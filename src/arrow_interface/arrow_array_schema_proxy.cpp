@@ -899,7 +899,7 @@ namespace sparrow
         set_null_count(static_cast<int64_t>(null_count));
         m_const_bitmap = const_bitmap_type(
             m_null_bitmap->data(),
-            length(),
+            m_null_bitmap->size(),
             static_cast<size_t>(m_null_bitmap->offset()),
             static_cast<size_t>(null_count)
         );
@@ -922,7 +922,7 @@ namespace sparrow
         set_null_count(static_cast<int64_t>(null_count));
         m_const_bitmap = const_bitmap_type(
             m_null_bitmap->data(),
-            length(),
+            m_null_bitmap->size(),
             static_cast<size_t>(m_null_bitmap->offset()),
             static_cast<size_t>(null_count)
         );
@@ -942,7 +942,7 @@ namespace sparrow
         set_null_count(static_cast<int64_t>(m_null_bitmap->null_count()));
         m_const_bitmap = const_bitmap_type(
             m_null_bitmap->data(),
-            length(),
+            m_null_bitmap->size(),
             static_cast<size_t>(m_null_bitmap->offset()),
             static_cast<size_t>(null_count())
         );

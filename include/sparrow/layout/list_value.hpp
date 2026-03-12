@@ -404,6 +404,24 @@ namespace sparrow
          */
         [[nodiscard]] list_value_reverse_iterator crend() const;
 
+        /// @brief Returns a pointer to the flat array backing this list view.
+        [[nodiscard]] const array_wrapper* flat_array() const noexcept
+        {
+            return p_flat_array;
+        }
+
+        /// @brief Returns the inclusive start index of this list slice in the flat array.
+        [[nodiscard]] size_type begin_index() const noexcept
+        {
+            return m_index_begin;
+        }
+
+        /// @brief Returns the exclusive end index of this list slice in the flat array.
+        [[nodiscard]] size_type end_index() const noexcept
+        {
+            return m_index_end;
+        }
+
     private:
 
         const array_wrapper* p_flat_array = nullptr;  ///< Pointer to underlying flattened array

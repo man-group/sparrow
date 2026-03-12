@@ -571,4 +571,421 @@ namespace sparrow
             }
         }
     }
+
+    /***********************************
+     * list_array mutation tests       *
+     ***********************************/
+
+    TEST_SUITE("list_array_mutable")
+    {
+        TEST_CASE("push_back element")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 2u);
+
+            // push_back a copy of arr[0] = [0,1]
+            arr.push_back(make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
+        }
+
+        TEST_CASE("push_back null")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 2u);
+
+            arr.push_back(make_nullable(arr[0].value(), false));  // null element
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_FALSE(arr[2].has_value());
+        }
+
+        TEST_CASE("pop_back")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 2u);
+
+            arr.pop_back();
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(1));
+        }
+
+        TEST_CASE("erase first element")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+
+            arr.erase(arr.cbegin());  // Remove [0,1]
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 3u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(2));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(3));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[2], std::int16_t(4));
+        }
+
+        TEST_CASE("erase middle element")
+        {
+            // flat=[0,1,2,3,4,5], lists=[[0,1],[2,3],[4,5]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(6, {2, 2, 2});
+            list_array arr(std::move(proxy));
+
+            arr.erase(sparrow::next(arr.cbegin(), 1));  // Remove [2,3]
+
+            REQUIRE_EQ(arr.size(), 2u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_EQ(arr[1].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(4));
+        }
+
+        TEST_CASE("resize grow")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+
+            arr.resize(4, make_nullable(arr[0].value()));  // grow to 4, fill with [0,1]
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(arr[2].value().size(), 2u);
+            CHECK_EQ(arr[3].value().size(), 2u);
+        }
+
+        TEST_CASE("resize shrink")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+
+            arr.resize(1, make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+        }
+
+        TEST_CASE("insert at beginning")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1]
+
+            arr.insert(arr.cbegin(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[0].has_value());
+            CHECK_EQ(arr[0].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(1));
+            CHECK_EQ(arr[1].value().size(), 2u);  // was arr[0]
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(0));
+            CHECK_EQ(arr[2].value().size(), 3u);  // was arr[1]
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
+        }
+
+        TEST_CASE("insert in the middle")
+        {
+            // flat=[0,1,2,3,4,5], lists=[[0,1],[2,3],[4,5]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(6, {2, 2, 2});
+            list_array arr(std::move(proxy));
+            const auto val = arr[2].value();  // [4,5]
+
+            arr.insert(sparrow::next(arr.cbegin(), 1), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK(arr[1].has_value());
+            CHECK_EQ(arr[1].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(4));
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], std::int16_t(5));
+            CHECK_EQ(arr[2].value().size(), 2u);  // was arr[1]
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
+            CHECK_EQ(arr[3].value().size(), 2u);  // was arr[2]
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(4));
+        }
+
+        TEST_CASE("insert at end")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1]
+
+            arr.insert(arr.cend(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_EQ(arr[1].value().size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
+        }
+    }
+
+    /***********************************
+     * list_view_array mutation tests  *
+     ***********************************/
+
+    namespace test
+    {
+        // Builds list_view_array with flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+        inline list_view_array make_test_list_view_array()
+        {
+            const std::vector<nullable<std::int16_t>> flat_data = {
+                make_nullable<std::int16_t>(0),
+                make_nullable<std::int16_t>(1),
+                make_nullable<std::int16_t>(2),
+                make_nullable<std::int16_t>(3),
+                make_nullable<std::int16_t>(4)
+            };
+            array flat{primitive_array<std::int16_t>(flat_data)};
+            // empty null-index range → all elements valid
+            return list_view_array(
+                std::move(flat),
+                std::vector<std::int32_t>{0, 2},
+                std::vector<std::uint32_t>{2, 3},
+                std::vector<std::size_t>{}
+            );
+        }
+    }
+
+    TEST_SUITE("list_view_array_mutable")
+    {
+        TEST_CASE("push_back element")
+        {
+            list_view_array arr = test::make_test_list_view_array();
+            REQUIRE_EQ(arr.size(), 2u);
+
+            // push_back a copy of arr[0] = [0,1]
+            arr.push_back(make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);
+        }
+
+        TEST_CASE("pop_back")
+        {
+            list_view_array arr = test::make_test_list_view_array();
+            REQUIRE_EQ(arr.size(), 2u);
+
+            arr.pop_back();
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+        }
+
+        TEST_CASE("erase first element")
+        {
+            list_view_array arr = test::make_test_list_view_array();
+
+            arr.erase(arr.cbegin());
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 3u);
+        }
+
+        TEST_CASE("insert at beginning")
+        {
+            list_view_array arr = test::make_test_list_view_array();  // [[0,1],[2,3,4]]
+            const auto val = arr[0].value();  // [0,1]
+
+            arr.insert(arr.cbegin(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[0].has_value());
+            CHECK_EQ(arr[0].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(1));
+            CHECK_EQ(arr[1].value().size(), 2u);  // was arr[0]
+            CHECK_EQ(arr[2].value().size(), 3u);  // was arr[1]
+        }
+
+        TEST_CASE("insert in the middle")
+        {
+            // flat=[0,1,2,3,4,5], lists=[[0,1],[2,3],[4,5]]
+            const std::vector<nullable<std::int16_t>> flat_data = {
+                make_nullable<std::int16_t>(0),
+                make_nullable<std::int16_t>(1),
+                make_nullable<std::int16_t>(2),
+                make_nullable<std::int16_t>(3),
+                make_nullable<std::int16_t>(4),
+                make_nullable<std::int16_t>(5)
+            };
+            array flat{primitive_array<std::int16_t>(flat_data)};
+            list_view_array arr(
+                std::move(flat),
+                std::vector<std::int32_t>{0, 2, 4},
+                std::vector<std::uint32_t>{2, 2, 2},
+                std::vector<std::size_t>{}
+            );
+            const auto val = arr[2].value();  // [4,5]
+
+            arr.insert(sparrow::next(arr.cbegin(), 1), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK(arr[1].has_value());
+            CHECK_EQ(arr[1].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(4));
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], std::int16_t(5));
+            CHECK_EQ(arr[2].value().size(), 2u);  // was arr[1]
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
+            CHECK_EQ(arr[3].value().size(), 2u);  // was arr[2]
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(4));
+        }
+
+        TEST_CASE("insert at end")
+        {
+            list_view_array arr = test::make_test_list_view_array();  // [[0,1],[2,3,4]]
+            const auto val = arr[0].value();  // [0,1]
+
+            arr.insert(arr.cend(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_EQ(arr[1].value().size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
+        }
+    }
+
+    /**********************************************
+     * fixed_sized_list_array mutation tests      *
+     **********************************************/
+
+    TEST_SUITE("fixed_sized_list_array_mutable")
+    {
+        TEST_CASE("push_back element")
+        {
+            // 4 lists of size 5: [[0..4],[5..9],[10..14],[15..19]]
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 4u);
+
+            // push_back a copy of arr[0] = [0,1,2,3,4]
+            arr.push_back(make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK(arr[4].has_value());
+            CHECK_EQ(arr[4].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[4], std::int16_t(4));
+        }
+
+        TEST_CASE("pop_back")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 4u);
+
+            arr.pop_back();
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[2].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(10));
+        }
+
+        TEST_CASE("erase first element")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+
+            arr.erase(arr.cbegin());
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[0].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(5));
+        }
+
+        TEST_CASE("resize grow")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+
+            arr.resize(6, make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 6u);
+            CHECK_EQ(arr[5].value().size(), 5u);
+        }
+
+        TEST_CASE("resize shrink")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+
+            arr.resize(2, make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 2u);
+            CHECK_EQ(arr[1].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(5));
+        }
+
+        TEST_CASE("insert at beginning")
+        {
+            // 4 lists of size 5: [[0..4],[5..9],[10..14],[15..19]]
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1,2,3,4]
+
+            arr.insert(arr.cbegin(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK(arr[0].has_value());
+            CHECK_EQ(arr[0].value().size(), 5u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[4], std::int16_t(4));
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(0));   // was arr[0]
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(15));  // was arr[3]
+        }
+
+        TEST_CASE("insert in the middle")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1,2,3,4]
+
+            arr.insert(sparrow::next(arr.cbegin(), 2), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));   // was arr[0]
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(5));   // was arr[1]
+            CHECK(arr[2].has_value());
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));   // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(10));  // was arr[2]
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(15));  // was arr[3]
+        }
+
+        TEST_CASE("insert at end")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1,2,3,4]
+
+            arr.insert(arr.cend(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(15));  // was arr[3]
+            CHECK(arr[4].has_value());
+            CHECK_EQ(arr[4].value().size(), 5u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[4], std::int16_t(4));
+        }
+    }
 }
