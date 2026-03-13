@@ -277,9 +277,9 @@ namespace sparrow
      * @tparam DERIVED The derived list array type (CRTP pattern)
      *
      * @pre DERIVED must implement offset_range(size_type) method
-    * @note Mutating operations are supported only on unsliced arrays.
-    *       Arrays produced by slice() or slice_view() with a non-zero Arrow offset are
-    *       treated as read-only for mutation.
+     * @note Mutating operations are supported only on unsliced arrays.
+     *       Arrays produced by slice() or slice_view() with a non-zero Arrow offset are
+     *       treated as read-only for mutation.
      * @post Maintains Arrow array format compatibility for list types
      * @post Provides unified interface for all list array variants
      */
