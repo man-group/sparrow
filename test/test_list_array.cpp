@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <stdexcept>
 
 #include "sparrow/array.hpp"
 #include "sparrow/list_array.hpp"
@@ -704,6 +705,16 @@ namespace sparrow
 
     TEST_SUITE("list_array_mutable")
     {
+        TEST_CASE("mutation on slice is unsupported")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            auto sliced = list_array(std::move(proxy)).slice(1, 2);
+            const auto val = sliced[0].value();
+
+            CHECK_THROWS_AS(sliced.push_back(make_nullable(val)), std::logic_error);
+            CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
+        }
+
         TEST_CASE("push_back element")
         {
             // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
@@ -890,6 +901,15 @@ namespace sparrow
 
     TEST_SUITE("list_view_array_mutable")
     {
+        TEST_CASE("mutation on slice is unsupported")
+        {
+            auto sliced = test::make_test_list_view_array().slice(1, 2);
+            const auto val = sliced[0].value();
+
+            CHECK_THROWS_AS(sliced.push_back(make_nullable(val)), std::logic_error);
+            CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
+        }
+
         TEST_CASE("push_back element")
         {
             list_view_array arr = test::make_test_list_view_array();
@@ -998,6 +1018,16 @@ namespace sparrow
 
     TEST_SUITE("fixed_sized_list_array_mutable")
     {
+        TEST_CASE("mutation on slice is unsupported")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            auto sliced = fixed_sized_list_array(std::move(proxy)).slice(1, 4);
+            const auto val = sliced[0].value();
+
+            CHECK_THROWS_AS(sliced.push_back(make_nullable(val)), std::logic_error);
+            CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
+        }
+
         TEST_CASE("push_back element")
         {
             // 4 lists of size 5: [[0..4],[5..9],[10..14],[15..19]]

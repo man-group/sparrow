@@ -16,6 +16,7 @@
 
 #include <limits>
 #include <ranges>
+#include <stdexcept>
 #include <string>  // for std::stoull
 #include <type_traits>
 #include <vector>
@@ -275,6 +276,9 @@ namespace sparrow
      * @tparam DERIVED The derived list array type (CRTP pattern)
      *
      * @pre DERIVED must implement offset_range(size_type) method
+    * @note Mutating operations are supported only on unsliced arrays.
+    *       Arrays produced by slice() or slice_view() with a non-zero Arrow offset are
+    *       treated as read-only for mutation.
      * @post Maintains Arrow array format compatibility for list types
      * @post Provides unified interface for all list array variants
      */
@@ -363,6 +367,20 @@ namespace sparrow
         constexpr list_array_crtp_base& operator=(self_type&&) noexcept = default;
 
     protected:
+
+        /**
+         * @brief Throws if a mutating operation is attempted on a sliced array.
+         *
+         * List-array mutation updates the parent offset or size buffers together with
+         * the flat child array in place. The current implementation assumes
+         * ArrowArray.offset == 0, so sliced arrays are intentionally unsupported for
+         * mutating APIs.
+         *
+         * @param operation Name of the mutating operation for diagnostics.
+         *
+         * @throws std::logic_error if this array has a non-zero Arrow offset.
+         */
+        constexpr void throw_if_sliced_for_mutation(const char* operation) const;
 
         [[nodiscard]] constexpr value_iterator value_begin();
         [[nodiscard]] constexpr value_iterator value_end();
@@ -1011,6 +1029,15 @@ namespace sparrow
     }
 
     template <class DERIVED>
+    constexpr void list_array_crtp_base<DERIVED>::throw_if_sliced_for_mutation(const char* operation) const
+    {
+        if (this->get_arrow_proxy().offset() != 0)
+        {
+            throw std::logic_error(std::string(operation) + " does not support sliced arrays (non-zero offset)");
+        }
+    }
+
+    template <class DERIVED>
     constexpr auto list_array_crtp_base<DERIVED>::value_begin() -> value_iterator
     {
         return value_iterator(detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()), 0);
@@ -1217,6 +1244,9 @@ namespace sparrow
         using mutable_offset_type = std::remove_const_t<offset_type>;
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         const size_type n = this->size();
+        auto& proxy = this->get_arrow_proxy();
+
+        this->throw_if_sliced_for_mutation("list_array_impl::insert_value");
 
         // Insert flat elements: count copies of value's slice
         const size_type flat_insert_pos = static_cast<size_type>(p_list_offsets[idx]);
@@ -1234,10 +1264,20 @@ namespace sparrow
 
         // Update offset buffer
         const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value.size());
-        const mutable_offset_type total_delta = static_cast<mutable_offset_type>(count) * val_sz;
-
-        auto& offset_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        const mutable_offset_type count_mt = static_cast<mutable_offset_type>(count);
+        const auto max_offset = std::numeric_limits<mutable_offset_type>::max();
+        // Check multiplication overflow for total_delta = count * val_sz
+        if (val_sz != mutable_offset_type{})
+        {
+            SPARROW_ASSERT_TRUE(count_mt <= max_offset / val_sz);
+        }
+        const mutable_offset_type total_delta = count_mt * val_sz;
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
         auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+        // Existing offsets should fit in the representable range once delta is applied
+        SPARROW_ASSERT_TRUE(offset_adaptor.size() >= n + 1);
+        const mutable_offset_type existing_max = offset_adaptor[n];
+        SPARROW_ASSERT_TRUE(existing_max <= max_offset - total_delta);
 
         // Resize the offset buffer to hold `count` new entries
         offset_adaptor.resize(n + 1 + count, mutable_offset_type{});
@@ -1250,12 +1290,14 @@ namespace sparrow
 
         // Fill new entries [idx+1..idx+count]
         const mutable_offset_type flat_insert_offset = static_cast<mutable_offset_type>(flat_insert_pos);
+        // Ensure new offsets based on flat_insert_offset cannot overflow
+        SPARROW_ASSERT_TRUE(flat_insert_offset <= max_offset - total_delta);
         for (size_type k = 1; k <= count; ++k)
         {
             offset_adaptor[idx + k] = flat_insert_offset + static_cast<mutable_offset_type>(k) * val_sz;
         }
 
-        this->get_arrow_proxy().update_buffers();
+        proxy.update_buffers();
         p_list_offsets = make_list_offsets();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
@@ -1283,11 +1325,14 @@ namespace sparrow
         using mutable_offset_type = std::remove_const_t<offset_type>;
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         const size_type n = this->size();
+        auto& proxy = this->get_arrow_proxy();
 
         if (count == 0)
         {
             return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
         }
+
+        this->throw_if_sliced_for_mutation("list_array_impl::erase_values");
 
         // Erase flat elements
         const mutable_offset_type flat_erase_begin = p_list_offsets[idx];
@@ -1303,16 +1348,15 @@ namespace sparrow
         }
 
         // Update offset buffer: remove count entries, shift remaining down
-        auto& offset_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
         auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
-
         for (size_type i = idx + count + 1; i <= n; ++i)
         {
             offset_adaptor[i - count] = offset_adaptor[i] - flat_erase_count_val;
         }
         offset_adaptor.resize(n + 1 - count);
 
-        this->get_arrow_proxy().update_buffers();
+        proxy.update_buffers();
         p_list_offsets = make_list_offsets();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
@@ -1492,9 +1536,13 @@ namespace sparrow
         using mutable_size_type = std::remove_const_t<list_size_type>;
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
 
+        this->throw_if_sliced_for_mutation("list_view_array_impl::insert_value");
+
         // Append new element(s) at the end of the flat array
-        const size_type flat_append_pos = this->raw_flat_array()->get_arrow_proxy().length();
+        SPARROW_ASSERT_TRUE(value.size() <= std::numeric_limits<mutable_offset_type>::max());
+        SPARROW_ASSERT_TRUE(value.size() <= std::numeric_limits<mutable_size_type>::max());
         const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value.size());
+        const size_type flat_append_pos = this->raw_flat_array()->get_arrow_proxy().length();
 
         if (val_sz > 0)
         {
@@ -1508,14 +1556,16 @@ namespace sparrow
             );
         }
 
+        auto& proxy = this->get_arrow_proxy();
+
         // Insert count new (offset, size) entries in the offset and sizes buffers at position idx
         const size_type n = this->size();
 
-        auto& offset_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
         auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
         offset_adaptor.resize(n + count);
 
-        auto& sizes_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
+        auto& sizes_buffer = proxy.get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
         auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
         sizes_adaptor.resize(n + count);
 
@@ -1527,6 +1577,19 @@ namespace sparrow
         }
 
         // Write new entries for the count inserted lists
+        // Before writing, assert that the computed offsets are representable
+        if (count > 0 && val_sz > 0)
+        {
+            const auto base_offset_ull = static_cast<unsigned long long>(flat_append_pos);
+            const auto step_ull = static_cast<unsigned long long>(val_sz);
+            const auto max_k_ull = static_cast<unsigned long long>(count - 1);
+            const auto max_offset_ull = static_cast<unsigned long long>(
+                std::numeric_limits<mutable_offset_type>::max()
+            );
+            const auto last_offset_ull = base_offset_ull + max_k_ull * step_ull;
+            SPARROW_ASSERT_TRUE(base_offset_ull <= max_offset_ull);
+            SPARROW_ASSERT_TRUE(last_offset_ull <= max_offset_ull);
+        }
         for (size_type k = 0; k < count; ++k)
         {
             offset_adaptor[idx + k] = static_cast<mutable_offset_type>(flat_append_pos)
@@ -1534,7 +1597,7 @@ namespace sparrow
             sizes_adaptor[idx + k] = static_cast<mutable_size_type>(val_sz);
         }
 
-        this->get_arrow_proxy().update_buffers();
+        proxy.update_buffers();
         p_list_offsets = make_list_offsets();
         p_list_sizes = make_list_sizes();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
@@ -1571,11 +1634,14 @@ namespace sparrow
             return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
         }
 
+        this->throw_if_sliced_for_mutation("list_view_array_impl::erase_values");
+
         // Remove the offset/size entries (leave flat data orphaned — valid per Arrow spec)
-        auto& offset_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto& proxy = this->get_arrow_proxy();
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
         auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
 
-        auto& sizes_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
+        auto& sizes_buffer = proxy.get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
         auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
 
         // Shift entries [idx+count..n) to [idx..n-count)
@@ -1586,8 +1652,7 @@ namespace sparrow
         }
         offset_adaptor.resize(n - count);
         sizes_adaptor.resize(n - count);
-
-        this->get_arrow_proxy().update_buffers();
+        proxy.update_buffers();
         p_list_offsets = make_list_offsets();
         p_list_sizes = make_list_sizes();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
@@ -1672,6 +1737,9 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(value.size() == m_list_size);
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+
+        this->throw_if_sliced_for_mutation("fixed_sized_list_array::insert_value");
+
         const size_type flat_insert_pos = flat_element_count(idx);
 
         if (m_list_size > 0)
@@ -1707,11 +1775,12 @@ namespace sparrow
     inline auto fixed_sized_list_array::erase_values(const_value_iterator pos, size_type count) -> value_iterator
     {
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
-
         if (count == 0)
         {
             return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
         }
+
+        this->throw_if_sliced_for_mutation("fixed_sized_list_array::erase_values");
 
         this->raw_flat_array()->erase_array_elements(flat_element_count(idx), flat_element_count(count));
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
