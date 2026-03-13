@@ -652,13 +652,7 @@ namespace sparrow
     )
     {
         // split into values and is_non_null ranges
-        auto values = nullable_range
-                      | std::views::transform(
-                          [](const auto& v)
-                          {
-                              return v.get();
-                          }
-                      );
+        auto values = nullable_range | std::views::transform(nullable_get);
         auto is_non_null = nullable_range
                            | std::views::transform(
                                [](const auto& v)

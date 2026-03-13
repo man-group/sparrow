@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <cstring>
+#include <stdexcept>
+
 #include "sparrow/array.hpp"
 #include "sparrow/list_array.hpp"
 #include "sparrow/primitive_array.hpp"
@@ -24,6 +28,59 @@ namespace sparrow
 {
     namespace test
     {
+        template <class LIST_ARRAY>
+        void check_sequential_lists(const LIST_ARRAY& list_arr, const std::vector<std::size_t>& sizes)
+        {
+            REQUIRE_EQ(list_arr.size(), sizes.size());
+
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
+            }
+
+            std::int16_t flat_index = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                auto list = list_arr[i].value();
+                for (std::size_t j = 0; j < sizes[i]; ++j)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
+                    ++flat_index;
+                }
+            }
+        }
+
+        std::uint8_t* copy_external_buffer(const buffer<std::uint8_t>& source)
+        {
+            auto* destination = new std::uint8_t[source.size()];
+            std::copy(source.begin(), source.end(), destination);
+            return destination;
+        }
+
+        std::uint8_t* make_external_list_offsets_buffer(const std::vector<std::size_t>& sizes)
+        {
+            auto* raw_buffer = new std::uint8_t[(sizes.size() + 1) * sizeof(std::int32_t)];
+            std::int32_t current_offset = 0;
+            std::memcpy(raw_buffer, &current_offset, sizeof(current_offset));
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                current_offset += static_cast<std::int32_t>(sizes[i]);
+                std::memcpy(raw_buffer + (i + 1) * sizeof(current_offset), &current_offset, sizeof(current_offset));
+            }
+            return raw_buffer;
+        }
+
+        std::uint8_t* make_external_list_sizes_buffer(const std::vector<std::size_t>& sizes)
+        {
+            auto* raw_buffer = new std::uint8_t[sizes.size() * sizeof(std::uint32_t)];
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                const auto list_size = static_cast<std::uint32_t>(sizes[i]);
+                std::memcpy(raw_buffer + i * sizeof(list_size), &list_size, sizeof(list_size));
+            }
+            return raw_buffer;
+        }
+
         template <class T>
         arrow_proxy make_list_proxy(size_t n_flat, const std::vector<size_t>& sizes)
         {
@@ -47,28 +104,80 @@ namespace sparrow
             return arrow_proxy(std::move(arr), std::move(schema));
         }
 
+        template <class T>
+        arrow_proxy make_external_list_proxy(size_t n_flat, const std::vector<size_t>& sizes)
+        {
+            ArrowArray flat_arr{};
+            ArrowSchema flat_schema{};
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0, {});
+            flat_schema.name = "the flat array";
+
+            ArrowSchema schema{};
+            schema.format = "+l";
+            schema.name = "test";
+            schema.metadata = nullptr;
+            schema.flags = static_cast<int64_t>(ArrowFlag::NULLABLE);
+            schema.n_children = 1;
+            schema.children = new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))};
+            schema.dictionary = nullptr;
+            schema.release = &release_external_arrow_schema;
+
+            ArrowArray arr{};
+            arr.length = static_cast<std::int64_t>(sizes.size());
+            arr.null_count = 0;
+            arr.offset = 0;
+            arr.n_buffers = 2;
+            auto** buffers = new std::uint8_t*[2];
+            buffers[0] = copy_external_buffer(make_bitmap_buffer(sizes.size(), std::vector<std::size_t>{}));
+            buffers[1] = make_external_list_offsets_buffer(sizes);
+            arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buffers));
+            arr.n_children = 1;
+            arr.children = new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))};
+            arr.dictionary = nullptr;
+            arr.release = &release_external_arrow_array;
+
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+
+        template <class T>
+        arrow_proxy make_external_list_view_proxy(size_t n_flat, const std::vector<size_t>& sizes)
+        {
+            ArrowArray flat_arr{};
+            ArrowSchema flat_schema{};
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0, {});
+            flat_schema.name = "the flat array";
+
+            ArrowSchema schema{};
+            schema.format = "+vl";
+            schema.name = "test";
+            schema.metadata = nullptr;
+            schema.flags = static_cast<int64_t>(ArrowFlag::NULLABLE);
+            schema.n_children = 1;
+            schema.children = new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))};
+            schema.dictionary = nullptr;
+            schema.release = &release_external_arrow_schema;
+
+            ArrowArray arr{};
+            arr.length = static_cast<std::int64_t>(sizes.size());
+            arr.null_count = 0;
+            arr.offset = 0;
+            arr.n_buffers = 3;
+            auto** buffers = new std::uint8_t*[3];
+            buffers[0] = copy_external_buffer(make_bitmap_buffer(sizes.size(), std::vector<std::size_t>{}));
+            buffers[1] = make_external_list_offsets_buffer(sizes);
+            buffers[2] = make_external_list_sizes_buffer(sizes);
+            arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buffers));
+            arr.n_children = 1;
+            arr.children = new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))};
+            arr.dictionary = nullptr;
+            arr.release = &release_external_arrow_array;
+
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+
         void check_array(const list_array& list_arr, const std::vector<std::size_t>& sizes)
         {
-            // check the size
-            REQUIRE_EQ(list_arr.size(), sizes.size());
-
-            // check the sizes
-            for (std::size_t i = 0; i < sizes.size(); ++i)
-            {
-                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
-            }
-
-            // check the values
-            std::int16_t flat_index = 0;
-            for (std::size_t i = 0; i < sizes.size(); ++i)
-            {
-                auto list = list_arr[i].value();
-                for (std::size_t j = 0; j < sizes[i]; ++j)
-                {
-                    CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
-                    ++flat_index;
-                }
-            }
+            check_sequential_lists(list_arr, sizes);
         }
     }
 
@@ -121,6 +230,13 @@ namespace sparrow
                     test::check_array(list_arr, sizes);
                 }
             }
+        }
+
+        TEST_CASE("construct from external ArrowArray")
+        {
+            const std::vector<std::size_t> sizes = {1, 2, 3, 4};
+            list_array list_arr(test::make_external_list_proxy<std::int16_t>(10, sizes));
+            test::check_sequential_lists(list_arr, sizes);
         }
 
         TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float32_t, float64_t)
@@ -347,6 +463,13 @@ namespace sparrow
             CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[2], std::int16_t(2));
         }
 
+        TEST_CASE("construct from external ArrowArray")
+        {
+            const std::vector<std::size_t> sizes = {1, 2, 3, 4};
+            list_view_array list_view_arr(test::make_external_list_view_proxy<std::int16_t>(10, sizes));
+            test::check_sequential_lists(list_view_arr, sizes);
+        }
+
         TEST_CASE_TEMPLATE("list_view_array[T]", T, std::uint8_t, std::int32_t, float32_t, float64_t)
         {
             using inner_scalar_type = T;
@@ -569,6 +692,452 @@ namespace sparrow
                     }
                 }
             }
+        }
+    }
+
+    /***********************************
+     * list_array mutation tests       *
+     ***********************************/
+
+    TEST_SUITE("list_array_mutable")
+    {
+        TEST_CASE("mutation on slice is unsupported")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            auto sliced = list_array(std::move(proxy)).slice(1, 2);
+            const auto val = sliced[0].value();
+
+            CHECK_THROWS_AS(sliced.push_back(make_nullable(val)), std::logic_error);
+            CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
+        }
+
+        TEST_CASE("push_back element")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 2u);
+
+            // push_back a copy of arr[0] = [0,1]
+            arr.push_back(make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
+        }
+
+        TEST_CASE("push_back null")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 2u);
+
+            arr.push_back(make_nullable(arr[0].value(), false));  // null element
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_FALSE(arr[2].has_value());
+        }
+
+        TEST_CASE("pop_back")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 2u);
+
+            arr.pop_back();
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(1));
+        }
+
+        TEST_CASE("erase first element")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+
+            arr.erase(arr.cbegin());  // Remove [0,1]
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 3u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(2));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(3));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[2], std::int16_t(4));
+        }
+
+        TEST_CASE("erase middle element")
+        {
+            // flat=[0,1,2,3,4,5], lists=[[0,1],[2,3],[4,5]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(6, {2, 2, 2});
+            list_array arr(std::move(proxy));
+
+            arr.erase(sparrow::next(arr.cbegin(), 1));  // Remove [2,3]
+
+            REQUIRE_EQ(arr.size(), 2u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_EQ(arr[1].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(4));
+        }
+
+        TEST_CASE("resize grow")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+
+            arr.resize(4, make_nullable(arr[0].value()));  // grow to 4, fill with [0,1]
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(arr[2].value().size(), 2u);
+            CHECK_EQ(arr[3].value().size(), 2u);
+        }
+
+        TEST_CASE("resize shrink")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+
+            arr.resize(1, make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+        }
+
+        TEST_CASE("insert at beginning")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1]
+
+            arr.insert(arr.cbegin(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[0].has_value());
+            CHECK_EQ(arr[0].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(1));
+            CHECK_EQ(arr[1].value().size(), 2u);  // was arr[0]
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(0));
+            CHECK_EQ(arr[2].value().size(), 3u);  // was arr[1]
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
+        }
+
+        TEST_CASE("insert in the middle")
+        {
+            // flat=[0,1,2,3,4,5], lists=[[0,1],[2,3],[4,5]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(6, {2, 2, 2});
+            list_array arr(std::move(proxy));
+            const auto val = arr[2].value();  // [4,5]
+
+            arr.insert(sparrow::next(arr.cbegin(), 1), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK(arr[1].has_value());
+            CHECK_EQ(arr[1].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(4));
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], std::int16_t(5));
+            CHECK_EQ(arr[2].value().size(), 2u);  // was arr[1]
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
+            CHECK_EQ(arr[3].value().size(), 2u);  // was arr[2]
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(4));
+        }
+
+        TEST_CASE("insert at end")
+        {
+            // flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1]
+
+            arr.insert(arr.cend(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_EQ(arr[1].value().size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
+        }
+    }
+
+    /***********************************
+     * list_view_array mutation tests  *
+     ***********************************/
+
+    namespace test
+    {
+        // Builds list_view_array with flat=[0,1,2,3,4], lists=[[0,1],[2,3,4]]
+        inline list_view_array make_test_list_view_array()
+        {
+            const std::vector<nullable<std::int16_t>> flat_data = {
+                make_nullable<std::int16_t>(0),
+                make_nullable<std::int16_t>(1),
+                make_nullable<std::int16_t>(2),
+                make_nullable<std::int16_t>(3),
+                make_nullable<std::int16_t>(4)
+            };
+            array flat{primitive_array<std::int16_t>(flat_data)};
+            // empty null-index range → all elements valid
+            return list_view_array(
+                std::move(flat),
+                std::vector<std::int32_t>{0, 2},
+                std::vector<std::uint32_t>{2, 3},
+                std::vector<std::size_t>{}
+            );
+        }
+    }
+
+    TEST_SUITE("list_view_array_mutable")
+    {
+        TEST_CASE("mutation on slice is unsupported")
+        {
+            auto sliced = test::make_test_list_view_array().slice(1, 2);
+            const auto val = sliced[0].value();
+
+            CHECK_THROWS_AS(sliced.push_back(make_nullable(val)), std::logic_error);
+            CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
+        }
+
+        TEST_CASE("push_back element")
+        {
+            list_view_array arr = test::make_test_list_view_array();
+            REQUIRE_EQ(arr.size(), 2u);
+
+            // push_back a copy of arr[0] = [0,1]
+            arr.push_back(make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);
+        }
+
+        TEST_CASE("pop_back")
+        {
+            list_view_array arr = test::make_test_list_view_array();
+            REQUIRE_EQ(arr.size(), 2u);
+
+            arr.pop_back();
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+        }
+
+        TEST_CASE("erase first element")
+        {
+            list_view_array arr = test::make_test_list_view_array();
+
+            arr.erase(arr.cbegin());
+
+            REQUIRE_EQ(arr.size(), 1u);
+            CHECK_EQ(arr[0].value().size(), 3u);
+        }
+
+        TEST_CASE("insert at beginning")
+        {
+            list_view_array arr = test::make_test_list_view_array();  // [[0,1],[2,3,4]]
+            const auto val = arr[0].value();                          // [0,1]
+
+            arr.insert(arr.cbegin(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK(arr[0].has_value());
+            CHECK_EQ(arr[0].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[1], std::int16_t(1));
+            CHECK_EQ(arr[1].value().size(), 2u);  // was arr[0]
+            CHECK_EQ(arr[2].value().size(), 3u);  // was arr[1]
+        }
+
+        TEST_CASE("insert in the middle")
+        {
+            // flat=[0,1,2,3,4,5], lists=[[0,1],[2,3],[4,5]]
+            const std::vector<nullable<std::int16_t>> flat_data = {
+                make_nullable<std::int16_t>(0),
+                make_nullable<std::int16_t>(1),
+                make_nullable<std::int16_t>(2),
+                make_nullable<std::int16_t>(3),
+                make_nullable<std::int16_t>(4),
+                make_nullable<std::int16_t>(5)
+            };
+            array flat{primitive_array<std::int16_t>(flat_data)};
+            list_view_array arr(
+                std::move(flat),
+                std::vector<std::int32_t>{0, 2, 4},
+                std::vector<std::uint32_t>{2, 2, 2},
+                std::vector<std::size_t>{}
+            );
+            const auto val = arr[2].value();  // [4,5]
+
+            arr.insert(sparrow::next(arr.cbegin(), 1), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK(arr[1].has_value());
+            CHECK_EQ(arr[1].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(4));
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[1], std::int16_t(5));
+            CHECK_EQ(arr[2].value().size(), 2u);  // was arr[1]
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(2));
+            CHECK_EQ(arr[3].value().size(), 2u);  // was arr[2]
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(4));
+        }
+
+        TEST_CASE("insert at end")
+        {
+            list_view_array arr = test::make_test_list_view_array();  // [[0,1],[2,3,4]]
+            const auto val = arr[0].value();                          // [0,1]
+
+            arr.insert(arr.cend(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[0].value().size(), 2u);
+            CHECK_EQ(arr[1].value().size(), 3u);
+            CHECK(arr[2].has_value());
+            CHECK_EQ(arr[2].value().size(), 2u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
+        }
+    }
+
+    /**********************************************
+     * fixed_sized_list_array mutation tests      *
+     **********************************************/
+
+    TEST_SUITE("fixed_sized_list_array_mutable")
+    {
+        TEST_CASE("mutation on slice is unsupported")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            auto sliced = fixed_sized_list_array(std::move(proxy)).slice(1, 4);
+            const auto val = sliced[0].value();
+
+            CHECK_THROWS_AS(sliced.push_back(make_nullable(val)), std::logic_error);
+            CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
+        }
+
+        TEST_CASE("push_back element")
+        {
+            // 4 lists of size 5: [[0..4],[5..9],[10..14],[15..19]]
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 4u);
+
+            // push_back a copy of arr[0] = [0,1,2,3,4]
+            arr.push_back(make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK(arr[4].has_value());
+            CHECK_EQ(arr[4].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[4], std::int16_t(4));
+        }
+
+        TEST_CASE("pop_back")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            REQUIRE_EQ(arr.size(), 4u);
+
+            arr.pop_back();
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[2].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(10));
+        }
+
+        TEST_CASE("erase first element")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+
+            arr.erase(arr.cbegin());
+
+            REQUIRE_EQ(arr.size(), 3u);
+            CHECK_EQ(arr[0].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(5));
+        }
+
+        TEST_CASE("resize grow")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+
+            arr.resize(6, make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 6u);
+            CHECK_EQ(arr[5].value().size(), 5u);
+        }
+
+        TEST_CASE("resize shrink")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+
+            arr.resize(2, make_nullable(arr[0].value()));
+
+            REQUIRE_EQ(arr.size(), 2u);
+            CHECK_EQ(arr[1].value().size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(5));
+        }
+
+        TEST_CASE("insert at beginning")
+        {
+            // 4 lists of size 5: [[0..4],[5..9],[10..14],[15..19]]
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1,2,3,4]
+
+            arr.insert(arr.cbegin(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK(arr[0].has_value());
+            CHECK_EQ(arr[0].value().size(), 5u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[4], std::int16_t(4));
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(0));   // was arr[0]
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(15));  // was arr[3]
+        }
+
+        TEST_CASE("insert in the middle")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1,2,3,4]
+
+            arr.insert(sparrow::next(arr.cbegin(), 2), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], std::int16_t(0));  // was arr[0]
+            CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], std::int16_t(5));  // was arr[1]
+            CHECK(arr[2].has_value());
+            CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));   // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(10));  // was arr[2]
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(15));  // was arr[3]
+        }
+
+        TEST_CASE("insert at end")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+            const auto val = arr[0].value();  // [0,1,2,3,4]
+
+            arr.insert(arr.cend(), make_nullable(val));
+
+            REQUIRE_EQ(arr.size(), 5u);
+            CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], std::int16_t(15));  // was arr[3]
+            CHECK(arr[4].has_value());
+            CHECK_EQ(arr[4].value().size(), 5u);  // newly inserted
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(0));
+            CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[4], std::int16_t(4));
         }
     }
 }
