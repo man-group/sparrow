@@ -129,10 +129,7 @@ namespace sparrow
                 validity_range.end()
             );
 
-            const auto value_range = std::ranges::subrange(first, last)
-                                     | std::views::transform(
-                                         nullable_get
-                                     );
+            const auto value_range = std::ranges::subrange(first, last) | std::views::transform(nullable_get);
             derived.insert_values(
                 sparrow::next(derived.value_cbegin(), distance),
                 value_range.begin(),
