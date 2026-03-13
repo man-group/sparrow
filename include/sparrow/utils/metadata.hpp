@@ -398,15 +398,19 @@ namespace sparrow
             const auto key_size = static_cast<int32_t>(key.size());
             std::memcpy(&(*metadata_iter), &key_size, sizeof(int32_t));
             std::advance(metadata_iter, sizeof(int32_t));
-
-            sparrow::ranges::copy(key, &(*metadata_iter));
+            if (key.size() > 0)
+            {
+                sparrow::ranges::copy(key, &(*metadata_iter));
+            }
             std::advance(metadata_iter, key.size());
 
             const auto value_size = static_cast<int32_t>(value.size());
             std::memcpy(&(*metadata_iter), &value_size, sizeof(int32_t));
             std::advance(metadata_iter, sizeof(int32_t));
-
-            sparrow::ranges::copy(value, &(*metadata_iter));
+            if (value.size() > 0)
+            {
+                sparrow::ranges::copy(value, &(*metadata_iter));
+            }
             std::advance(metadata_iter, value.size());
         }
         return metadata_buf;

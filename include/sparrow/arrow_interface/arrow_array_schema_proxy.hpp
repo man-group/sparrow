@@ -1296,13 +1296,14 @@ struct std::formatter<sparrow::arrow_proxy>
         }
 
         const std::string dictionary_str = obj.dictionary() ? std::format("{}", *obj.dictionary()) : "nullptr";
+        const std::string metadata_str = obj.metadata() ? std::format("{}", *obj.metadata()) : "nullptr";
 
         return std::format_to(
             ctx.out(),
             "arrow_proxy\n- format: {}\n- name; {}\n- metadata: {}\n- data_type: {}\n- null_count:{}\n- length: {}\n- offset: {}\n- n_buffers: {}\n- buffers:\n{}\n- n_children: {}\n-children: {}\n- dictionary: {}",
             obj.format(),
             obj.name().value_or(""),
-            obj.metadata().value_or(""),
+            metadata_str,
             obj.data_type(),
             obj.null_count(),
             obj.length(),
