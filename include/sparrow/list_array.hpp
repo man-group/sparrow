@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <limits>
 #include <ranges>
 #include <string>  // for std::stoull
 #include <type_traits>
@@ -951,6 +952,8 @@ namespace sparrow
          */
         [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
+        [[nodiscard]] constexpr size_type flat_element_count(size_type list_count) const;
+
         void resize_values(size_type new_length, list_value value);
 
         value_iterator insert_value(const_value_iterator pos, list_value value, size_type count);
@@ -1662,13 +1665,22 @@ namespace sparrow
         return std::make_pair(offset, offset + m_list_size);
     }
 
+    constexpr auto fixed_sized_list_array::flat_element_count(size_type list_count) const -> size_type
+    {
+        const offset_type max_flat_count = static_cast<offset_type>(std::numeric_limits<size_type>::max());
+        SPARROW_ASSERT_TRUE(
+            m_list_size == 0 || static_cast<offset_type>(list_count) <= max_flat_count / m_list_size
+        );
+        return static_cast<size_type>(static_cast<offset_type>(list_count) * m_list_size);
+    }
+
     inline auto
     fixed_sized_list_array::insert_value(const_value_iterator pos, list_value value, size_type count)
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(value.size() == m_list_size);
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
-        const size_type flat_insert_pos = idx * m_list_size;
+        const size_type flat_insert_pos = flat_element_count(idx);
 
         if (m_list_size > 0)
         {
@@ -1709,7 +1721,7 @@ namespace sparrow
             return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
         }
 
-        this->raw_flat_array()->erase_array_elements(idx * m_list_size, count * m_list_size);
+        this->raw_flat_array()->erase_array_elements(flat_element_count(idx), flat_element_count(count));
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
