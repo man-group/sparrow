@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <string>  // for std::stoull
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "sparrow/array_api.hpp"
@@ -1539,8 +1540,8 @@ namespace sparrow
         this->throw_if_sliced_for_mutation("list_view_array_impl::insert_value");
 
         // Append new element(s) at the end of the flat array
-        SPARROW_ASSERT_TRUE(value.size() <= std::numeric_limits<mutable_offset_type>::max());
-        SPARROW_ASSERT_TRUE(value.size() <= std::numeric_limits<mutable_size_type>::max());
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value.size()));
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_size_type>(value.size()));
         const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value.size());
         const size_type flat_append_pos = this->raw_flat_array()->get_arrow_proxy().length();
 
