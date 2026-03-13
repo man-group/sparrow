@@ -1024,10 +1024,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {  // split into values and is_non_null ranges
-        auto values = range
-                      | std::views::transform(
-                          nullable_get
-                      );
+        auto values = range | std::views::transform(nullable_get);
         auto is_non_null = range
                            | std::views::transform(
                                [](const auto& v)

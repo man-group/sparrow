@@ -98,6 +98,7 @@ namespace sparrow
     };
 
     inline constexpr nullable_get_fn nullable_get{};
+
     /*
      * Default traits for the nullable class. These traits should be specialized
      * for proxy classes whose reference and const_reference types are not
