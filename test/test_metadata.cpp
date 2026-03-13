@@ -59,7 +59,7 @@ TEST_SUITE("metadata")
     {
         const std::vector<sparrow::metadata_pair> metadata = {
             {"key1", "val1"},
-            {"key2", ""}   // empty value as LAST entry
+            {"key2", ""}  // empty value as LAST entry
         };
         const auto buffer = sparrow::get_metadata_from_key_values(metadata);
         const sparrow::key_value_view view(buffer.data());
