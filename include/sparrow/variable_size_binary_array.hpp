@@ -1239,8 +1239,9 @@ namespace sparrow
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>
-    constexpr auto variable_size_binary_array_impl<T, CR, OT, Ext>::data_buffer_distance(offset_type byte_offset)
-        const -> std::ptrdiff_t
+    constexpr auto
+    variable_size_binary_array_impl<T, CR, OT, Ext>::data_buffer_distance(offset_type byte_offset) const
+        -> std::ptrdiff_t
     {
         using promoted_type = std::common_type_t<offset_type, std::ptrdiff_t>;
         SPARROW_ASSERT_TRUE(
@@ -1470,11 +1471,7 @@ namespace sparrow
         auto* insert_pos = data_begin + data_buffer_distance(offset_begin);
 
         // Move elements to make space for the new value
-        std::move_backward(
-            insert_pos,
-            data_end - static_cast<std::ptrdiff_t>(cumulative_sizes),
-            data_end
-        );
+        std::move_backward(insert_pos, data_end - static_cast<std::ptrdiff_t>(cumulative_sizes), data_end);
 
         for (const T& value : values)
         {
