@@ -893,6 +893,8 @@ namespace sparrow
             requires mpl::convertible_ranges<U, T>
         constexpr void assign(U&& rhs, size_type index);
 
+        [[nodiscard]] constexpr std::ptrdiff_t data_buffer_distance(offset_type byte_offset) const;
+
         /**
          * @brief Checks if adding size to current offset would cause overflow.
          *
@@ -1194,19 +1196,23 @@ namespace sparrow
             if (shift_byte_count > 0)
             {
                 data_buffer.resize(new_data_buffer_size);
+                auto* data_begin = data_buffer.template data<data_value_type>();
+                auto* data_end = data_begin + static_cast<std::ptrdiff_t>(data_buffer.size());
                 // Move elements to make space for the new value
                 std::move_backward(
-                    sparrow::next(data_buffer.begin(), offset_end),
-                    sparrow::next(data_buffer.end(), -shift_byte_count),
-                    data_buffer.end()
+                    data_begin + data_buffer_distance(offset_end),
+                    data_end - data_buffer_distance(shift_byte_count),
+                    data_end
                 );
             }
             else
             {
+                auto* data_begin = data_buffer.template data<data_value_type>();
+                auto* data_end = data_begin + static_cast<std::ptrdiff_t>(data_buffer.size());
                 std::move(
-                    sparrow::next(data_buffer.begin(), offset_end),
-                    data_buffer.end(),
-                    sparrow::next(data_buffer.begin(), offset_end + shift_byte_count)
+                    data_begin + data_buffer_distance(offset_end),
+                    data_end,
+                    data_begin + data_buffer_distance(offset_end + shift_byte_count)
                 );
                 data_buffer.resize(new_data_buffer_size);
             }
@@ -1224,11 +1230,28 @@ namespace sparrow
             rhs,
             [](const auto& val)
             {
-                return static_cast<std::uint8_t>(val);
+                return static_cast<data_value_type>(val);
             }
         );
+        auto* data_begin = data_buffer.template data<data_value_type>();
         // Copy the new value into the buffer
-        std::copy(std::ranges::begin(tmp), std::ranges::end(tmp), sparrow::next(data_buffer.begin(), offset_beg));
+        std::copy(std::ranges::begin(tmp), std::ranges::end(tmp), data_begin + data_buffer_distance(offset_beg));
+    }
+
+    template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>
+    constexpr auto variable_size_binary_array_impl<T, CR, OT, Ext>::data_buffer_distance(offset_type byte_offset)
+        const -> std::ptrdiff_t
+    {
+        using promoted_type = std::common_type_t<offset_type, std::ptrdiff_t>;
+        SPARROW_ASSERT_TRUE(
+            static_cast<promoted_type>(byte_offset)
+            >= static_cast<promoted_type>(std::numeric_limits<std::ptrdiff_t>::min())
+        );
+        SPARROW_ASSERT_TRUE(
+            static_cast<promoted_type>(byte_offset)
+            <= static_cast<promoted_type>(std::numeric_limits<std::ptrdiff_t>::max())
+        );
+        return static_cast<std::ptrdiff_t>(byte_offset);
     }
 
     template <std::ranges::sized_range T, class CR, layout_offset OT, typename Ext>
@@ -1363,11 +1386,20 @@ namespace sparrow
     {
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
         const OT offset_begin = *offset(idx);
-        const std::vector<uint8_t> casted_value{value.cbegin(), value.cend()};
+        std::vector<std::uint8_t> casted_value;
+        casted_value.reserve(value.size());
+        for (const auto& item : value)
+        {
+            casted_value.push_back(static_cast<std::uint8_t>(item));
+        }
         const repeat_view<std::vector<uint8_t>> my_repeat_view{casted_value, count};
         const auto joined_repeated_value_range = std::ranges::views::join(my_repeat_view);
         auto& data_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
-        const auto pos_to_insert = sparrow::next(data_buffer.cbegin(), offset_begin);
+        const auto* data_begin = data_buffer.template data<std::uint8_t>();
+        using data_buffer_type = std::remove_reference_t<decltype(data_buffer)>;
+        const auto pos_to_insert = typename data_buffer_type::const_iterator(
+            data_begin + data_buffer_distance(offset_begin)
+        );
         data_buffer.insert(pos_to_insert, joined_repeated_value_range.begin(), joined_repeated_value_range.end());
         insert_offset(offsets_cbegin() + idx + 1, static_cast<offset_type>(value.size()), count);
         return sparrow::next(value_begin(), idx);
@@ -1433,19 +1465,21 @@ namespace sparrow
         data_buffer_adaptor.resize(data_buffer_adaptor.size() + cumulative_sizes);
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
         const OT offset_begin = *offset(idx);
-        auto insert_pos = sparrow::next(data_buffer_adaptor.begin(), offset_begin);
+        auto* data_begin = data_buffer_adaptor.data();
+        auto* data_end = data_begin + static_cast<std::ptrdiff_t>(data_buffer_adaptor.size());
+        auto* insert_pos = data_begin + data_buffer_distance(offset_begin);
 
         // Move elements to make space for the new value
         std::move_backward(
             insert_pos,
-            sparrow::next(data_buffer_adaptor.end(), -static_cast<difference_type>(cumulative_sizes)),
-            data_buffer_adaptor.end()
+            data_end - static_cast<std::ptrdiff_t>(cumulative_sizes),
+            data_end
         );
 
         for (const T& value : values)
         {
             std::copy(value.begin(), value.end(), insert_pos);
-            std::advance(insert_pos, value.size());
+            std::advance(insert_pos, static_cast<std::ptrdiff_t>(value.size()));
         }
 
         const auto sizes_of_each_value = std::ranges::views::transform(
@@ -1541,8 +1575,14 @@ namespace sparrow
         const auto offset_begin = *offset(index);
         const auto offset_end = *offset(index + count);
         const size_t difference = static_cast<size_t>(offset_end - offset_begin);
+        auto* data_begin = data_buffer.template data<data_value_type>();
+        auto* data_end = data_begin + static_cast<std::ptrdiff_t>(data_buffer.size());
         // move the values after the erased ones
-        std::move(data_buffer.begin() + offset_end, data_buffer.end(), data_buffer.begin() + offset_begin);
+        std::move(
+            data_begin + data_buffer_distance(offset_end),
+            data_end,
+            data_begin + data_buffer_distance(offset_begin)
+        );
         data_buffer.resize(data_buffer.size() - difference);
         // adjust the offsets for the subsequent elements
         erase_offsets(offset(index), count);
