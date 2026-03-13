@@ -794,8 +794,8 @@ namespace sparrow
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
         [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
-        [[nodiscard]] constexpr offset_type* make_list_offsets();
-        [[nodiscard]] constexpr offset_type* make_list_sizes();
+        [[nodiscard]] constexpr offset_type* make_list_offsets() const;
+        [[nodiscard]] constexpr offset_type* make_list_sizes() const;
 
         constexpr void resize_values(size_type new_length, list_value value);
 
@@ -1205,12 +1205,8 @@ namespace sparrow
     template <bool BIG>
     constexpr auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
-        // Use the live owning buffer data directly to avoid stale buffer_view pointers
-        // after buffer reallocation (e.g. during insert/erase operations).
-        return reinterpret_cast<offset_type*>(
-                   this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX].data()
-               )
-               + this->get_arrow_proxy().offset();
+        return this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<offset_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
     template <bool BIG>
@@ -1259,6 +1255,7 @@ namespace sparrow
             offset_adaptor[idx + k] = flat_insert_offset + static_cast<mutable_offset_type>(k) * val_sz;
         }
 
+        this->get_arrow_proxy().update_buffers();
         p_list_offsets = make_list_offsets();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
@@ -1315,6 +1312,7 @@ namespace sparrow
         }
         offset_adaptor.resize(n + 1 - count);
 
+        this->get_arrow_proxy().update_buffers();
         p_list_offsets = make_list_offsets();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
@@ -1472,25 +1470,17 @@ namespace sparrow
     }
 
     template <bool BIG>
-    constexpr auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
+    constexpr auto list_view_array_impl<BIG>::make_list_offsets() const -> offset_type*
     {
-        // Use the live owning buffer data directly to avoid stale buffer_view pointers
-        // after buffer reallocation (e.g. during insert/erase operations).
-        return reinterpret_cast<offset_type*>(
-                   this->get_arrow_proxy().get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX].data()
-               )
-               + this->get_arrow_proxy().offset();
+        return this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<offset_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
     template <bool BIG>
-    constexpr auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
+    constexpr auto list_view_array_impl<BIG>::make_list_sizes() const -> offset_type*
     {
-        // Use the live owning buffer data directly to avoid stale buffer_view pointers
-        // after buffer reallocation (e.g. during insert/erase operations).
-        return reinterpret_cast<offset_type*>(
-                   this->get_arrow_proxy().get_array_private_data()->buffers()[SIZES_BUFFER_INDEX].data()
-               )
-               + this->get_arrow_proxy().offset();
+        return this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].template data<offset_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
     template <bool BIG>
@@ -1544,6 +1534,7 @@ namespace sparrow
             sizes_adaptor[idx + k] = static_cast<mutable_size_type>(val_sz);
         }
 
+        this->get_arrow_proxy().update_buffers();
         p_list_offsets = make_list_offsets();
         p_list_sizes = make_list_sizes();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
@@ -1596,6 +1587,7 @@ namespace sparrow
         offset_adaptor.resize(n - count);
         sizes_adaptor.resize(n - count);
 
+        this->get_arrow_proxy().update_buffers();
         p_list_offsets = make_list_offsets();
         p_list_sizes = make_list_sizes();
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+
 #include "sparrow/array.hpp"
 #include "sparrow/list_array.hpp"
 #include "sparrow/primitive_array.hpp"
@@ -24,6 +26,58 @@ namespace sparrow
 {
     namespace test
     {
+        template <class LIST_ARRAY>
+        void check_sequential_lists(const LIST_ARRAY& list_arr, const std::vector<std::size_t>& sizes)
+        {
+            REQUIRE_EQ(list_arr.size(), sizes.size());
+
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
+            }
+
+            std::int16_t flat_index = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                auto list = list_arr[i].value();
+                for (std::size_t j = 0; j < sizes[i]; ++j)
+                {
+                    CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
+                    ++flat_index;
+                }
+            }
+        }
+
+        std::uint8_t* copy_external_buffer(const buffer<std::uint8_t>& source)
+        {
+            auto* destination = new std::uint8_t[source.size()];
+            std::copy(source.begin(), source.end(), destination);
+            return destination;
+        }
+
+        std::uint8_t* make_external_list_offsets_buffer(const std::vector<std::size_t>& sizes)
+        {
+            auto* raw_buffer = new std::uint8_t[(sizes.size() + 1) * sizeof(std::int32_t)];
+            auto* offsets = reinterpret_cast<std::int32_t*>(raw_buffer);
+            offsets[0] = 0;
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                offsets[i + 1] = offsets[i] + static_cast<std::int32_t>(sizes[i]);
+            }
+            return raw_buffer;
+        }
+
+        std::uint8_t* make_external_list_sizes_buffer(const std::vector<std::size_t>& sizes)
+        {
+            auto* raw_buffer = new std::uint8_t[sizes.size() * sizeof(std::uint32_t)];
+            auto* list_sizes = reinterpret_cast<std::uint32_t*>(raw_buffer);
+            for (std::size_t i = 0; i < sizes.size(); ++i)
+            {
+                list_sizes[i] = static_cast<std::uint32_t>(sizes[i]);
+            }
+            return raw_buffer;
+        }
+
         template <class T>
         arrow_proxy make_list_proxy(size_t n_flat, const std::vector<size_t>& sizes)
         {
@@ -47,28 +101,80 @@ namespace sparrow
             return arrow_proxy(std::move(arr), std::move(schema));
         }
 
+        template <class T>
+        arrow_proxy make_external_list_proxy(size_t n_flat, const std::vector<size_t>& sizes)
+        {
+            ArrowArray flat_arr{};
+            ArrowSchema flat_schema{};
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0, {});
+            flat_schema.name = "the flat array";
+
+            ArrowSchema schema{};
+            schema.format = "+l";
+            schema.name = "test";
+            schema.metadata = nullptr;
+            schema.flags = static_cast<int64_t>(ArrowFlag::NULLABLE);
+            schema.n_children = 1;
+            schema.children = new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))};
+            schema.dictionary = nullptr;
+            schema.release = &release_external_arrow_schema;
+
+            ArrowArray arr{};
+            arr.length = static_cast<std::int64_t>(sizes.size());
+            arr.null_count = 0;
+            arr.offset = 0;
+            arr.n_buffers = 2;
+            auto** buffers = new std::uint8_t*[2];
+            buffers[0] = copy_external_buffer(make_bitmap_buffer(sizes.size(), std::vector<std::size_t>{}));
+            buffers[1] = make_external_list_offsets_buffer(sizes);
+            arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buffers));
+            arr.n_children = 1;
+            arr.children = new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))};
+            arr.dictionary = nullptr;
+            arr.release = &release_external_arrow_array;
+
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+
+        template <class T>
+        arrow_proxy make_external_list_view_proxy(size_t n_flat, const std::vector<size_t>& sizes)
+        {
+            ArrowArray flat_arr{};
+            ArrowSchema flat_schema{};
+            test::fill_schema_and_array<T>(flat_schema, flat_arr, n_flat, 0, {});
+            flat_schema.name = "the flat array";
+
+            ArrowSchema schema{};
+            schema.format = "+vl";
+            schema.name = "test";
+            schema.metadata = nullptr;
+            schema.flags = static_cast<int64_t>(ArrowFlag::NULLABLE);
+            schema.n_children = 1;
+            schema.children = new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))};
+            schema.dictionary = nullptr;
+            schema.release = &release_external_arrow_schema;
+
+            ArrowArray arr{};
+            arr.length = static_cast<std::int64_t>(sizes.size());
+            arr.null_count = 0;
+            arr.offset = 0;
+            arr.n_buffers = 3;
+            auto** buffers = new std::uint8_t*[3];
+            buffers[0] = copy_external_buffer(make_bitmap_buffer(sizes.size(), std::vector<std::size_t>{}));
+            buffers[1] = make_external_list_offsets_buffer(sizes);
+            buffers[2] = make_external_list_sizes_buffer(sizes);
+            arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buffers));
+            arr.n_children = 1;
+            arr.children = new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))};
+            arr.dictionary = nullptr;
+            arr.release = &release_external_arrow_array;
+
+            return arrow_proxy(std::move(arr), std::move(schema));
+        }
+
         void check_array(const list_array& list_arr, const std::vector<std::size_t>& sizes)
         {
-            // check the size
-            REQUIRE_EQ(list_arr.size(), sizes.size());
-
-            // check the sizes
-            for (std::size_t i = 0; i < sizes.size(); ++i)
-            {
-                CHECK_EQ(list_arr[i].value().size(), sizes[i]);
-            }
-
-            // check the values
-            std::int16_t flat_index = 0;
-            for (std::size_t i = 0; i < sizes.size(); ++i)
-            {
-                auto list = list_arr[i].value();
-                for (std::size_t j = 0; j < sizes[i]; ++j)
-                {
-                    CHECK_NULLABLE_VARIANT_EQ(list[j], flat_index);
-                    ++flat_index;
-                }
-            }
+            check_sequential_lists(list_arr, sizes);
         }
     }
 
@@ -121,6 +227,13 @@ namespace sparrow
                     test::check_array(list_arr, sizes);
                 }
             }
+        }
+
+        TEST_CASE("construct from external ArrowArray")
+        {
+            const std::vector<std::size_t> sizes = {1, 2, 3, 4};
+            list_array list_arr(test::make_external_list_proxy<std::int16_t>(10, sizes));
+            test::check_sequential_lists(list_arr, sizes);
         }
 
         TEST_CASE_TEMPLATE("list[T]", T, std::uint8_t, std::int32_t, float32_t, float64_t)
@@ -345,6 +458,13 @@ namespace sparrow
             CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[0], std::int16_t(0));
             CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[1], std::int16_t(1));
             CHECK_NULLABLE_VARIANT_EQ(list_view_arr[3].value()[2], std::int16_t(2));
+        }
+
+        TEST_CASE("construct from external ArrowArray")
+        {
+            const std::vector<std::size_t> sizes = {1, 2, 3, 4};
+            list_view_array list_view_arr(test::make_external_list_view_proxy<std::int16_t>(10, sizes));
+            test::check_sequential_lists(list_view_arr, sizes);
         }
 
         TEST_CASE_TEMPLATE("list_view_array[T]", T, std::uint8_t, std::int32_t, float32_t, float64_t)
