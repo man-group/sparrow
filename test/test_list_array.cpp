@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <cstring>
 
 #include "sparrow/array.hpp"
 #include "sparrow/list_array.hpp"
@@ -58,11 +59,16 @@ namespace sparrow
         std::uint8_t* make_external_list_offsets_buffer(const std::vector<std::size_t>& sizes)
         {
             auto* raw_buffer = new std::uint8_t[(sizes.size() + 1) * sizeof(std::int32_t)];
-            auto* offsets = reinterpret_cast<std::int32_t*>(raw_buffer);
-            offsets[0] = 0;
+            std::int32_t current_offset = 0;
+            std::memcpy(raw_buffer, &current_offset, sizeof(current_offset));
             for (std::size_t i = 0; i < sizes.size(); ++i)
             {
-                offsets[i + 1] = offsets[i] + static_cast<std::int32_t>(sizes[i]);
+                current_offset += static_cast<std::int32_t>(sizes[i]);
+                std::memcpy(
+                    raw_buffer + (i + 1) * sizeof(current_offset),
+                    &current_offset,
+                    sizeof(current_offset)
+                );
             }
             return raw_buffer;
         }
@@ -70,10 +76,10 @@ namespace sparrow
         std::uint8_t* make_external_list_sizes_buffer(const std::vector<std::size_t>& sizes)
         {
             auto* raw_buffer = new std::uint8_t[sizes.size() * sizeof(std::uint32_t)];
-            auto* list_sizes = reinterpret_cast<std::uint32_t*>(raw_buffer);
             for (std::size_t i = 0; i < sizes.size(); ++i)
             {
-                list_sizes[i] = static_cast<std::uint32_t>(sizes[i]);
+                const auto list_size = static_cast<std::uint32_t>(sizes[i]);
+                std::memcpy(raw_buffer + i * sizeof(list_size), &list_size, sizeof(list_size));
             }
             return raw_buffer;
         }
