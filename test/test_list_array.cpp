@@ -65,11 +65,7 @@ namespace sparrow
             for (std::size_t i = 0; i < sizes.size(); ++i)
             {
                 current_offset += static_cast<std::int32_t>(sizes[i]);
-                std::memcpy(
-                    raw_buffer + (i + 1) * sizeof(current_offset),
-                    &current_offset,
-                    sizeof(current_offset)
-                );
+                std::memcpy(raw_buffer + (i + 1) * sizeof(current_offset), &current_offset, sizeof(current_offset));
             }
             return raw_buffer;
         }
