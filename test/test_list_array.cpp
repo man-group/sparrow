@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <initializer_list>
 #include <stdexcept>
 
 #include "sparrow/array.hpp"
@@ -695,6 +696,52 @@ namespace sparrow
         }
     }
 
+    namespace test
+    {
+        template <class LIST_ARRAY>
+        void check_int16_list(const LIST_ARRAY& arr, std::size_t idx, std::initializer_list<std::int16_t> expected)
+        {
+            REQUIRE(arr[idx].has_value());
+            const auto list = arr[idx].value();
+            REQUIRE_EQ(list.size(), expected.size());
+
+            std::size_t value_idx = 0;
+            for (const auto expected_value : expected)
+            {
+                CHECK_NULLABLE_VARIANT_EQ(list[value_idx], expected_value);
+                ++value_idx;
+            }
+        }
+
+        inline list_array make_int16_list_array(
+            const std::vector<nullable<std::int16_t>>& flat_data,
+            const std::vector<std::size_t>& sizes
+        )
+        {
+            array flat{primitive_array<std::int16_t>(flat_data)};
+            return list_array(std::move(flat), list_array::offset_from_sizes(sizes), true);
+        }
+
+        inline list_view_array make_int16_list_view_array(
+            const std::vector<nullable<std::int16_t>>& flat_data,
+            const std::vector<std::int32_t>& offsets,
+            const std::vector<std::uint32_t>& sizes
+        )
+        {
+            array flat{primitive_array<std::int16_t>(flat_data)};
+            return list_view_array(std::move(flat), offsets, sizes, std::vector<std::size_t>{});
+        }
+
+        inline fixed_sized_list_array make_int16_fixed_sized_list_array(
+            std::uint64_t list_size,
+            const std::vector<nullable<std::int16_t>>& flat_data
+        )
+        {
+            array flat{primitive_array<std::int16_t>(flat_data)};
+            return fixed_sized_list_array(list_size, std::move(flat), true);
+        }
+    }
+
     /***********************************
      * list_array mutation tests       *
      ***********************************/
@@ -866,6 +913,36 @@ namespace sparrow
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
         }
+
+        TEST_CASE("insert range in the middle")
+        {
+            arrow_proxy proxy = test::make_list_proxy<std::int16_t>(5, {2, 3});
+            list_array arr(std::move(proxy));
+
+            list_array source = test::make_int16_list_array(
+                {
+                    make_nullable<std::int16_t>(10),
+                    make_nullable<std::int16_t>(11),
+                    make_nullable<std::int16_t>(12),
+                    make_nullable<std::int16_t>(20),
+                    make_nullable<std::int16_t>(21)
+                },
+                {3, 2}
+            );
+            const std::vector<list_array::value_type> to_insert = {
+                make_nullable(source[0].value()),
+                make_nullable(source[1].value())
+            };
+
+            const auto it = arr.insert(sparrow::next(arr.cbegin(), 1), to_insert.begin(), to_insert.end());
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(it, sparrow::next(arr.begin(), 1));
+            test::check_int16_list(arr, 0, {0, 1});
+            test::check_int16_list(arr, 1, {10, 11, 12});
+            test::check_int16_list(arr, 2, {20, 21});
+            test::check_int16_list(arr, 3, {2, 3, 4});
+        }
     }
 
     /***********************************
@@ -1006,6 +1083,36 @@ namespace sparrow
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], std::int16_t(0));
             CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[1], std::int16_t(1));
         }
+
+        TEST_CASE("insert range at beginning")
+        {
+            list_view_array arr = test::make_test_list_view_array();
+
+            list_view_array source = test::make_int16_list_view_array(
+                {
+                    make_nullable<std::int16_t>(10),
+                    make_nullable<std::int16_t>(11),
+                    make_nullable<std::int16_t>(20),
+                    make_nullable<std::int16_t>(21),
+                    make_nullable<std::int16_t>(22)
+                },
+                {0, 2},
+                {2, 3}
+            );
+            const std::vector<list_view_array::value_type> to_insert = {
+                make_nullable(source[0].value()),
+                make_nullable(source[1].value())
+            };
+
+            const auto it = arr.insert(arr.cbegin(), to_insert.begin(), to_insert.end());
+
+            REQUIRE_EQ(arr.size(), 4u);
+            CHECK_EQ(it, arr.begin());
+            test::check_int16_list(arr, 0, {10, 11});
+            test::check_int16_list(arr, 1, {20, 21, 22});
+            test::check_int16_list(arr, 2, {0, 1});
+            test::check_int16_list(arr, 3, {2, 3, 4});
+        }
     }
 
     /**********************************************
@@ -1138,6 +1245,41 @@ namespace sparrow
             CHECK_EQ(arr[4].value().size(), 5u);  // newly inserted
             CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], std::int16_t(0));
             CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[4], std::int16_t(4));
+        }
+
+        TEST_CASE("insert range at end")
+        {
+            arrow_proxy proxy = test::make_fixed_sized_list_proxy<std::int16_t>(20, 5);
+            fixed_sized_list_array arr(std::move(proxy));
+
+            fixed_sized_list_array source = test::make_int16_fixed_sized_list_array(
+                5,
+                {
+                    make_nullable<std::int16_t>(30),
+                    make_nullable<std::int16_t>(31),
+                    make_nullable<std::int16_t>(32),
+                    make_nullable<std::int16_t>(33),
+                    make_nullable<std::int16_t>(34),
+                    make_nullable<std::int16_t>(40),
+                    make_nullable<std::int16_t>(41),
+                    make_nullable<std::int16_t>(42),
+                    make_nullable<std::int16_t>(43),
+                    make_nullable<std::int16_t>(44)
+                }
+            );
+            const std::vector<fixed_sized_list_array::value_type> to_insert = {
+                make_nullable(source[0].value()),
+                make_nullable(source[1].value())
+            };
+
+            const auto it = arr.insert(arr.cend(), to_insert.begin(), to_insert.end());
+
+            REQUIRE_EQ(arr.size(), 6u);
+            CHECK_EQ(it, sparrow::next(arr.begin(), 4));
+            test::check_int16_list(arr, 0, {0, 1, 2, 3, 4});
+            test::check_int16_list(arr, 3, {15, 16, 17, 18, 19});
+            test::check_int16_list(arr, 4, {30, 31, 32, 33, 34});
+            test::check_int16_list(arr, 5, {40, 41, 42, 43, 44});
         }
     }
 }

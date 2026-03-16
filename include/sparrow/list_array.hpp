@@ -1310,12 +1310,17 @@ namespace sparrow
         -> value_iterator
     {
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
-        size_type counter = 0;
-        for (auto it = first; it != last; ++it, ++counter)
+        auto& proxy = this->get_arrow_proxy();
+        const size_type original_size = this->size();
+        size_type inserted_count = 0;
+        for (auto it = first; it != last; ++it)
         {
-            auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + counter));
+            auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + inserted_count));
             insert_value(cur_pos, static_cast<list_value>(*it), 1);
+            ++inserted_count;
+            proxy.set_length(original_size + inserted_count);
         }
+        proxy.set_length(original_size);
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
@@ -1612,12 +1617,17 @@ namespace sparrow
         -> value_iterator
     {
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
-        size_type counter = 0;
-        for (auto it = first; it != last; ++it, ++counter)
+        auto& proxy = this->get_arrow_proxy();
+        const size_type original_size = this->size();
+        size_type inserted_count = 0;
+        for (auto it = first; it != last; ++it)
         {
-            auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + counter));
+            auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + inserted_count));
             insert_value(cur_pos, static_cast<list_value>(*it), 1);
+            ++inserted_count;
+            proxy.set_length(original_size + inserted_count);
         }
+        proxy.set_length(original_size);
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
