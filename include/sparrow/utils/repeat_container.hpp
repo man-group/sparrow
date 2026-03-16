@@ -126,7 +126,9 @@ namespace sparrow
             std::is_nothrow_constructible_v<typename storage_traits::storage_type, typename storage_traits::constructor_reference>
         );
 
-        constexpr repeat_view(value_type&& value, size_t count) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+        constexpr repeat_view(value_type&& value, size_t count) noexcept(
+            std::is_nothrow_move_constructible_v<value_type>
+        )
             requires(!std::is_reference_v<T>);
 
         constexpr const_iterator begin() const noexcept;
@@ -218,7 +220,8 @@ namespace sparrow
     }
 
     template <typename T>
-    [[nodiscard]] constexpr const typename repeat_view<T>::value_type& repeat_view<T>::stored_value() const noexcept
+    [[nodiscard]] constexpr const typename repeat_view<T>::value_type&
+    repeat_view<T>::stored_value() const noexcept
     {
         return storage_traits::get(m_value);
     }
