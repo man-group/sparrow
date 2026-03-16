@@ -14,12 +14,56 @@
 
 #pragma once
 
+#include <functional>
 #include <ranges>
+#include <type_traits>
+#include <utility>
 
 #include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
+    namespace detail
+    {
+        template <typename T>
+        struct repeat_view_storage_traits
+        {
+            using value_type = T;
+            using storage_type = T;
+            using constructor_reference = const value_type&;
+
+            [[nodiscard]] static constexpr const value_type& get(const storage_type& value) noexcept
+            {
+                return value;
+            }
+        };
+
+        template <typename T>
+        struct repeat_view_storage_traits<T&>
+        {
+            using value_type = std::remove_reference_t<T>;
+            using storage_type = std::reference_wrapper<value_type>;
+            using constructor_reference = value_type&;
+
+            [[nodiscard]] static constexpr const value_type& get(const storage_type& value) noexcept
+            {
+                return value.get();
+            }
+        };
+
+        template <typename T>
+        struct repeat_view_storage_traits<const T&>
+        {
+            using value_type = std::remove_cv_t<T>;
+            using storage_type = std::reference_wrapper<const std::remove_reference_t<T>>;
+            using constructor_reference = const std::remove_reference_t<T>&;
+
+            [[nodiscard]] static constexpr const value_type& get(const storage_type& value) noexcept
+            {
+                return value.get();
+            }
+        };
+    }
 
     template <typename T>
     class repeat_view_iterator
@@ -68,8 +112,9 @@ namespace sparrow
     {
     public:
 
-        using value_type = T;
-        using self_type = repeat_view<value_type>;
+        using storage_traits = detail::repeat_view_storage_traits<T>;
+        using value_type = typename storage_traits::value_type;
+        using self_type = repeat_view<T>;
         using const_iterator = repeat_view_iterator<value_type>;
 
         /**
@@ -77,7 +122,12 @@ namespace sparrow
          * @param value The value to repeat
          * @param count The number of times to repeat the value
          */
-        constexpr repeat_view(const T& value, size_t count) noexcept;
+        constexpr repeat_view(typename storage_traits::constructor_reference value, size_t count) noexcept(
+            std::is_nothrow_constructible_v<typename storage_traits::storage_type, typename storage_traits::constructor_reference>
+        );
+
+        constexpr repeat_view(value_type&& value, size_t count) noexcept(std::is_nothrow_move_constructible_v<value_type>)
+            requires(!std::is_reference_v<T>);
 
         constexpr const_iterator begin() const noexcept;
         constexpr const_iterator end() const noexcept;
@@ -87,9 +137,17 @@ namespace sparrow
 
     private:
 
-        T m_value;
-        size_t m_count;
+        [[nodiscard]] constexpr const value_type& stored_value() const noexcept;
+
+        typename storage_traits::storage_type m_value;
+        size_t m_count = 0;
     };
+
+    template <typename T>
+    repeat_view(T&, size_t) -> repeat_view<T&>;
+
+    template <typename T>
+    repeat_view(T&&, size_t) -> repeat_view<std::remove_cvref_t<T>>;
 
     template <typename T>
     constexpr repeat_view_iterator<T>::repeat_view_iterator(const T& value, size_t index)
@@ -141,34 +199,52 @@ namespace sparrow
     }
 
     template <typename T>
-    constexpr repeat_view<T>::repeat_view(const T& value, size_t count) noexcept
+    constexpr repeat_view<T>::repeat_view(typename storage_traits::constructor_reference value, size_t count) noexcept(
+        std::is_nothrow_constructible_v<typename storage_traits::storage_type, typename storage_traits::constructor_reference>
+    )
         : m_value(value)
         , m_count(count)
     {
     }
 
     template <typename T>
+    constexpr repeat_view<T>::repeat_view(value_type&& value, size_t count) noexcept(
+        std::is_nothrow_move_constructible_v<value_type>
+    )
+        requires(!std::is_reference_v<T>)
+        : m_value(std::move(value))
+        , m_count(count)
+    {
+    }
+
+    template <typename T>
+    [[nodiscard]] constexpr const typename repeat_view<T>::value_type& repeat_view<T>::stored_value() const noexcept
+    {
+        return storage_traits::get(m_value);
+    }
+
+    template <typename T>
     constexpr auto repeat_view<T>::begin() const noexcept -> const_iterator
     {
-        return const_iterator(m_value, 0);
+        return const_iterator(stored_value(), 0);
     }
 
     template <typename T>
     constexpr auto repeat_view<T>::end() const noexcept -> const_iterator
     {
-        return const_iterator(m_value, m_count);
+        return const_iterator(stored_value(), m_count);
     }
 
     template <typename T>
     constexpr auto repeat_view<T>::cbegin() const noexcept -> const_iterator
     {
-        return const_iterator(m_value, 0);
+        return const_iterator(stored_value(), 0);
     }
 
     template <typename T>
     constexpr auto repeat_view<T>::cend() const noexcept -> const_iterator
     {
-        return const_iterator(m_value, m_count);
+        return const_iterator(stored_value(), m_count);
     }
 
     template <typename T>

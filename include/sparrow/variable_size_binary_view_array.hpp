@@ -1289,7 +1289,7 @@ namespace sparrow
     variable_size_binary_view_array_impl<T, CR, Ext>::insert_value(const_value_iterator pos, U value, size_type count)
         -> value_iterator
     {
-        const auto repeat_view = sparrow::repeat_view<U>(value, count);
+        const auto repeat_view = sparrow::repeat_view{value, count};
         return insert_values(pos, std::ranges::begin(repeat_view), std::ranges::end(repeat_view));
     }
 

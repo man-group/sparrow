@@ -1387,13 +1387,14 @@ namespace sparrow
     {
         const auto idx = static_cast<size_t>(std::distance(value_cbegin(), pos));
         const OT offset_begin = *offset(idx);
-        std::vector<std::uint8_t> casted_value;
-        casted_value.reserve(value.size());
-        for (const auto& item : value)
-        {
-            casted_value.push_back(static_cast<std::uint8_t>(item));
-        }
-        const repeat_view<std::vector<uint8_t>> my_repeat_view{casted_value, count};
+        auto casted_value = std::ranges::views::transform(
+            value,
+            [](const auto& val)
+            {
+                return static_cast<std::uint8_t>(val);
+            }
+        );
+        const auto my_repeat_view = repeat_view{casted_value, count};
         const auto joined_repeated_value_range = std::ranges::views::join(my_repeat_view);
         auto& data_buffer = this->get_arrow_proxy().get_array_private_data()->buffers()[DATA_BUFFER_INDEX];
         const auto* data_begin = data_buffer.template data<std::uint8_t>();
