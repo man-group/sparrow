@@ -1264,8 +1264,12 @@ namespace sparrow
         }
 
         // Update offset buffer
-        const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value.size());
-        const mutable_offset_type count_mt = static_cast<mutable_offset_type>(count);
+        const auto value_size = value.size();
+        const auto count_size = count;
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value_size));
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(count_size));
+        const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value_size);
+        const mutable_offset_type count_mt = static_cast<mutable_offset_type>(count_size);
         const auto max_offset = std::numeric_limits<mutable_offset_type>::max();
         // Check multiplication overflow for total_delta = count * val_sz
         if (val_sz != mutable_offset_type{})
