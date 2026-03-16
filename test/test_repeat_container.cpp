@@ -24,7 +24,7 @@ TEST_SUITE("repeat_container")
 
     TEST_CASE("constructor")
     {
-        const sparrow::repeat_view view(value, 5);
+        [[maybe_unused]] const sparrow::repeat_view view(value, 5);
     }
 
     TEST_CASE("begin")
