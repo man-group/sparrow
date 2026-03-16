@@ -1521,10 +1521,7 @@ namespace sparrow
     {
         const auto offset = p_list_offsets[i];
         SPARROW_ASSERT_TRUE(std::in_range<std::remove_const_t<offset_type>>(p_list_sizes[i]));
-        return std::make_pair(
-            offset,
-            offset + static_cast<offset_type>(p_list_sizes[i])
-        );
+        return std::make_pair(offset, offset + static_cast<offset_type>(p_list_sizes[i]));
     }
 
     template <bool BIG>
