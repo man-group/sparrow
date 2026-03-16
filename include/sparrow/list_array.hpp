@@ -814,7 +814,7 @@ namespace sparrow
         [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
         [[nodiscard]] constexpr offset_type* make_list_offsets() const;
-        [[nodiscard]] constexpr offset_type* make_list_sizes() const;
+        [[nodiscard]] constexpr const list_size_type* make_list_sizes() const;
 
         constexpr void resize_values(size_type new_length, list_value value);
 
@@ -827,7 +827,7 @@ namespace sparrow
         constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
         offset_type* p_list_offsets;
-        offset_type* p_list_sizes;
+        const list_size_type* p_list_sizes;
 
         // friend classes
         friend class array_crtp_base<self_type>;
@@ -1520,7 +1520,11 @@ namespace sparrow
         -> std::pair<offset_type, offset_type>
     {
         const auto offset = p_list_offsets[i];
-        return std::make_pair(offset, offset + p_list_sizes[i]);
+        SPARROW_ASSERT_TRUE(std::in_range<std::remove_const_t<offset_type>>(p_list_sizes[i]));
+        return std::make_pair(
+            offset,
+            offset + static_cast<offset_type>(p_list_sizes[i])
+        );
     }
 
     template <bool BIG>
@@ -1531,9 +1535,9 @@ namespace sparrow
     }
 
     template <bool BIG>
-    constexpr auto list_view_array_impl<BIG>::make_list_sizes() const -> offset_type*
+    constexpr auto list_view_array_impl<BIG>::make_list_sizes() const -> const list_size_type*
     {
-        return this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].template data<offset_type>()
+        return this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].template data<list_size_type>()
                + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
