@@ -699,7 +699,8 @@ namespace sparrow
     namespace test
     {
         template <class LIST_ARRAY>
-        void check_int16_list(const LIST_ARRAY& arr, std::size_t idx, std::initializer_list<std::int16_t> expected)
+        void
+        check_int16_list(const LIST_ARRAY& arr, std::size_t idx, std::initializer_list<std::int16_t> expected)
         {
             REQUIRE(arr[idx].has_value());
             const auto list = arr[idx].value();
@@ -732,10 +733,8 @@ namespace sparrow
             return list_view_array(std::move(flat), offsets, sizes, std::vector<std::size_t>{});
         }
 
-        inline fixed_sized_list_array make_int16_fixed_sized_list_array(
-            std::uint64_t list_size,
-            const std::vector<nullable<std::int16_t>>& flat_data
-        )
+        inline fixed_sized_list_array
+        make_int16_fixed_sized_list_array(std::uint64_t list_size, const std::vector<nullable<std::int16_t>>& flat_data)
         {
             array flat{primitive_array<std::int16_t>(flat_data)};
             return fixed_sized_list_array(list_size, std::move(flat), true);
@@ -920,13 +919,11 @@ namespace sparrow
             list_array arr(std::move(proxy));
 
             list_array source = test::make_int16_list_array(
-                {
-                    make_nullable<std::int16_t>(10),
-                    make_nullable<std::int16_t>(11),
-                    make_nullable<std::int16_t>(12),
-                    make_nullable<std::int16_t>(20),
-                    make_nullable<std::int16_t>(21)
-                },
+                {make_nullable<std::int16_t>(10),
+                 make_nullable<std::int16_t>(11),
+                 make_nullable<std::int16_t>(12),
+                 make_nullable<std::int16_t>(20),
+                 make_nullable<std::int16_t>(21)},
                 {3, 2}
             );
             const std::vector<list_array::value_type> to_insert = {
@@ -1089,13 +1086,11 @@ namespace sparrow
             list_view_array arr = test::make_test_list_view_array();
 
             list_view_array source = test::make_int16_list_view_array(
-                {
-                    make_nullable<std::int16_t>(10),
-                    make_nullable<std::int16_t>(11),
-                    make_nullable<std::int16_t>(20),
-                    make_nullable<std::int16_t>(21),
-                    make_nullable<std::int16_t>(22)
-                },
+                {make_nullable<std::int16_t>(10),
+                 make_nullable<std::int16_t>(11),
+                 make_nullable<std::int16_t>(20),
+                 make_nullable<std::int16_t>(21),
+                 make_nullable<std::int16_t>(22)},
                 {0, 2},
                 {2, 3}
             );
@@ -1254,18 +1249,16 @@ namespace sparrow
 
             fixed_sized_list_array source = test::make_int16_fixed_sized_list_array(
                 5,
-                {
-                    make_nullable<std::int16_t>(30),
-                    make_nullable<std::int16_t>(31),
-                    make_nullable<std::int16_t>(32),
-                    make_nullable<std::int16_t>(33),
-                    make_nullable<std::int16_t>(34),
-                    make_nullable<std::int16_t>(40),
-                    make_nullable<std::int16_t>(41),
-                    make_nullable<std::int16_t>(42),
-                    make_nullable<std::int16_t>(43),
-                    make_nullable<std::int16_t>(44)
-                }
+                {make_nullable<std::int16_t>(30),
+                 make_nullable<std::int16_t>(31),
+                 make_nullable<std::int16_t>(32),
+                 make_nullable<std::int16_t>(33),
+                 make_nullable<std::int16_t>(34),
+                 make_nullable<std::int16_t>(40),
+                 make_nullable<std::int16_t>(41),
+                 make_nullable<std::int16_t>(42),
+                 make_nullable<std::int16_t>(43),
+                 make_nullable<std::int16_t>(44)}
             );
             const std::vector<fixed_sized_list_array::value_type> to_insert = {
                 make_nullable(source[0].value()),
