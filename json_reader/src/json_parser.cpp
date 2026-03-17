@@ -143,13 +143,22 @@ namespace sparrow::json_reader
         auto create_dictionary = [&](auto&& keys)
         {
             using key_element_type = std::decay_t<decltype(keys[0])>;
-            return sparrow::array{sparrow::dictionary_encoded_array<key_element_type>{
+            sparrow::array ar{sparrow::dictionary_encoded_array<key_element_type>{
                 std::forward<std::vector<key_element_type>>(keys),
                 std::move(dictionary_array),
                 std::move(index_validity),
                 name,
                 std::move(index_metadata)
             }};
+
+            if (dictionary.contains("isOrdered") && dictionary.at("isOrdered").get<bool>())
+            {
+                auto& proxy = sparrow::detail::array_access::get_arrow_proxy(ar);
+                auto flags = proxy.flags();
+                flags.insert(sparrow::ArrowFlag::DICTIONARY_ORDERED);
+                proxy.set_flags(flags);
+            }
+            return ar;
         };
 
         if (index_is_signed)
