@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
+#include <string>
+#include <vector>
+
 #include "sparrow/utils/metadata.hpp"
 
 #include "doctest/doctest.h"
@@ -49,6 +53,25 @@ TEST_SUITE("metadata")
     {
         const auto metadata_result = sparrow::get_metadata_from_key_values(sparrow::metadata_sample);
         CHECK_EQ(sparrow::metadata_buffer, metadata_result);
+    }
+
+    TEST_CASE("get_metadata_from_key_values - empty value at end")
+    {
+        const std::vector<sparrow::metadata_pair> metadata = {
+            {"key1", "val1"},
+            {"key2", ""}  // empty value as LAST entry
+        };
+        const auto buffer = sparrow::get_metadata_from_key_values(metadata);
+        const sparrow::key_value_view view(buffer.data());
+
+        std::map<std::string, std::string> m;
+        for (const auto& [k, v] : view)
+        {
+            m.emplace(std::string(k), std::string(v));
+        }
+        CHECK_EQ(m.size(), 2);
+        CHECK_EQ(m["key1"], "val1");
+        CHECK_EQ(m["key2"], "");
     }
 
     TEST_CASE("empty")
