@@ -404,7 +404,10 @@ namespace sparrow
          */
         [[nodiscard]] list_value_reverse_iterator crend() const;
 
-        /// @brief Returns a pointer to the flat array backing this list view.
+        
+
+    private:
+    /// @brief Returns a pointer to the flat array backing this list view.
         [[nodiscard]] const array_wrapper* flat_array() const noexcept
         {
             return p_flat_array;
@@ -421,8 +424,6 @@ namespace sparrow
         {
             return m_index_end;
         }
-
-    private:
 
         const array_wrapper* p_flat_array = nullptr;  ///< Pointer to underlying flattened array
         size_type m_index_begin = 0u;                 ///< Starting index in flattened array
