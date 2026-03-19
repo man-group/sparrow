@@ -76,20 +76,20 @@ namespace sparrow
          * @pre pos <= this->get_arrow_proxy().length()
          * @pre src_begin <= src_end <= source.get_arrow_proxy().length()
          */
-        virtual void insert_elements_from(
+        constexpr void insert_elements_from(
             size_type pos,
             const array_wrapper& source,
             size_type src_begin,
             size_type src_end,
             size_type count
-        ) = 0;
+        );
 
         /**
          * Erases \c count elements starting at position \c pos from this array.
          *
          * @pre pos + count <= this->get_arrow_proxy().length()
          */
-        virtual void erase_array_elements(size_type pos, size_type count) = 0;
+        void erase_array_elements(size_type pos, size_type count);
 
     protected:
 
@@ -103,6 +103,14 @@ namespace sparrow
         [[nodiscard]] virtual arrow_proxy& get_arrow_proxy_impl() = 0;
         [[nodiscard]] virtual const arrow_proxy& get_arrow_proxy_impl() const = 0;
         [[nodiscard]] virtual wrapper_ptr clone_impl() const = 0;
+        virtual void insert_elements_from_impl(
+            size_type pos,
+            const array_wrapper& source,
+            size_type src_begin,
+            size_type src_end,
+            size_type count
+        ) = 0;
+        virtual void erase_array_elements_impl(size_type pos, size_type count) = 0;
     };
 
     template <class T>
@@ -131,7 +139,7 @@ namespace sparrow
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy_impl() const override;
         [[nodiscard]] wrapper_ptr clone_impl() const override;
 
-        void insert_elements_from(
+        constexpr void insert_elements_from_impl(
             size_type pos,
             const array_wrapper& source,
             size_type src_begin,
@@ -139,7 +147,7 @@ namespace sparrow
             size_type count
         ) override;
 
-        void erase_array_elements(size_type pos, size_type count) override;
+        void erase_array_elements_impl(size_type pos, size_type count) override;
 
         using storage_type = std::variant<value_ptr<T>, std::shared_ptr<T>, T*>;
         storage_type m_storage;
@@ -179,6 +187,22 @@ namespace sparrow
     constexpr const arrow_proxy& array_wrapper::get_arrow_proxy() const
     {
         return get_arrow_proxy_impl();
+    }
+
+    constexpr void array_wrapper::insert_elements_from(
+        size_type pos,
+        const array_wrapper& source,
+        size_type src_begin,
+        size_type src_end,
+        size_type count
+    )
+    {
+        insert_elements_from_impl(pos, source, src_begin, src_end, count);
+    }
+
+    inline void array_wrapper::erase_array_elements(size_type pos, size_type count)
+    {
+        erase_array_elements_impl(pos, count);
     }
 
     constexpr array_wrapper::array_wrapper(enum data_type dt)
@@ -281,7 +305,7 @@ namespace sparrow
     }
 
     template <class T>
-    void array_wrapper_impl<T>::insert_elements_from(
+    constexpr void array_wrapper_impl<T>::insert_elements_from_impl(
         size_type pos,
         const array_wrapper& source,
         size_type src_begin,
@@ -319,13 +343,13 @@ namespace sparrow
     }
 
     template <class T>
-    void array_wrapper_impl<T>::erase_array_elements(size_type pos, size_type count)
+    void array_wrapper_impl<T>::erase_array_elements_impl(size_type pos, size_type count)
     {
         if constexpr (requires { p_array->erase(p_array->cbegin(), p_array->cbegin()); })
         {
             auto first = std::next(p_array->cbegin(), static_cast<std::ptrdiff_t>(pos));
             auto last = std::next(first, static_cast<std::ptrdiff_t>(count));
-            p_array->erase(first, last);
+            static_cast<void>(p_array->erase(first, last));
         }
         else
         {

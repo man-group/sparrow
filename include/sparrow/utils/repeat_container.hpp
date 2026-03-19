@@ -51,18 +51,6 @@ namespace sparrow
             }
         };
 
-        template <typename T>
-        struct repeat_view_storage_traits<const T&>
-        {
-            using value_type = std::remove_cv_t<T>;
-            using storage_type = std::reference_wrapper<const std::remove_reference_t<T>>;
-            using constructor_reference = const std::remove_reference_t<T>&;
-
-            [[nodiscard]] static constexpr const value_type& get(const storage_type& value) noexcept
-            {
-                return value.get();
-            }
-        };
     }
 
     template <typename T>
