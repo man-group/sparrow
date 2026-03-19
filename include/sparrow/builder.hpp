@@ -510,8 +510,9 @@ namespace sparrow
                                           | std::views::transform(
                                               [](const auto& variant) -> const type_at_index&
                                               {
-                                                  
-                                                  if (const auto* active_value = std::get_if<type_at_index>(&variant))
+                                                  if (const auto* active_value = std::get_if<type_at_index>(
+                                                          &variant
+                                                      ))
                                                   {
                                                       return *active_value;
                                                   }
