@@ -15,15 +15,24 @@
 #pragma once
 
 #include <memory>
+#include <type_traits>
+#include <utility>
 #include <variant>
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/memory.hpp"
-#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {
+    class array_wrapper;
+
+    template <class T>
+    T& unwrap_array(array_wrapper&);
+
+    template <class T>
+    const T& unwrap_array(const array_wrapper&);
+
     namespace detail
     {
         // Helper struct to allow overloading on the type of ARRAY
@@ -42,6 +51,7 @@ namespace sparrow
                 return false;
             }
         };
+
     }
 
     /**
@@ -76,7 +86,7 @@ namespace sparrow
          * @pre pos <= this->get_arrow_proxy().length()
          * @pre src_begin <= src_end <= source.get_arrow_proxy().length()
          */
-        constexpr void insert_elements_from(
+        SPARROW_API void insert_elements_from(
             size_type pos,
             const array_wrapper& source,
             size_type src_begin,
@@ -89,7 +99,7 @@ namespace sparrow
          *
          * @pre pos + count <= this->get_arrow_proxy().length()
          */
-        void erase_array_elements(size_type pos, size_type count);
+        SPARROW_API void erase_array_elements(size_type pos, size_type count);
 
     protected:
 
@@ -103,14 +113,6 @@ namespace sparrow
         [[nodiscard]] virtual arrow_proxy& get_arrow_proxy_impl() = 0;
         [[nodiscard]] virtual const arrow_proxy& get_arrow_proxy_impl() const = 0;
         [[nodiscard]] virtual wrapper_ptr clone_impl() const = 0;
-        virtual void insert_elements_from_impl(
-            size_type pos,
-            const array_wrapper& source,
-            size_type src_begin,
-            size_type src_end,
-            size_type count
-        ) = 0;
-        virtual void erase_array_elements_impl(size_type pos, size_type count) = 0;
     };
 
     template <class T>
@@ -121,6 +123,7 @@ namespace sparrow
         array_wrapper_impl(T&& ar);
         array_wrapper_impl(T* ar);
         array_wrapper_impl(std::shared_ptr<T> ar);
+        array_wrapper_impl(array_wrapper_impl&&) = delete;
 
         ~array_wrapper_impl() override = default;
 
@@ -134,31 +137,17 @@ namespace sparrow
         [[nodiscard]] constexpr enum data_type get_data_type() const noexcept;
 
         constexpr array_wrapper_impl(const array_wrapper_impl&);
+        array_wrapper_impl& operator=(const array_wrapper_impl&) = delete;
+        array_wrapper_impl& operator=(array_wrapper_impl&&) = delete;
         [[nodiscard]] constexpr bool is_dictionary_impl() const noexcept override;
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy_impl() override;
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy_impl() const override;
         [[nodiscard]] wrapper_ptr clone_impl() const override;
 
-        constexpr void insert_elements_from_impl(
-            size_type pos,
-            const array_wrapper& source,
-            size_type src_begin,
-            size_type src_end,
-            size_type count
-        ) override;
-
-        void erase_array_elements_impl(size_type pos, size_type count) override;
-
         using storage_type = std::variant<value_ptr<T>, std::shared_ptr<T>, T*>;
         storage_type m_storage;
         T* p_array;
     };
-
-    template <class T>
-    T& unwrap_array(array_wrapper&);
-
-    template <class T>
-    const T& unwrap_array(const array_wrapper&);
 
     /********************************
      * array_wrapper implementation *
@@ -187,22 +176,6 @@ namespace sparrow
     constexpr const arrow_proxy& array_wrapper::get_arrow_proxy() const
     {
         return get_arrow_proxy_impl();
-    }
-
-    constexpr void array_wrapper::insert_elements_from(
-        size_type pos,
-        const array_wrapper& source,
-        size_type src_begin,
-        size_type src_end,
-        size_type count
-    )
-    {
-        insert_elements_from_impl(pos, source, src_begin, src_end, count);
-    }
-
-    inline void array_wrapper::erase_array_elements(size_type pos, size_type count)
-    {
-        erase_array_elements_impl(pos, count);
     }
 
     constexpr array_wrapper::array_wrapper(enum data_type dt)
@@ -302,61 +275,6 @@ namespace sparrow
     auto array_wrapper_impl<T>::clone_impl() const -> wrapper_ptr
     {
         return wrapper_ptr{new array_wrapper_impl<T>(*this)};
-    }
-
-    template <class T>
-    constexpr void array_wrapper_impl<T>::insert_elements_from_impl(
-        size_type pos,
-        const array_wrapper& source,
-        size_type src_begin,
-        size_type src_end,
-        size_type count
-    )
-    {
-        if constexpr (requires { p_array->insert(p_array->cbegin(), p_array->cbegin(), p_array->cbegin()); })
-        {
-            SPARROW_ASSERT_TRUE(source.data_type() == this->data_type());
-            const T& src = static_cast<const array_wrapper_impl<T>&>(source).get_wrapped();
-            const std::ptrdiff_t elem_count = static_cast<std::ptrdiff_t>(src_end - src_begin);
-
-            // Copy the source slice first to safely handle self-insertion
-            std::vector<typename T::value_type> temp_slice(
-                std::next(src.cbegin(), static_cast<std::ptrdiff_t>(src_begin)),
-                std::next(src.cbegin(), static_cast<std::ptrdiff_t>(src_end))
-            );
-
-            for (size_type i = 0; i < count; ++i)
-            {
-                auto cur_pos = std::next(
-                    p_array->cbegin(),
-                    static_cast<std::ptrdiff_t>(pos) + static_cast<std::ptrdiff_t>(i) * elem_count
-                );
-                p_array->insert(cur_pos, temp_slice.cbegin(), temp_slice.cend());
-            }
-        }
-        else
-        {
-            throw std::runtime_error(
-                "array_wrapper_impl::insert_elements_from: array type does not support mutation"
-            );
-        }
-    }
-
-    template <class T>
-    void array_wrapper_impl<T>::erase_array_elements_impl(size_type pos, size_type count)
-    {
-        if constexpr (requires { p_array->erase(p_array->cbegin(), p_array->cbegin()); })
-        {
-            auto first = std::next(p_array->cbegin(), static_cast<std::ptrdiff_t>(pos));
-            auto last = std::next(first, static_cast<std::ptrdiff_t>(count));
-            static_cast<void>(p_array->erase(first, last));
-        }
-        else
-        {
-            throw std::runtime_error(
-                "array_wrapper_impl::erase_array_elements: array type does not support mutation"
-            );
-        }
     }
 
     template <class T>

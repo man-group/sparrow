@@ -407,7 +407,7 @@ namespace sparrow
         
 
     private:
-    /// @brief Returns a pointer to the flat array backing this list view.
+        /// @brief Returns a pointer to the flat array backing this list view.
         [[nodiscard]] const array_wrapper* flat_array() const noexcept
         {
             return p_flat_array;
@@ -428,6 +428,15 @@ namespace sparrow
         const array_wrapper* p_flat_array = nullptr;  ///< Pointer to underlying flattened array
         size_type m_index_begin = 0u;                 ///< Starting index in flattened array
         size_type m_index_end = 0u;                   ///< Ending index in flattened array (exclusive)
+
+
+        template <bool BIG>
+        friend class list_array_impl;
+
+        template <bool BIG>
+        friend class list_view_array_impl;
+        
+        friend class fixed_sized_list_array;
     };
 
     /**
