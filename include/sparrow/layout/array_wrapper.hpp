@@ -25,14 +25,6 @@
 
 namespace sparrow
 {
-    class array_wrapper;
-
-    template <class T>
-    T& unwrap_array(array_wrapper&);
-
-    template <class T>
-    const T& unwrap_array(const array_wrapper&);
-
     namespace detail
     {
         // Helper struct to allow overloading on the type of ARRAY
@@ -51,7 +43,6 @@ namespace sparrow
                 return false;
             }
         };
-
     }
 
     /**
@@ -148,6 +139,12 @@ namespace sparrow
         storage_type m_storage;
         T* p_array;
     };
+
+    template <class T>
+    T& unwrap_array(array_wrapper&);
+
+    template <class T>
+    const T& unwrap_array(const array_wrapper&);
 
     /********************************
      * array_wrapper implementation *

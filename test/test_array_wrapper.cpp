@@ -181,6 +181,19 @@ namespace sparrow
 
                 CHECK_EQ(array, make_int_array({1, 1, 2, 1, 2, 2, 3}));
             }
+
+            SUBCASE("different concrete wrapper types with the same data type throw")
+            {
+                using extended_array_type = primitive_array<
+                    std::int32_t,
+                    simple_extension<"sparrow.test.array_wrapper.insert_elements_from">>;
+                using extended_wrapper_type = array_wrapper_impl<extended_array_type>;
+
+                wrapper_type destination(array_type(make_arrow_proxy<std::int32_t>(3, offset)));
+                extended_wrapper_type source(extended_array_type(make_arrow_proxy<std::int32_t>(2, offset)));
+
+                CHECK_THROWS_AS(destination.insert_elements_from(1, source, 0, 2, 1), std::invalid_argument);
+            }
         }
 
         TEST_CASE("erase_array_elements")
