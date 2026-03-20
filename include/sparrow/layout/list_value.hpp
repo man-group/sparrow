@@ -404,9 +404,9 @@ namespace sparrow
          */
         [[nodiscard]] list_value_reverse_iterator crend() const;
 
-        
 
     private:
+
         /// @brief Returns a pointer to the flat array backing this list view.
         [[nodiscard]] const array_wrapper* flat_array() const noexcept
         {
@@ -435,7 +435,7 @@ namespace sparrow
 
         template <bool BIG>
         friend class list_view_array_impl;
-        
+
         friend class fixed_sized_list_array;
     };
 

@@ -1,8 +1,8 @@
 #include "sparrow/layout/array_wrapper.hpp"
 
-#include "sparrow/layout/array_registry.hpp"
-
 #include <type_traits>
+
+#include "sparrow/layout/array_registry.hpp"
 
 namespace sparrow
 {
@@ -39,22 +39,27 @@ namespace sparrow
                 array_type& destination = unwrap_array<array_type>(*this);
                 const array_type& source_array = unwrap_array<array_type>(source);
 
-                if constexpr (
-                    requires
-                    {
-                        destination.insert(destination.cbegin(), source_array.cbegin(), source_array.cbegin());
-                    }
-                )
+                if constexpr (requires {
+                                  destination.insert(
+                                      destination.cbegin(),
+                                      source_array.cbegin(),
+                                      source_array.cbegin()
+                                  );
+                              })
                 {
                     const std::ptrdiff_t elem_count = static_cast<std::ptrdiff_t>(src_end - src_begin);
-                    const auto source_first = std::next(source_array.cbegin(), static_cast<std::ptrdiff_t>(src_begin));
-                    const auto source_last = std::next(source_array.cbegin(), static_cast<std::ptrdiff_t>(src_end));
+                    const auto source_first = std::next(
+                        source_array.cbegin(),
+                        static_cast<std::ptrdiff_t>(src_begin)
+                    );
+                    const auto source_last = std::next(
+                        source_array.cbegin(),
+                        static_cast<std::ptrdiff_t>(src_end)
+                    );
                     using source_input_value = std::remove_cvref_t<decltype(nullable_get(*source_first))>;
                     using destination_input_value = std::remove_cvref_t<
                         decltype(nullable_get(std::declval<typename array_type::value_type&>()))>;
-                    constexpr bool can_insert_directly = std::same_as<
-                        source_input_value,
-                        destination_input_value>;
+                    constexpr bool can_insert_directly = std::same_as<source_input_value, destination_input_value>;
 
                     if (&destination == &source_array)
                     {
