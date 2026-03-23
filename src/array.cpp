@@ -134,6 +134,11 @@ namespace sparrow
         return get_arrow_proxy().is_view();
     }
 
+    bool array::is_dictionary() const
+    {
+        return p_array->is_dictionary();
+    }
+
     array array::slice(size_type start, size_type end) const
     {
         SPARROW_ASSERT_TRUE(start <= end);
