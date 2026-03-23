@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/list_array.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/primitive_array.hpp"
 
@@ -50,6 +51,22 @@ namespace sparrow
                 nullable_values.push_back(make_nullable(value));
             }
             return primitive_array<std::int32_t>(nullable_values);
+        };
+
+        const auto make_int16_list_array = [](
+                                               std::initializer_list<std::int16_t> flat_values,
+                                               std::initializer_list<std::size_t> sizes
+                                           )
+        {
+            std::vector<nullable<std::int16_t>> nullable_flat_values;
+            nullable_flat_values.reserve(flat_values.size());
+            for (const auto value : flat_values)
+            {
+                nullable_flat_values.push_back(make_nullable(value));
+            }
+
+            array flat{primitive_array<std::int16_t>(std::move(nullable_flat_values))};
+            return list_array(std::move(flat), list_array::offset_from_sizes(sizes), true);
         };
 
         TEST_CASE_TEMPLATE_DEFINE("Constructor", AR, array_wrapper_ctor)

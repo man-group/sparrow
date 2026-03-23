@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "sparrow/array.hpp"
 #include "sparrow/layout/list_value.hpp"
 #include "sparrow/layout/map_value.hpp"
 #include "sparrow/layout/struct_value.hpp"
@@ -24,7 +25,6 @@ namespace sparrow
 {
     using scalar_value_type = std::int32_t;
     using array_type = primitive_array<scalar_value_type>;
-    using wrapper_type = array_wrapper_impl<array_type>;
     using test::make_arrow_proxy;
 
     TEST_SUITE("value_list")
@@ -32,8 +32,8 @@ namespace sparrow
         TEST_CASE("size")
         {
             array_type ar(make_arrow_proxy<scalar_value_type>());
-            wrapper_type w(&ar);
-            list_value l(&w, 2u, 7u);
+            array a_view(&ar);
+            list_value l(&a_view, 2u, 7u);
 
             CHECK_EQ(l.size(), 5u);
         }
@@ -43,9 +43,9 @@ namespace sparrow
             std::size_t begin = 2u;
             std::size_t end = 7u;
             array_type ar(make_arrow_proxy<scalar_value_type>());
-            wrapper_type w(&ar);
+            array a_view(&ar);
 
-            list_value l(&w, begin, end);
+            list_value l(&a_view, begin, end);
             for (std::size_t i = begin; i < end; ++i)
             {
                 CHECK_EQ(l[i].has_value(), ar[begin + i].has_value());
@@ -62,9 +62,9 @@ namespace sparrow
         std::size_t begin = 2u;
         std::size_t end = 7u;
         array_type ar(make_arrow_proxy<scalar_value_type>());
-        wrapper_type w(&ar);
+        array a_view(&ar);
 
-        list_value l(&w, begin, end);
+        list_value l(&a_view, begin, end);
 
         TEST_CASE("iterators")
         {
@@ -106,9 +106,9 @@ namespace sparrow
         {
             std::size_t end3 = 8u;
             array_type ar2(make_arrow_proxy<scalar_value_type>());
-            wrapper_type w2(&ar);
-            list_value l2(&w2, begin, end);
-            list_value l3(&w, begin, end3);
+            array a_view2(&ar);
+            list_value l2(&a_view2, begin, end);
+            list_value l3(&a_view, begin, end3);
 
             CHECK(l != l3);
             CHECK(l == l2);

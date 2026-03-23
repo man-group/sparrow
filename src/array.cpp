@@ -146,6 +146,22 @@ namespace sparrow
         return {get_arrow_proxy().slice_view(start, end)};
     }
 
+    void array::insert_elements_from(
+        size_type pos,
+        const array& source,
+        size_type src_begin,
+        size_type src_end,
+        size_type count
+    )
+    {
+        p_array->insert_elements_from(pos, *source.p_array, src_begin, src_end, count);
+    }
+
+    void array::erase_array_elements(size_type pos, size_type count)
+    {
+        p_array->erase_array_elements(pos, count);
+    }
+
     arrow_proxy& array::get_arrow_proxy()
     {
         return p_array->get_arrow_proxy();

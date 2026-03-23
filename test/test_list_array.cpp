@@ -367,21 +367,21 @@ namespace sparrow
                 auto* flat_values = list_arr.raw_flat_array();
 
                 // check the size
-                REQUIRE(array_size(*flat_values) == n_flat);
+                REQUIRE(flat_values->size() == n_flat);
 
                 // check that flat values are "iota"
                 if constexpr (std::is_integral_v<inner_scalar_type>)
                 {
                     for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
                     {
-                        CHECK_NULLABLE_VARIANT_EQ(array_element(*flat_values, static_cast<std::size_t>(i)), i);
+                        CHECK_NULLABLE_VARIANT_EQ((*flat_values)[static_cast<std::size_t>(i)], i);
                     }
                 }
                 else
                 {
                     for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
                     {
-                        const auto value_variant = array_element(*flat_values, static_cast<std::size_t>(i));
+                        const auto value_variant = (*flat_values)[static_cast<std::size_t>(i)];
                         CHECK(
                             std::get<typename primitive_array<inner_scalar_type>::const_reference>(value_variant)
                                 .value()
@@ -858,21 +858,21 @@ namespace sparrow
                 auto* flat_values = list_arr.raw_flat_array();
 
                 // check the size
-                REQUIRE(array_size(*flat_values) == n_flat);
+                REQUIRE(flat_values->size() == n_flat);
 
                 // check that flat values are "iota"
                 if constexpr (std::is_integral_v<inner_scalar_type>)
                 {
                     for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
                     {
-                        CHECK_NULLABLE_VARIANT_EQ(array_element(*flat_values, static_cast<std::size_t>(i)), i);
+                        CHECK_NULLABLE_VARIANT_EQ((*flat_values)[static_cast<std::size_t>(i)], i);
                     }
                 }
                 else
                 {
                     for (inner_scalar_type i = 0; i < static_cast<inner_scalar_type>(n_flat); ++i)
                     {
-                        const auto value_variant = array_element(*flat_values, static_cast<std::size_t>(i));
+                        const auto value_variant = (*flat_values)[static_cast<std::size_t>(i)];
                         CHECK(
                             std::get<typename primitive_array<inner_scalar_type>::const_reference>(value_variant)
                                 .value()

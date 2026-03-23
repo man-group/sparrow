@@ -14,6 +14,7 @@
 
 #include "sparrow/layout/list_value.hpp"
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/layout/array_registry.hpp"
 
 namespace sparrow
@@ -59,7 +60,7 @@ namespace sparrow
         return m_index < rhs.m_index;
     }
 
-    list_value::list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end)
+    list_value::list_value(const array* flat_array, size_type index_begin, size_type index_end)
         : p_flat_array(flat_array)
         , m_index_begin(index_begin)
         , m_index_end(index_end)
@@ -79,7 +80,7 @@ namespace sparrow
 
     auto list_value::operator[](size_type i) const -> const_reference
     {
-        return array_element(*p_flat_array, m_index_begin + i);
+        return (*p_flat_array)[m_index_begin + i];
     }
 
     auto list_value::front() const -> const_reference

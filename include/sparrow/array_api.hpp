@@ -289,6 +289,11 @@ namespace sparrow
         [[nodiscard]] SPARROW_API bool is_view() const;
 
         /**
+         * @returns true if the array is dictionary-encoded, false otherwise.
+         */
+        [[nodiscard]] SPARROW_API bool is_dictionary() const;
+
+        /**
          * Slices the array to keep only the elements between the given \p start and \p end.
          * A copy of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
          * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
@@ -311,6 +316,34 @@ namespace sparrow
          * @return A sliced view of the array.
          */
         [[nodiscard]] SPARROW_API array slice_view(size_type start, size_type end) const;
+
+        /**
+         * Inserts \p count copies of elements from \p source[src_begin, src_end) at position \p pos.
+         *
+         * @param pos Insertion point (0-based index into this array's flat storage).
+         * @param source The array to copy elements from.
+         * @param src_begin Start index in \p source (inclusive).
+         * @param src_end End index in \p source (exclusive).
+         * @param count Number of times to repeat the copied range.
+         *
+         * @pre source.data_type() == this->data_type()
+         * @pre pos <= this->size()
+         * @pre src_begin <= src_end <= source.size()
+         */
+        SPARROW_API void insert_elements_from(
+            size_type pos,
+            const array& source,
+            size_type src_begin,
+            size_type src_end,
+            size_type count
+        );
+
+        /**
+         * Erases \p count elements starting at position \p pos from this array.
+         *
+         * @pre pos + count <= this->size()
+         */
+        SPARROW_API void erase_array_elements(size_type pos, size_type count);
 
     private:
 

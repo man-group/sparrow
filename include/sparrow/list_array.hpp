@@ -28,7 +28,6 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
-#include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
@@ -316,7 +315,7 @@ namespace sparrow
          *
          * @post Returns non-null pointer to a valid flat child handle
          */
-        [[nodiscard]] constexpr const array_wrapper* raw_flat_array() const;
+        [[nodiscard]] constexpr const array* raw_flat_array() const;
 
         /**
          * @brief Gets mutable access to the underlying flat array.
@@ -325,7 +324,7 @@ namespace sparrow
          *
          * @post Returns non-null pointer to a valid flat child handle
          */
-        [[nodiscard]] constexpr array_wrapper* raw_flat_array();
+        [[nodiscard]] constexpr array* raw_flat_array();
 
     protected:
 
@@ -394,10 +393,10 @@ namespace sparrow
         [[nodiscard]] constexpr inner_reference value(size_type i);
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
-        [[nodiscard]] cloning_ptr<array_wrapper> make_flat_array();
+        [[nodiscard]] array make_flat_array();
 
         // data members
-        cloning_ptr<array_wrapper> p_flat_array;
+        array p_flat_array;
 
         // friend classes
         friend class array_crtp_base<DERIVED>;
@@ -1030,15 +1029,15 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array_wrapper*
+    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array*
     {
-        return p_flat_array.get();
+        return &p_flat_array;
     }
 
     template <class DERIVED>
-    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array_wrapper*
+    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array*
     {
-        return p_flat_array.get();
+        return &p_flat_array;
     }
 
     template <class DERIVED>
@@ -1094,13 +1093,14 @@ namespace sparrow
     {
         const auto r = this->derived_cast().offset_range(i);
         using st = typename list_value::size_type;
-        return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
+        return list_value{&p_flat_array, static_cast<st>(r.first), static_cast<st>(r.second)};
     }
 
     template <class DERIVED>
-    cloning_ptr<array_wrapper> list_array_crtp_base<DERIVED>::make_flat_array()
+    array list_array_crtp_base<DERIVED>::make_flat_array()
     {
-        return array_factory(this->get_arrow_proxy().children()[0].view());
+        auto& child_proxy = this->get_arrow_proxy().children()[0];
+        return array{&child_proxy.array(), &child_proxy.schema()};
     }
 
     /**********************************
@@ -1413,12 +1413,12 @@ namespace sparrow
         const auto old_size_mt = static_cast<mutable_offset_type>(old_size);
         const auto new_size_mt = static_cast<mutable_offset_type>(new_size);
 
-        cloning_ptr<array_wrapper> source_owner;
-        const array_wrapper* source = value.flat_array();
+        array source_owner;
+        const array* source = value.flat_array();
         if (source != nullptr && this->raw_flat_array() == source)
         {
-            source_owner.reset(source->clone().release());
-            source = source_owner.get();
+            source_owner = *source;
+            source = &source_owner;
         }
 
         if (old_size == new_size)
@@ -1637,7 +1637,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value.size()));
         SPARROW_ASSERT_TRUE(std::in_range<mutable_size_type>(value.size()));
         const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value.size());
-        const size_type flat_append_pos = this->raw_flat_array()->get_arrow_proxy().length();
+        const size_type flat_append_pos = this->raw_flat_array()->size();
 
         if (val_sz > 0)
         {
@@ -1787,7 +1787,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(std::in_range<mutable_size_type>(value.size()));
 
         const mutable_offset_type value_size = static_cast<mutable_offset_type>(value.size());
-        const size_type flat_append_pos = this->raw_flat_array()->get_arrow_proxy().length();
+        const size_type flat_append_pos = this->raw_flat_array()->size();
 
         if (value_size > 0)
         {
@@ -1859,7 +1859,7 @@ namespace sparrow
     constexpr auto fixed_sized_list_array::offset_range(size_type i) const
         -> std::pair<offset_type, offset_type>
     {
-        const auto offset = i * m_list_size;
+        const auto offset = (i + this->offset()) * m_list_size;
         return std::make_pair(offset, offset + m_list_size);
     }
 
@@ -1954,12 +1954,12 @@ namespace sparrow
             return;
         }
 
-        cloning_ptr<array_wrapper> source_owner;
-        const array_wrapper* source = value.flat_array();
+        array source_owner;
+        const array* source = value.flat_array();
         if (source != nullptr && this->raw_flat_array() == source)
         {
-            source_owner.reset(source->clone().release());
-            source = source_owner.get();
+            source_owner = *source;
+            source = &source_owner;
         }
 
         SPARROW_ASSERT_TRUE(source != nullptr);
