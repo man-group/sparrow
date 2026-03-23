@@ -17,14 +17,18 @@
 #include <ostream>
 
 #include "sparrow/config/config.hpp"
-#include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/iterator.hpp"
 
 namespace sparrow
 {
 
     class list_value;
+
+    template <class L>
+    class list_reference;
 
     /**
      * @brief Iterator for traversing elements within a list_value.
@@ -148,7 +152,7 @@ namespace sparrow
         [[nodiscard]] bool less_than(const self_type& rhs) const;
 
         const list_value* m_list_value = nullptr;  ///< Pointer to parent list_value
-        difference_type m_index;                   ///< Current index within the list
+        difference_type m_index = 0;               ///< Current index within the list
 
         friend class iterator_access;
     };
@@ -221,7 +225,7 @@ namespace sparrow
          * @param index_begin Starting index of the list (inclusive)
          * @param index_end Ending index of the list (exclusive)
          *
-         * @pre flat_array must be a valid pointer to array_wrapper
+         * @pre flat_array must be a valid pointer to the flat child handle
          * @pre index_begin must be <= index_end
          * @pre index_end must be <= flat_array->size()
          * @post size() returns (index_end - index_begin)
@@ -425,9 +429,9 @@ namespace sparrow
             return m_index_end;
         }
 
-        const array_wrapper* p_flat_array = nullptr;  ///< Pointer to underlying flattened array
-        size_type m_index_begin = 0u;                 ///< Starting index in flattened array
-        size_type m_index_end = 0u;                   ///< Ending index in flattened array (exclusive)
+        const array_wrapper* p_flat_array = nullptr;      ///< Pointer to underlying flattened array
+        size_type m_index_begin = 0u;                     ///< Starting index in flattened array
+        size_type m_index_end = 0u;                       ///< Ending index in flattened array (exclusive)
 
 
         template <bool BIG>
@@ -437,6 +441,75 @@ namespace sparrow
         friend class list_view_array_impl;
 
         friend class fixed_sized_list_array;
+    };
+
+    template <class L>
+    class list_reference : public list_value
+    {
+    public:
+
+        using self_type = list_reference<L>;
+        using size_type = list_value::size_type;
+
+        constexpr list_reference(L* layout, size_type index)
+            : list_value(make_view(layout, index))
+            , p_layout(layout)
+            , m_index(index)
+        {
+        }
+
+        constexpr list_reference(const self_type&) noexcept = default;
+        constexpr list_reference(self_type&&) noexcept = default;
+        ~list_reference() = default;
+
+        self_type& operator=(const list_value& rhs)
+        {
+            p_layout->replace_value(m_index, rhs);
+            refresh_view();
+            return *this;
+        }
+
+        self_type& operator=(const self_type& rhs)
+        {
+            operator=(static_cast<const list_value&>(rhs));
+            return *this;
+        }
+
+        self_type& operator=(self_type&& rhs)
+        {
+            operator=(static_cast<const list_value&>(rhs));
+            return *this;
+        }
+
+    private:
+
+        [[nodiscard]] static constexpr list_value make_view(L* layout, size_type index)
+        {
+            const auto range = layout->offset_range(index);
+            return list_value(
+                layout->raw_flat_array(),
+                static_cast<size_type>(range.first),
+                static_cast<size_type>(range.second)
+            );
+        }
+
+        constexpr void refresh_view()
+        {
+            static_cast<list_value&>(*this) = make_view(p_layout, m_index);
+        }
+
+        L* p_layout = nullptr;
+        size_type m_index = 0;
+    };
+
+    template <class L>
+    struct nullable_traits<list_reference<L>>
+    {
+        using value_type = list_reference<L>;
+        using reference = list_reference<L>;
+        using const_reference = list_value;
+        using rvalue_reference = list_reference<L>;
+        using const_rvalue_reference = list_value;
     };
 
     /**

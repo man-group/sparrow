@@ -29,7 +29,6 @@
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_factory.hpp"
-#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
@@ -230,11 +229,11 @@ namespace sparrow
         using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
         using array_type = list_array_impl<BIG>;
         using inner_value_type = list_value;
-        using inner_reference = list_value;
+        using inner_reference = list_reference<array_type>;
         using inner_const_reference = list_value;
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
-            detail::layout_value_functor<const array_type, inner_value_type>>;
+            detail::layout_value_functor<const array_type, inner_const_reference>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -244,11 +243,11 @@ namespace sparrow
         using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
         using array_type = list_view_array_impl<BIG>;
         using inner_value_type = list_value;
-        using inner_reference = list_value;
+        using inner_reference = list_reference<array_type>;
         using inner_const_reference = list_value;
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
-            detail::layout_value_functor<const array_type, inner_value_type>>;
+            detail::layout_value_functor<const array_type, inner_const_reference>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -258,11 +257,11 @@ namespace sparrow
         using list_size_type = std::uint64_t;
         using array_type = fixed_sized_list_array;
         using inner_value_type = list_value;
-        using inner_reference = list_value;
+        using inner_reference = list_reference<array_type>;
         using inner_const_reference = list_value;
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
-            detail::layout_value_functor<const array_type, inner_value_type>>;
+            detail::layout_value_functor<const array_type, inner_const_reference>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -302,8 +301,8 @@ namespace sparrow
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         using inner_value_type = list_value;
-        using inner_reference = list_value;
-        using inner_const_reference = list_value;
+        using inner_reference = typename inner_types::inner_reference;
+        using inner_const_reference = typename inner_types::inner_const_reference;
 
         using value_type = nullable<inner_value_type>;
         using reference = nullable<inner_reference, bitmap_reference>;
@@ -315,7 +314,7 @@ namespace sparrow
          *
          * @return Const pointer to the flat array containing all list elements
          *
-         * @post Returns non-null pointer to valid array_wrapper
+         * @post Returns non-null pointer to a valid flat child handle
          */
         [[nodiscard]] constexpr const array_wrapper* raw_flat_array() const;
 
@@ -324,7 +323,7 @@ namespace sparrow
          *
          * @return Pointer to the flat array containing all list elements
          *
-         * @post Returns non-null pointer to valid array_wrapper
+         * @post Returns non-null pointer to a valid flat child handle
          */
         [[nodiscard]] constexpr array_wrapper* raw_flat_array();
 
@@ -403,10 +402,11 @@ namespace sparrow
         // friend classes
         friend class array_crtp_base<DERIVED>;
         friend class mutable_array_base<DERIVED>;
+        friend class list_reference<DERIVED>;
 
         // needs access to this->value(i)
-        friend class detail::layout_value_functor<DERIVED, inner_value_type>;
-        friend class detail::layout_value_functor<const DERIVED, inner_value_type>;
+        friend class detail::layout_value_functor<DERIVED, inner_reference>;
+        friend class detail::layout_value_functor<const DERIVED, inner_const_reference>;
     };
 
     template <bool BIG>
@@ -616,6 +616,8 @@ namespace sparrow
 
         constexpr void resize_values(size_type new_length, list_value value);
 
+        void replace_value(size_type index, list_value value);
+
         constexpr value_iterator insert_value(const_value_iterator pos, list_value value, size_type count);
 
         template <std::input_iterator InputIt>
@@ -630,6 +632,8 @@ namespace sparrow
         friend class array_crtp_base<self_type>;
         friend class mutable_array_base<self_type>;
         friend class list_array_crtp_base<self_type>;
+        template <class L>
+        friend class list_reference;
     };
 
     template <bool BIG>
@@ -818,6 +822,8 @@ namespace sparrow
 
         constexpr void resize_values(size_type new_length, list_value value);
 
+        void replace_value(size_type index, list_value value);
+
         constexpr value_iterator insert_value(const_value_iterator pos, list_value value, size_type count);
 
         template <std::input_iterator InputIt>
@@ -833,6 +839,8 @@ namespace sparrow
         friend class array_crtp_base<self_type>;
         friend class mutable_array_base<self_type>;
         friend class list_array_crtp_base<self_type>;
+        template <class L>
+        friend class list_reference;
     };
 
     class fixed_sized_list_array final : public list_array_crtp_base<fixed_sized_list_array>
@@ -975,6 +983,8 @@ namespace sparrow
 
         void resize_values(size_type new_length, list_value value);
 
+        void replace_value(size_type index, list_value value);
+
         value_iterator insert_value(const_value_iterator pos, list_value value, size_type count);
 
         template <std::input_iterator InputIt>
@@ -989,6 +999,8 @@ namespace sparrow
         friend class array_crtp_base<self_type>;
         friend class mutable_array_base<self_type>;
         friend class list_array_crtp_base<self_type>;
+        template <class L>
+        friend class list_reference;
     };
 
     /***************************************
@@ -1041,14 +1053,14 @@ namespace sparrow
     template <class DERIVED>
     constexpr auto list_array_crtp_base<DERIVED>::value_begin() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()), 0);
+        return value_iterator(detail::layout_value_functor<DERIVED, inner_reference>(&this->derived_cast()), 0);
     }
 
     template <class DERIVED>
     constexpr auto list_array_crtp_base<DERIVED>::value_end() -> value_iterator
     {
         return value_iterator(
-            detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()),
+            detail::layout_value_functor<DERIVED, inner_reference>(&this->derived_cast()),
             this->size()
         );
     }
@@ -1057,7 +1069,7 @@ namespace sparrow
     constexpr auto list_array_crtp_base<DERIVED>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(
-            detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()),
+            detail::layout_value_functor<const DERIVED, inner_const_reference>(&this->derived_cast()),
             0
         );
     }
@@ -1066,7 +1078,7 @@ namespace sparrow
     constexpr auto list_array_crtp_base<DERIVED>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(
-            detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()),
+            detail::layout_value_functor<const DERIVED, inner_const_reference>(&this->derived_cast()),
             this->size()
         );
     }
@@ -1074,9 +1086,7 @@ namespace sparrow
     template <class DERIVED>
     constexpr auto list_array_crtp_base<DERIVED>::value(size_type i) -> inner_reference
     {
-        const auto r = this->derived_cast().offset_range(i);
-        using st = typename list_value::size_type;
-        return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
+        return inner_reference(&this->derived_cast(), i);
     }
 
     template <class DERIVED>
@@ -1388,6 +1398,80 @@ namespace sparrow
         }
     }
 
+    template <bool BIG>
+    void list_array_impl<BIG>::replace_value(size_type index, list_value value)
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+
+        this->throw_if_sliced_for_mutation("list_array_impl::replace_value");
+        const size_type new_size = value.size();
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(new_size));
+
+        const size_type n = this->size();
+        const auto [flat_begin, flat_end] = offset_range(index);
+        const auto old_size = static_cast<size_type>(flat_end - flat_begin);
+        const auto old_size_mt = static_cast<mutable_offset_type>(old_size);
+        const auto new_size_mt = static_cast<mutable_offset_type>(new_size);
+
+        cloning_ptr<array_wrapper> source_owner;
+        const array_wrapper* source = value.flat_array();
+        if (source != nullptr && this->raw_flat_array() == source)
+        {
+            source_owner.reset(source->clone().release());
+            source = source_owner.get();
+        }
+
+        if (old_size == new_size)
+        {
+            if (new_size == 0)
+            {
+                return;
+            }
+        }
+
+        if (old_size > 0)
+        {
+            this->raw_flat_array()->erase_array_elements(static_cast<size_type>(flat_begin), old_size);
+        }
+        if (new_size > 0)
+        {
+            SPARROW_ASSERT_TRUE(source != nullptr);
+            this->raw_flat_array()->insert_elements_from(
+                static_cast<size_type>(flat_begin),
+                *source,
+                value.begin_index(),
+                value.end_index(),
+                1
+            );
+        }
+
+        auto& proxy = this->get_arrow_proxy();
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+
+        if (new_size_mt > old_size_mt)
+        {
+            const mutable_offset_type delta = new_size_mt - old_size_mt;
+            const auto max_offset = std::numeric_limits<mutable_offset_type>::max();
+            SPARROW_ASSERT_TRUE(offset_adaptor[n] <= max_offset - delta);
+            for (size_type i = index + 1; i <= n; ++i)
+            {
+                offset_adaptor[i] += delta;
+            }
+        }
+        else
+        {
+            const mutable_offset_type delta = old_size_mt - new_size_mt;
+            for (size_type i = index + 1; i <= n; ++i)
+            {
+                offset_adaptor[i] -= delta;
+            }
+        }
+
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
+    }
+
     /***************************************
      * list_view_array_impl implementation *
      ***************************************/
@@ -1691,6 +1775,47 @@ namespace sparrow
         }
     }
 
+    template <bool BIG>
+    void list_view_array_impl<BIG>::replace_value(size_type index, list_value value)
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+        using mutable_size_type = std::remove_const_t<list_size_type>;
+
+        this->throw_if_sliced_for_mutation("list_view_array_impl::replace_value");
+
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value.size()));
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_size_type>(value.size()));
+
+        const mutable_offset_type value_size = static_cast<mutable_offset_type>(value.size());
+        const size_type flat_append_pos = this->raw_flat_array()->get_arrow_proxy().length();
+
+        if (value_size > 0)
+        {
+            SPARROW_ASSERT_TRUE(value.flat_array() != nullptr);
+            this->raw_flat_array()->insert_elements_from(
+                flat_append_pos,
+                *value.flat_array(),
+                value.begin_index(),
+                value.end_index(),
+                1
+            );
+        }
+
+        auto& proxy = this->get_arrow_proxy();
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+        auto& sizes_buffer = proxy.get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
+        auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
+
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(flat_append_pos));
+        offset_adaptor[index] = static_cast<mutable_offset_type>(flat_append_pos);
+        sizes_adaptor[index] = static_cast<mutable_size_type>(value_size);
+
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
+        p_list_sizes = make_list_sizes();
+    }
+
 #ifdef __GNUC__
 #    pragma GCC diagnostic pop
 #endif
@@ -1816,6 +1941,37 @@ namespace sparrow
         {
             insert_value(this->value_cend(), value, new_length - n);
         }
+    }
+
+    inline void fixed_sized_list_array::replace_value(size_type index, list_value value)
+    {
+        SPARROW_ASSERT_TRUE(value.size() == m_list_size);
+
+        this->throw_if_sliced_for_mutation("fixed_sized_list_array::replace_value");
+
+        if (m_list_size == 0)
+        {
+            return;
+        }
+
+        cloning_ptr<array_wrapper> source_owner;
+        const array_wrapper* source = value.flat_array();
+        if (source != nullptr && this->raw_flat_array() == source)
+        {
+            source_owner.reset(source->clone().release());
+            source = source_owner.get();
+        }
+
+        SPARROW_ASSERT_TRUE(source != nullptr);
+        const size_type flat_index = flat_element_count(index);
+        this->raw_flat_array()->erase_array_elements(flat_index, static_cast<size_type>(m_list_size));
+        this->raw_flat_array()->insert_elements_from(
+            flat_index,
+            *source,
+            value.begin_index(),
+            value.end_index(),
+            1
+        );
     }
 
     template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>
