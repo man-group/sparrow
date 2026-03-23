@@ -367,9 +367,9 @@ namespace sparrow
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
-         * A copy of the \ref array is modified. The data is not modified, only the ArrowArray.offset and
-         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
-         * elements will be invalid.
+         * A deep copy of the underlying Arrow data is created. The copied ArrowArray.offset and
+         * ArrowArray.length are then updated to represent the requested range. If \p end is greater than
+         * the size of the buffers, the following elements will be invalid.
          *
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.
@@ -378,9 +378,9 @@ namespace sparrow
 
         /**
          * Slices the array to keep only the elements between the given \p start and \p end.
-         * A view of the \ref array is returned. The data is not modified, only the ArrowArray.offset and
-         * ArrowArray.length are updated. If \p end is greater than the size of the buffers, the following
-         * elements will be invalid.
+         * A view of the \ref array is returned. The underlying data is shared, and only the
+         * ArrowArray.offset and ArrowArray.length are updated. If \p end is greater than the size of the
+         * buffers, the following elements will be invalid.
          *
          * @param start The index of the first element to keep. Must be less than \p end.
          * @param end The index of the first element to discard. Must be less than the size of the buffers.

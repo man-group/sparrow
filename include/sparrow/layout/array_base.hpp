@@ -369,7 +369,8 @@ namespace sparrow
          * @brief Creates a sliced copy of the array.
          *
          * Creates a new array containing only elements between start and end indices.
-         * The underlying data is not copied; only the Arrow offset and length are modified.
+         * The underlying Arrow data is deep-copied first, then the copied Arrow offset and
+         * length are modified to represent the requested range.
          *
          * @param start Index of the first element to keep (inclusive)
          * @param end Index of the first element to exclude (exclusive)
@@ -379,6 +380,7 @@ namespace sparrow
          * @pre start must be <= size()
          * @pre end should be <= size() for valid elements
          * @post Returned array has length (end - start)
+         * @post Returned array owns storage independent from the original array
          * @post Elements maintain their original validity and values
          * @post If end > buffer size, trailing elements may be invalid
          *
