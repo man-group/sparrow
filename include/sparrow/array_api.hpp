@@ -419,13 +419,6 @@ namespace sparrow
          * @pre pos <= this->size()
          * @pre src_begin <= src_end <= source.size()
          */
-        SPARROW_API void insert_elements_from(
-            size_type pos,
-            const array& source,
-            size_type src_begin,
-            size_type src_end,
-            size_type count
-        );
 
         /**
          * Erases \p count elements starting at position \p pos from this array.
@@ -433,6 +426,13 @@ namespace sparrow
          * @pre pos + count <= this->size()
          */
         SPARROW_API void erase_array_elements(size_type pos, size_type count);
+        SPARROW_API iterator insert(const_iterator pos, const_iterator first, const_iterator last);
+
+        SPARROW_API
+        iterator insert(const_iterator pos, const_iterator first, const_iterator last, size_type count);
+
+        SPARROW_API iterator erase(const_iterator pos);
+        SPARROW_API iterator erase(const_iterator first, const_iterator last);
 
     private:
 
@@ -461,6 +461,26 @@ namespace sparrow
 
         friend class detail::array_access;
     };
+
+    inline auto array::begin() const -> iterator
+    {
+        return cbegin();
+    }
+
+    inline auto array::end() const -> iterator
+    {
+        return cend();
+    }
+
+    inline auto array::cbegin() const -> const_iterator
+    {
+        return const_iterator(this, 0);
+    }
+
+    inline auto array::cend() const -> const_iterator
+    {
+        return const_iterator(this, size());
+    }
 
     /**
      * Compares the content of two arrays.
