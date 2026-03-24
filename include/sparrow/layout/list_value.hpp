@@ -442,6 +442,9 @@ namespace sparrow
         friend class list_view_array_impl;
 
         friend class fixed_sized_list_array;
+
+        template <class DERIVED>
+        friend class list_array_crtp_base;
     };
 
     template <class L>
