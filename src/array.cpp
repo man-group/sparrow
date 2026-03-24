@@ -279,18 +279,25 @@ namespace sparrow
                     }
                     else
                     {
-                        // Type mismatch (e.g. string_view -> string): materialise owned
-                        // values via range construction, then insert count times.
-                        const std::vector<typename array_type::value_type> temp(source_first, source_last);
+                        // Type mismatch (e.g. nullable<string_view> -> nullable<string>):
+                        const auto elem_count = static_cast<std::ptrdiff_t>(last_index - first_index);
+                        const auto converting_view =
+                            std::ranges::subrange(source_first, source_last)
+                            | std::views::transform(
+                                [](const auto& elem) -> typename array_type::value_type
+                                {
+                                    return typename array_type::value_type(elem);
+                                }
+                            );
                         auto current_offset = static_cast<std::ptrdiff_t>(pos_index);
                         for (size_type i = 0; i < count; ++i)
                         {
                             destination.insert(
                                 std::next(destination.cbegin(), current_offset),
-                                temp.cbegin(),
-                                temp.cend()
+                                converting_view.begin(),
+                                converting_view.end()
                             );
-                            current_offset += static_cast<std::ptrdiff_t>(temp.size());
+                            current_offset += elem_count;
                         }
                     }
                 }
