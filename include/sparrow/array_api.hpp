@@ -410,10 +410,8 @@ namespace sparrow
          * Inserts \p count copies of elements from \p source[src_begin, src_end) at position \p pos.
          *
          * @param pos Insertion point (0-based index into this array's flat storage).
-         * @param source The array to copy elements from.
-         * @param src_begin Start index in \p source (inclusive).
-         * @param src_end End index in \p source (exclusive).
-         * @param count Number of times to repeat the copied range.
+         * Slices the array in place to keep only the elements between the given \p start and \p end.
+         * The data is not modified, only the ArrowArray.offset and ArrowArray.length are updated.
          *
          * @pre source.data_type() == this->data_type()
          * @pre pos <= this->size()
@@ -421,17 +419,46 @@ namespace sparrow
          */
 
         /**
-         * Erases \p count elements starting at position \p pos from this array.
+         * Inserts elements from the range [first, last) before the element at the specified position.
          *
-         * @pre pos + count <= this->size()
+         * @param pos The position before which the new elements will be inserted.
+         * @param first The beginning of the range of elements to insert.
+         * @param last The end of the range of elements to insert.
+         * @return An iterator to the first of the newly inserted elements.
          */
-        SPARROW_API void erase_array_elements(size_type pos, size_type count);
         SPARROW_API iterator insert(const_iterator pos, const_iterator first, const_iterator last);
 
+        /**
+         * Inserts elements from the range [first, last) before the element at the specified position,
+         * repeating the insertion count times.
+         *
+         * @param pos The position before which the new elements will be inserted.
+         * @param first The beginning of the range of elements to insert.
+         * @param last The end of the range of elements to insert.
+         * @param count The number of times to repeat the insertion.
+         * @return An iterator to the first of the newly inserted elements.
+         */
         SPARROW_API
         iterator insert(const_iterator pos, const_iterator first, const_iterator last, size_type count);
 
+        /**
+         * Inserts a copy of \c value before \c pos in the array, repeating the insertion count times.
+         *
+         * @param pos The iterator before which the element will be inserted (\c pos may be the end()
+         * iterator).
+         * @param value The element to insert.
+         * @param count The number of times to repeat the insertion.
+         * @return An iterator pointing to the first of the inserted values.
+         */
         SPARROW_API iterator erase(const_iterator pos);
+
+        /**
+         * Removes the elements in the range [ \c first , \c last ) from the array.
+         *
+         * @param first The iterator to the first element to remove.
+         * @param last The iterator to the element following the last element to remove.
+         * @return The iterator following the last element removed.
+         */
         SPARROW_API iterator erase(const_iterator first, const_iterator last);
 
     private:

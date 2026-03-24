@@ -157,8 +157,6 @@ namespace sparrow
     {
         return rend();
     }
-
-
 }
 
 #if defined(__cpp_lib_format)
