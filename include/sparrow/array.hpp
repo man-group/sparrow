@@ -23,7 +23,11 @@ namespace sparrow
     {
         if (p_array == nullptr)
         {
-            throw std::out_of_range("array::const_iterator: cannot dereference end iterator");
+            throw std::invalid_argument("array::const_iterator: cannot dereference an invalid iterator");
+        }
+        if (m_index >= p_array->size())
+        {
+            throw std::out_of_range("array::const_iterator: cannot dereference a past-end iterator");
         }
         return (*p_array)[m_index];
     }

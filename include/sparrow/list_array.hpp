@@ -1264,14 +1264,17 @@ namespace sparrow
         -> value_iterator
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
-        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
-        const size_type n = this->size();
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         auto& proxy = this->get_arrow_proxy();
 
         this->throw_if_sliced_for_mutation("list_array_impl::insert_value");
 
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+        const size_type n = offset_adaptor.size() - 1;
+
         // Insert flat elements: count copies of value's slice
-        const size_type flat_insert_pos = static_cast<size_type>(p_list_offsets[idx]);
+        const auto flat_insert_pos = static_cast<size_type>(p_list_offsets[idx]);
         if (value.size() > 0)
         {
             SPARROW_ASSERT_TRUE(value.flat_array() != nullptr);
@@ -1290,8 +1293,8 @@ namespace sparrow
         const auto count_size = count;
         SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value_size));
         SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(count_size));
-        const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value_size);
-        const mutable_offset_type count_mt = static_cast<mutable_offset_type>(count_size);
+        const auto val_sz = static_cast<mutable_offset_type>(value_size);
+        const auto count_mt = static_cast<mutable_offset_type>(count_size);
         const auto max_offset = std::numeric_limits<mutable_offset_type>::max();
         // Check multiplication overflow for total_delta = count * val_sz
         if (val_sz != mutable_offset_type{})
@@ -1299,14 +1302,10 @@ namespace sparrow
             SPARROW_ASSERT_TRUE(count_mt <= max_offset / val_sz);
         }
         const mutable_offset_type total_delta = count_mt * val_sz;
-        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
-        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
         // Existing offsets should fit in the representable range once delta is applied
-        SPARROW_ASSERT_TRUE(offset_adaptor.size() >= n + 1);
         const mutable_offset_type existing_max = offset_adaptor[n];
         SPARROW_ASSERT_TRUE(existing_max <= max_offset - total_delta);
 
-        // Resize the offset buffer to hold `count` new entries
         offset_adaptor.resize(n + 1 + count, mutable_offset_type{});
 
         // Shift existing entries [idx+1..n] to [idx+count+1..n+count], adding delta
@@ -1315,9 +1314,7 @@ namespace sparrow
             offset_adaptor[i + count] = offset_adaptor[i] + total_delta;
         }
 
-        // Fill new entries [idx+1..idx+count]
-        const mutable_offset_type flat_insert_offset = static_cast<mutable_offset_type>(flat_insert_pos);
-        // Ensure new offsets based on flat_insert_offset cannot overflow
+        const auto flat_insert_offset = static_cast<mutable_offset_type>(flat_insert_pos);
         SPARROW_ASSERT_TRUE(flat_insert_offset <= max_offset - total_delta);
         for (size_type k = 1; k <= count; ++k)
         {
@@ -1335,18 +1332,14 @@ namespace sparrow
     constexpr auto list_array_impl<BIG>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
         -> value_iterator
     {
-        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
-        auto& proxy = this->get_arrow_proxy();
-        const size_type original_size = this->size();
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         size_type inserted_count = 0;
         for (auto it = first; it != last; ++it)
         {
             auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + inserted_count));
             insert_value(cur_pos, static_cast<list_value>(*it), 1);
             ++inserted_count;
-            proxy.set_length(original_size + inserted_count);
         }
-        proxy.set_length(original_size);
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
@@ -1737,15 +1730,42 @@ namespace sparrow
         const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         auto& proxy = this->get_arrow_proxy();
         const size_type original_size = this->size();
-        size_type inserted_count = 0;
-        for (auto it = first; it != last; ++it)
+        if constexpr (std::forward_iterator<InputIt>)
         {
-            auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + inserted_count));
-            insert_value(cur_pos, static_cast<list_value>(*it), 1);
-            ++inserted_count;
-            proxy.set_length(original_size + inserted_count);
+            const auto count = static_cast<size_type>(std::distance(first, last));
+            if (count == 0)
+            {
+                return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+            }
+            size_type inserted_count = 0;
+            // Temporarily extend logical length once for the whole bulk insertion.
+            proxy.set_length(original_size + count);
+            for (auto it = first; it != last; ++it)
+            {
+                auto cur_pos = sparrow::next(
+                    this->value_cbegin(),
+                    static_cast<std::ptrdiff_t>(idx + inserted_count)
+                );
+                insert_value(cur_pos, static_cast<list_value>(*it), 1);
+                ++inserted_count;
+            }
+            proxy.set_length(original_size);
         }
-        proxy.set_length(original_size);
+        else
+        {
+            size_type inserted_count = 0;
+            for (auto it = first; it != last; ++it)
+            {
+                auto cur_pos = sparrow::next(
+                    this->value_cbegin(),
+                    static_cast<std::ptrdiff_t>(idx + inserted_count)
+                );
+                insert_value(cur_pos, static_cast<list_value>(*it), 1);
+                ++inserted_count;
+                proxy.set_length(original_size + inserted_count);
+            }
+            proxy.set_length(original_size);
+        }
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
@@ -1765,7 +1785,6 @@ namespace sparrow
 
         this->throw_if_sliced_for_mutation("list_view_array_impl::erase_values");
 
-        // Remove the offset/size entries (leave flat data orphaned — valid per Arrow spec)
         auto& proxy = this->get_arrow_proxy();
         auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
         auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
@@ -1774,11 +1793,16 @@ namespace sparrow
         auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
 
         // Shift entries [idx+count..n) to [idx..n-count)
-        for (size_type i = idx; i + count < n; ++i)
-        {
-            offset_adaptor[i] = offset_adaptor[i + count];
-            sizes_adaptor[i] = sizes_adaptor[i + count];
-        }
+        std::copy(
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + count),
+            offset_adaptor.end(),
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx)
+        );
+        std::copy(
+            sizes_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + count),
+            sizes_adaptor.end(),
+            sizes_adaptor.begin() + static_cast<std::ptrdiff_t>(idx)
+        );
         offset_adaptor.resize(n - count);
         sizes_adaptor.resize(n - count);
         proxy.update_buffers();
@@ -1815,8 +1839,9 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value.size()));
         SPARROW_ASSERT_TRUE(std::in_range<mutable_size_type>(value.size()));
 
-        const mutable_offset_type value_size = static_cast<mutable_offset_type>(value.size());
+        const auto value_size = static_cast<mutable_offset_type>(value.size());
         const size_type flat_append_pos = this->raw_flat_array()->size();
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(flat_append_pos));
 
         if (value_size > 0)
         {
@@ -1836,11 +1861,8 @@ namespace sparrow
         auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
         auto& sizes_buffer = proxy.get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
         auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
-
-        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(flat_append_pos));
         offset_adaptor[index] = static_cast<mutable_offset_type>(flat_append_pos);
         sizes_adaptor[index] = static_cast<mutable_size_type>(value_size);
-
         proxy.update_buffers();
         p_list_offsets = make_list_offsets();
         p_list_sizes = make_list_sizes();
@@ -1907,7 +1929,7 @@ namespace sparrow
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(value.size() == m_list_size);
-        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
 
         this->throw_if_sliced_for_mutation("fixed_sized_list_array::insert_value");
 
@@ -1934,7 +1956,7 @@ namespace sparrow
     auto fixed_sized_list_array::insert_values(const_value_iterator pos, InputIt first, InputIt last)
         -> value_iterator
     {
-        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         size_type counter = 0;
         for (auto it = first; it != last; ++it, ++counter)
         {
@@ -1946,7 +1968,7 @@ namespace sparrow
 
     inline auto fixed_sized_list_array::erase_values(const_value_iterator pos, size_type count) -> value_iterator
     {
-        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
         if (count == 0)
         {
             return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
