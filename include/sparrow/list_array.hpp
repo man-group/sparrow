@@ -388,7 +388,7 @@ namespace sparrow
 
         // Inserts `count` copies of value's flat elements into the flat array at flat_pos.
         // No-op if value.size() == 0.
-        constexpr void insert_flat_elements(size_type flat_pos, list_value value, size_type count);
+        constexpr void insert_flat_elements(size_type flat_pos, const list_value& value, size_type count);
 
         // Erases flat_count consecutive flat elements starting at flat_begin.
         // No-op if flat_count == 0.
@@ -398,7 +398,7 @@ namespace sparrow
 
         using list_size_type = inner_types::list_size_type;
 
-        constexpr void resize_values(size_type new_length, list_value value);
+        constexpr void resize_values(size_type new_length, const list_value& value);
 
         template <std::input_iterator InputIt>
             requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
@@ -629,9 +629,9 @@ namespace sparrow
 
         [[nodiscard]] constexpr offset_type* make_list_offsets();
 
-        void replace_value(size_type index, list_value value);
+        void replace_value(size_type index, const list_value& value);
 
-        constexpr value_iterator insert_value(const_value_iterator pos, list_value value, size_type count);
+        constexpr value_iterator insert_value(const_value_iterator pos, const list_value& value, size_type count);
 
         constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
@@ -831,9 +831,9 @@ namespace sparrow
         [[nodiscard]] constexpr offset_type* make_list_offsets() const;
         [[nodiscard]] constexpr const list_size_type* make_list_sizes() const;
 
-        void replace_value(size_type index, list_value value);
+        void replace_value(size_type index, const list_value& value);
 
-        constexpr value_iterator insert_value(const_value_iterator pos, list_value value, size_type count);
+        constexpr value_iterator insert_value(const_value_iterator pos, const list_value& value, size_type count);
 
         template <std::input_iterator InputIt>
             requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
@@ -990,9 +990,9 @@ namespace sparrow
 
         [[nodiscard]] constexpr size_type flat_element_count(size_type list_count) const;
 
-        void replace_value(size_type index, list_value value);
+        void replace_value(size_type index, const list_value& value);
 
-        value_iterator insert_value(const_value_iterator pos, list_value value, size_type count);
+        value_iterator insert_value(const_value_iterator pos, const list_value& value, size_type count);
 
         value_iterator erase_values(const_value_iterator pos, size_type count);
 
@@ -1109,7 +1109,7 @@ namespace sparrow
 
     template <class DERIVED>
     constexpr void
-    list_array_crtp_base<DERIVED>::insert_flat_elements(size_type flat_pos, list_value value, size_type count)
+    list_array_crtp_base<DERIVED>::insert_flat_elements(size_type flat_pos, const list_value& value, size_type count)
     {
         if (value.size() == 0)
         {
@@ -1141,7 +1141,7 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    constexpr void list_array_crtp_base<DERIVED>::resize_values(size_type new_length, list_value value)
+    constexpr void list_array_crtp_base<DERIVED>::resize_values(size_type new_length, const list_value& value)
     {
         DERIVED& derived = static_cast<DERIVED&>(*this);
         const size_type n = this->size();
@@ -1171,7 +1171,7 @@ namespace sparrow
         for (auto it = first; it != last; ++it, ++count)
         {
             auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + count));
-            derived.insert_value(cur_pos, static_cast<list_value>(*it), 1);
+            derived.insert_value(cur_pos, *it, 1);
         }
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
@@ -1329,7 +1329,7 @@ namespace sparrow
 
     template <bool BIG>
     constexpr auto
-    list_array_impl<BIG>::insert_value(const_value_iterator pos, list_value value, size_type count)
+    list_array_impl<BIG>::insert_value(const_value_iterator pos, const list_value& value, size_type count)
         -> value_iterator
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
@@ -1430,7 +1430,7 @@ namespace sparrow
     }
 
     template <bool BIG>
-    void list_array_impl<BIG>::replace_value(size_type index, list_value value)
+    void list_array_impl<BIG>::replace_value(size_type index, const list_value& value)
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
 
@@ -1462,12 +1462,8 @@ namespace sparrow
             SPARROW_ASSERT_TRUE(source != nullptr);
             const auto flat_begin_index = static_cast<size_type>(flat_begin);
             this->erase_flat_elements(flat_begin_index, old_size);
-            array& flat_array = *this->raw_flat_array();
-            flat_array.insert(
-                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_begin_index),
-                source->cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
-                source->cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
-                1
+            this->insert_flat_elements(
+                flat_begin_index, list_value{source, value.begin_index(), value.end_index()}, 1
             );
             auto& proxy_eq = this->get_arrow_proxy();
             proxy_eq.update_buffers();
@@ -1479,11 +1475,9 @@ namespace sparrow
         if (new_size > 0)
         {
             SPARROW_ASSERT_TRUE(source != nullptr);
-            array& flat_array = *this->raw_flat_array();
-            flat_array.insert(
-                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_begin),
-                source->cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
-                source->cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
+            this->insert_flat_elements(
+                static_cast<size_type>(flat_begin),
+                list_value{source, value.begin_index(), value.end_index()},
                 1
             );
         }
@@ -1674,7 +1668,7 @@ namespace sparrow
 
     template <bool BIG>
     constexpr auto
-    list_view_array_impl<BIG>::insert_value(const_value_iterator pos, list_value value, size_type count)
+    list_view_array_impl<BIG>::insert_value(const_value_iterator pos, const list_value& value, size_type count)
         -> value_iterator
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
@@ -1770,7 +1764,7 @@ namespace sparrow
                     this->value_cbegin(),
                     static_cast<std::ptrdiff_t>(idx + inserted_count)
                 );
-                insert_value(cur_pos, static_cast<list_value>(*it), 1);
+                insert_value(cur_pos, *it, 1);
                 ++inserted_count;
             }
             proxy.set_length(original_size);
@@ -1784,7 +1778,7 @@ namespace sparrow
                     this->value_cbegin(),
                     static_cast<std::ptrdiff_t>(idx + inserted_count)
                 );
-                insert_value(cur_pos, static_cast<list_value>(*it), 1);
+                insert_value(cur_pos, *it, 1);
                 ++inserted_count;
                 proxy.set_length(original_size + inserted_count);
             }
@@ -1836,7 +1830,7 @@ namespace sparrow
     }
 
     template <bool BIG>
-    void list_view_array_impl<BIG>::replace_value(size_type index, list_value value)
+    void list_view_array_impl<BIG>::replace_value(size_type index, const list_value& value)
     {
         using mutable_offset_type = std::remove_const_t<offset_type>;
         using mutable_size_type = std::remove_const_t<list_size_type>;
@@ -1921,7 +1915,7 @@ namespace sparrow
     }
 
     inline auto
-    fixed_sized_list_array::insert_value(const_value_iterator pos, list_value value, size_type count)
+    fixed_sized_list_array::insert_value(const_value_iterator pos, const list_value& value, size_type count)
         -> value_iterator
     {
         SPARROW_ASSERT_TRUE(value.size() == m_list_size);
@@ -1950,7 +1944,7 @@ namespace sparrow
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
-    inline void fixed_sized_list_array::replace_value(size_type index, list_value value)
+    inline void fixed_sized_list_array::replace_value(size_type index, const list_value& value)
     {
         SPARROW_ASSERT_TRUE(value.size() == m_list_size);
 
@@ -1972,12 +1966,8 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(source != nullptr);
         const size_type flat_index = flat_element_count(index);
         this->erase_flat_elements(flat_index, static_cast<size_type>(m_list_size));
-        array& flat_array = *this->raw_flat_array();
-        flat_array.insert(
-            flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_index),
-            source->cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
-            source->cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
-            1
+        this->insert_flat_elements(
+            flat_index, list_value{source, value.begin_index(), value.end_index()}, 1
         );
     }
 
