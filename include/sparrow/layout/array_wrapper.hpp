@@ -15,8 +15,6 @@
 #pragma once
 
 #include <memory>
-#include <type_traits>
-#include <utility>
 #include <variant>
 
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
@@ -53,7 +51,6 @@ namespace sparrow
     public:
 
         using wrapper_ptr = std::unique_ptr<array_wrapper>;
-        using size_type = std::size_t;
 
         virtual ~array_wrapper() = default;
 
@@ -91,7 +88,6 @@ namespace sparrow
         array_wrapper_impl(T&& ar);
         array_wrapper_impl(T* ar);
         array_wrapper_impl(std::shared_ptr<T> ar);
-        array_wrapper_impl(array_wrapper_impl&&) = delete;
 
         ~array_wrapper_impl() override = default;
 
@@ -105,8 +101,6 @@ namespace sparrow
         [[nodiscard]] constexpr enum data_type get_data_type() const noexcept;
 
         constexpr array_wrapper_impl(const array_wrapper_impl&);
-        array_wrapper_impl& operator=(const array_wrapper_impl&) = delete;
-        array_wrapper_impl& operator=(array_wrapper_impl&&) = delete;
         [[nodiscard]] constexpr bool is_dictionary_impl() const noexcept override;
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy_impl() override;
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy_impl() const override;

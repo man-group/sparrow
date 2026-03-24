@@ -345,7 +345,6 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_registry.cpp
-    ${SPARROW_SOURCE_DIR}/layout/array_wrapper.cpp
     ${SPARROW_SOURCE_DIR}/layout/fixed_width_binary_array_utils.cpp
     ${SPARROW_SOURCE_DIR}/layout/list_value.cpp
     ${SPARROW_SOURCE_DIR}/layout/map_value.cpp

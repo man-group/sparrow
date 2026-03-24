@@ -1,1 +1,0 @@
-#include "sparrow/layout/array_wrapper.hpp"
