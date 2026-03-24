@@ -113,7 +113,10 @@ namespace sparrow
         {
             SPARROW_ASSERT_TRUE(pos >= this->cbegin())
             SPARROW_ASSERT_TRUE(pos <= this->cend());
-            SPARROW_ASSERT_TRUE(first <= last);
+            if constexpr (std::random_access_iterator<InputIt>)
+            {
+                SPARROW_ASSERT_TRUE(first <= last);
+            }
             const difference_type distance = std::distance(this->cbegin(), pos);
             const auto validity_range = std::ranges::subrange(first, last)
                                         | std::views::transform(

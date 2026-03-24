@@ -48,6 +48,17 @@ namespace sparrow
             test::fill_schema_and_array<T>(sc, ar, n, offset, {});
             return array(std::move(ar), std::move(sc));
         }
+
+        inline auto make_int_array(std::initializer_list<std::int32_t> values)
+        {
+            std::vector<nullable<std::int32_t>> nullable_values;
+            nullable_values.reserve(values.size());
+            for (const auto value : values)
+            {
+                nullable_values.push_back(make_nullable(value));
+            }
+            return primitive_array<std::int32_t>(nullable_values);
+        }
     }
 
     TEST_SUITE("array")
@@ -464,6 +475,68 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(slice_view_id, testing_types);
+
+        TEST_CASE("insert")
+        {
+            using array_type = primitive_array<std::int32_t>;
+
+            SUBCASE("from another array")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array source(test::make_int_array({8, 9}));
+
+                const auto iter = destination.insert(
+                    destination.cbegin() + 1,
+                    source.cbegin(),
+                    source.cend(),
+                    2
+                );
+
+                CHECK_EQ(iter, destination.cbegin() + 1);
+                CHECK(destination == array(test::make_int_array({1, 8, 9, 8, 9, 2, 3})));
+            }
+
+            SUBCASE("different arrays sharing the same layout still copy the source slice")
+            {
+                array_type typed_array(test::make_int_array({1, 2, 3}));
+                array destination(&typed_array);
+                array source(&typed_array);
+
+                destination.insert(
+                    destination.cbegin() + 1,
+                    source.cbegin(),
+                    source.cbegin() + 2,
+                    2
+                );
+
+                CHECK_EQ(typed_array, test::make_int_array({1, 1, 2, 1, 2, 2, 3}));
+            }
+
+            SUBCASE("different concrete array types with the same data type throw")
+            {
+                using extended_array_type = primitive_array<
+                    std::int32_t,
+                    simple_extension<"sparrow.test.array.insert">>;
+
+                array destination(test::make_int_array({1, 2, 3}));
+                array source(extended_array_type(test::make_arrow_proxy<std::int32_t>(2, 0)));
+
+                CHECK_THROWS_AS(
+                    destination.insert(destination.cbegin() + 1, source.cbegin(), source.cend()),
+                    std::invalid_argument
+                );
+            }
+        }
+
+        TEST_CASE("erase")
+        {
+            array destination(test::make_int_array({1, 2, 3, 4, 5}));
+
+            const auto iter = destination.erase(destination.cbegin() + 1, destination.cbegin() + 3);
+
+            CHECK_EQ(iter, destination.cbegin() + 1);
+            CHECK(destination == array(test::make_int_array({1, 4, 5})));
+        }
 
         TEST_CASE_TEMPLATE_DEFINE("name", AR, name_id)
         {

@@ -69,29 +69,6 @@ namespace sparrow
         [[nodiscard]] constexpr arrow_proxy& get_arrow_proxy();
         [[nodiscard]] constexpr const arrow_proxy& get_arrow_proxy() const;
 
-        /**
-         * Inserts \c count copies of the elements \c [src_begin, src_end) from \c source before position
-         * \c pos in this array. Both this array and \c source must wrap the same concrete element type.
-         *
-         * @pre source.data_type() == this->data_type()
-         * @pre pos <= this->get_arrow_proxy().length()
-         * @pre src_begin <= src_end <= source.get_arrow_proxy().length()
-         */
-        SPARROW_API void insert_elements_from(
-            size_type pos,
-            const array_wrapper& source,
-            size_type src_begin,
-            size_type src_end,
-            size_type count
-        );
-
-        /**
-         * Erases \c count elements starting at position \c pos from this array.
-         *
-         * @pre pos + count <= this->get_arrow_proxy().length()
-         */
-        SPARROW_API void erase_array_elements(size_type pos, size_type count);
-
     protected:
 
         constexpr array_wrapper(enum data_type dt);

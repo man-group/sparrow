@@ -12,17 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <vector>
-
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/list_array.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/primitive_array.hpp"
 
 #include "doctest/doctest.h"
 #include "external_array_data_creation.hpp"
-#include "test_utils.hpp"
-
 namespace sparrow
 {
     using test::make_arrow_proxy;
@@ -44,17 +39,6 @@ namespace sparrow
     {
         constexpr std::size_t size = 10u;
         constexpr std::size_t offset = 0u;
-
-        const auto make_int_array = [](std::initializer_list<std::int32_t> values)
-        {
-            std::vector<nullable<std::int32_t>> nullable_values;
-            nullable_values.reserve(values.size());
-            for (const auto value : values)
-            {
-                nullable_values.push_back(make_nullable(value));
-            }
-            return primitive_array<std::int32_t>(nullable_values);
-        };
 
         TEST_CASE_TEMPLATE_DEFINE("Constructor", AR, array_wrapper_ctor)
         {
@@ -151,65 +135,5 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(array_wrapper_clone, testing_types);
 
-        TEST_CASE("insert_elements_from")
-        {
-            using array_type = primitive_array<std::int32_t>;
-            using wrapper_type = array_wrapper_impl<array_type>;
-
-            SUBCASE("from another wrapper")
-            {
-                wrapper_type destination(make_int_array({1, 2, 3}));
-                wrapper_type source(make_int_array({8, 9}));
-
-                destination.insert_elements_from(1, source, 0, 2, 2);
-
-                CHECK_EQ(destination.get_wrapped(), make_int_array({1, 8, 9, 8, 9, 2, 3}));
-            }
-
-            SUBCASE("self insertion copies the source slice first")
-            {
-                wrapper_type wrapper(make_int_array({1, 2, 3}));
-
-                wrapper.insert_elements_from(1, wrapper, 0, 2, 2);
-
-                CHECK_EQ(wrapper.get_wrapped(), make_int_array({1, 1, 2, 1, 2, 2, 3}));
-            }
-
-            SUBCASE("different wrappers sharing the same array still copy the source slice")
-            {
-                array_type array(make_int_array({1, 2, 3}));
-                wrapper_type destination(&array);
-                wrapper_type source(&array);
-
-                destination.insert_elements_from(1, source, 0, 2, 2);
-
-                CHECK_EQ(array, make_int_array({1, 1, 2, 1, 2, 2, 3}));
-            }
-
-            SUBCASE("different concrete wrapper types with the same data type throw")
-            {
-                using extended_array_type = primitive_array<
-                    std::int32_t,
-                    simple_extension<"sparrow.test.array_wrapper.insert_elements_from">>;
-                using extended_wrapper_type = array_wrapper_impl<extended_array_type>;
-
-                wrapper_type destination(array_type(make_arrow_proxy<std::int32_t>(3, offset)));
-                extended_wrapper_type source(extended_array_type(make_arrow_proxy<std::int32_t>(2, offset)));
-
-                CHECK_THROWS_AS(destination.insert_elements_from(1, source, 0, 2, 1), std::invalid_argument);
-            }
-        }
-
-        TEST_CASE("erase_array_elements")
-        {
-            using array_type = primitive_array<std::int32_t>;
-            using wrapper_type = array_wrapper_impl<array_type>;
-
-            wrapper_type wrapper(make_int_array({1, 2, 3, 4, 5}));
-
-            wrapper.erase_array_elements(1, 2);
-
-            CHECK_EQ(wrapper.get_wrapped(), make_int_array({1, 4, 5}));
-        }
     }
 }

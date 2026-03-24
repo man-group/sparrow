@@ -14,6 +14,10 @@
 
 #include "sparrow/array.hpp"
 
+#include <stdexcept>
+#include <type_traits>
+#include <vector>
+
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
@@ -151,20 +155,215 @@ namespace sparrow
         return {get_arrow_proxy().slice_view(start, end)};
     }
 
-    void array::insert_elements_from(
-        size_type pos,
-        const array& source,
-        size_type src_begin,
-        size_type src_end,
-        size_type count
-    )
+    array::iterator array::insert(const_iterator pos, const_iterator first, const_iterator last)
     {
-        p_array->insert_elements_from(pos, *source.p_array, src_begin, src_end, count);
+        return insert(pos, first, last, 1);
     }
 
-    void array::erase_array_elements(size_type pos, size_type count)
+    array::iterator
+    array::insert(const_iterator pos, const_iterator first, const_iterator last, size_type count)
     {
-        p_array->erase_array_elements(pos, count);
+        if (pos.p_array != this)
+        {
+            throw std::invalid_argument("array::insert: position iterator must belong to the destination array");
+        }
+
+        if (first.p_array == nullptr)
+        {
+            throw std::invalid_argument("array::insert: source iterators must belong to a valid array");
+        }
+
+        if (first.p_array != last.p_array)
+        {
+            throw std::invalid_argument("array::insert: source iterators must belong to the same array");
+        }
+
+        const array& source = *first.p_array;
+        const size_type pos_index = pos.m_index;
+        const size_type first_index = first.m_index;
+        const size_type last_index = last.m_index;
+
+        if (source.data_type() != this->data_type())
+        {
+            throw std::invalid_argument("array::insert: source and destination must have the same data type");
+        }
+
+        if (pos_index > size())
+        {
+            throw std::out_of_range("array::insert: position is out of range");
+        }
+
+        if (first_index > last_index)
+        {
+            throw std::invalid_argument("array::insert: source iterator range is invalid");
+        }
+
+        if (last_index > source.size())
+        {
+            throw std::out_of_range("array::insert: source iterator range is out of bounds");
+        }
+
+        if (count == 0 || first_index == last_index)
+        {
+            return cbegin() + static_cast<iterator::difference_type>(pos_index);
+        }
+
+        const auto& destination_wrapper = *p_array;
+        const auto& source_wrapper = *source.p_array;
+        if (typeid(destination_wrapper) != typeid(source_wrapper))
+        {
+            throw std::invalid_argument(
+                "array::insert: source and destination must wrap the same concrete array type"
+            );
+        }
+
+        visit(
+            [this, &source, pos_index, first_index, last_index, count](const auto& array_impl)
+            {
+                using array_type = std::remove_cvref_t<decltype(array_impl)>;
+                array_type& destination = unwrap_array<array_type>(*p_array);
+                const array_type& source_array = unwrap_array<array_type>(*source.p_array);
+
+                if constexpr (requires {
+                                  destination.insert(
+                                      destination.cbegin(),
+                                      source_array.cbegin(),
+                                      source_array.cbegin()
+                                  );
+                              })
+                {
+                    const auto source_first = std::next(
+                        source_array.cbegin(),
+                        static_cast<std::ptrdiff_t>(first_index)
+                    );
+                    const auto source_last = std::next(
+                        source_array.cbegin(),
+                        static_cast<std::ptrdiff_t>(last_index)
+                    );
+                    using source_input_value = std::remove_cvref_t<decltype(nullable_get(*source_first))>;
+                    using destination_input_value = std::remove_cvref_t<
+                        decltype(nullable_get(std::declval<typename array_type::value_type&>()))>;
+                    constexpr bool can_insert_directly = std::same_as<source_input_value, destination_input_value>;
+
+                    const auto dest_pos = std::next(destination.cbegin(), static_cast<std::ptrdiff_t>(pos_index));
+
+                    if (&destination == &source_array)
+                    {
+                        // Self-insertion: snapshot first to avoid iterator invalidation.
+                        const std::vector<typename array_type::value_type> temp(source_first, source_last);
+                        auto current_offset = static_cast<std::ptrdiff_t>(pos_index);
+                        for (size_type i = 0; i < count; ++i)
+                        {
+                            destination.insert(
+                                std::next(destination.cbegin(), current_offset),
+                                temp.cbegin(),
+                                temp.cend()
+                            );
+                            current_offset += static_cast<std::ptrdiff_t>(temp.size());
+                        }
+                    }
+                    else if constexpr (can_insert_directly)
+                    {
+                        // Types match, no aliasing: insert directly from source iterators.
+                        const auto elem_count = static_cast<std::ptrdiff_t>(last_index - first_index);
+                        auto current_offset = static_cast<std::ptrdiff_t>(pos_index);
+                        for (size_type i = 0; i < count; ++i)
+                        {
+                            destination.insert(
+                                std::next(destination.cbegin(), current_offset),
+                                source_first,
+                                source_last
+                            );
+                            current_offset += elem_count;
+                        }
+                    }
+                    else
+                    {
+                        // Type mismatch (e.g. string_view -> string): materialise owned
+                        // values via range construction, then insert count times.
+                        const std::vector<typename array_type::value_type> temp(source_first, source_last);
+                        auto current_offset = static_cast<std::ptrdiff_t>(pos_index);
+                        for (size_type i = 0; i < count; ++i)
+                        {
+                            destination.insert(
+                                std::next(destination.cbegin(), current_offset),
+                                temp.cbegin(),
+                                temp.cend()
+                            );
+                            current_offset += static_cast<std::ptrdiff_t>(temp.size());
+                        }
+                    }
+                }
+                else
+                {
+                    throw std::runtime_error("array::insert: array type does not support mutation");
+                }
+            }
+        );
+
+        return cbegin() + static_cast<iterator::difference_type>(pos_index);
+    }
+
+    array::iterator array::erase(const_iterator pos)
+    {
+        if (pos.p_array != this)
+        {
+            throw std::invalid_argument("array::erase: iterator must belong to this array");
+        }
+
+        if (pos.m_index >= size())
+        {
+            throw std::out_of_range("array::erase: iterator is out of range");
+        }
+        return erase(pos, pos + 1);
+    }
+
+    array::iterator array::erase(const_iterator first, const_iterator last)
+    {
+        if (first.p_array != this || last.p_array != this)
+        {
+            throw std::invalid_argument("array::erase: iterators must belong to this array");
+        }
+
+        const size_type first_index = first.m_index;
+        const size_type last_index = last.m_index;
+
+        if (first_index > last_index)
+        {
+            throw std::invalid_argument("array::erase: iterator range is invalid");
+        }
+
+        if (last_index > size())
+        {
+            throw std::out_of_range("array::erase: iterator range is out of bounds");
+        }
+
+        const auto count = last_index - first_index;
+        if (count == 0)
+        {
+            return cbegin() + static_cast<iterator::difference_type>(first_index);
+        }
+
+        visit(
+            [this, first_index, count](const auto& array_impl)
+            {
+                using array_type = std::remove_cvref_t<decltype(array_impl)>;
+                array_type& wrapped_array = unwrap_array<array_type>(*p_array);
+
+                if constexpr (requires { wrapped_array.erase(wrapped_array.cbegin(), wrapped_array.cbegin()); })
+                {
+                    auto erase_first = std::next(wrapped_array.cbegin(), static_cast<std::ptrdiff_t>(first_index));
+                    auto erase_last = std::next(erase_first, static_cast<std::ptrdiff_t>(count));
+                    static_cast<void>(wrapped_array.erase(erase_first, erase_last));
+                }
+                else
+                {
+                    throw std::runtime_error("array::erase: array type does not support mutation");
+                }
+            }
+        );
+
+        return cbegin() + static_cast<iterator::difference_type>(first_index);
     }
 
     arrow_proxy& array::get_arrow_proxy()

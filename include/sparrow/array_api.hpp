@@ -14,16 +14,18 @@
 
 #pragma once
 
+#include <iterator>
 #include <ranges>
+#include <stdexcept>
 
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_concept.hpp"
-#include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
 namespace sparrow
@@ -46,6 +48,88 @@ namespace sparrow
         using size_type = std::size_t;
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
+
+        class const_iterator : public iterator_base<
+                                   const_iterator,
+                                   value_type,
+                                   std::random_access_iterator_tag,
+                                   const_reference,
+                                   std::ptrdiff_t>
+        {
+        public:
+
+            using difference_type = std::ptrdiff_t;
+            using size_type = array::size_type;
+
+            const_iterator() = default;
+
+        private:
+
+            const_iterator(const array* array_ptr, size_type index)
+                : p_array(array_ptr)
+                , m_index(index)
+            {
+            }
+
+            [[nodiscard]] const_reference dereference() const;
+
+            void increment()
+            {
+                ++m_index;
+            }
+
+            void decrement()
+            {
+                --m_index;
+            }
+
+            void advance(difference_type n)
+            {
+                if (n >= 0)
+                {
+                    m_index += static_cast<size_type>(n);
+                }
+                else
+                {
+                    if (n < -static_cast<difference_type>(m_index))
+                    {
+                        throw std::out_of_range("array::const_iterator: iterator advanced before begin");
+                    }
+                    m_index -= static_cast<size_type>(-n);
+                }
+            }
+
+            [[nodiscard]] difference_type distance_to(const const_iterator& rhs) const
+            {
+                if (p_array != rhs.p_array)
+                {
+                    throw std::invalid_argument("array::const_iterator: iterators belong to different arrays");
+                }
+                return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
+            }
+
+            [[nodiscard]] bool equal(const const_iterator& rhs) const
+            {
+                return p_array == rhs.p_array && m_index == rhs.m_index;
+            }
+
+            [[nodiscard]] bool less_than(const const_iterator& rhs) const
+            {
+                if (p_array != rhs.p_array)
+                {
+                    throw std::invalid_argument("array::const_iterator: iterators belong to different arrays");
+                }
+                return m_index < rhs.m_index;
+            }
+
+            const array* p_array = nullptr;
+            size_type m_index = 0;
+
+            friend class iterator_access;
+            friend class array;
+        };
+
+        using iterator = const_iterator;
 
         /**
          * Constructs an empty array.
@@ -257,6 +341,11 @@ namespace sparrow
          * @return Constant reference to the last element.
          */
         [[nodiscard]] SPARROW_API const_reference back() const;
+
+        [[nodiscard]] iterator begin() const;
+        [[nodiscard]] iterator end() const;
+        [[nodiscard]] const_iterator cbegin() const;
+        [[nodiscard]] const_iterator cend() const;
 
         template <class F>
         using visit_result_t = std::invoke_result_t<F, null_array>;

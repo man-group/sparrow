@@ -463,6 +463,8 @@ namespace sparrow
         constexpr list_array_impl(self_type&&) noexcept = default;
         constexpr list_array_impl& operator=(self_type&&) noexcept = default;
 
+        constexpr void slice_inplace(size_type start, size_type end);
+
         /**
          * @brief Generic constructor for creating list array from various inputs.
          *
@@ -690,6 +692,8 @@ namespace sparrow
 
         constexpr list_view_array_impl(self_type&&) = default;
         constexpr list_view_array_impl& operator=(self_type&&) = default;
+
+        constexpr void slice_inplace(size_type start, size_type end);
 
         /**
          * @brief Generic constructor for creating list view array from various inputs.
@@ -1235,6 +1239,13 @@ namespace sparrow
     }
 
     template <bool BIG>
+    constexpr void list_array_impl<BIG>::slice_inplace(size_type start, size_type end)
+    {
+        base_type::slice_inplace(start, end);
+        p_list_offsets = make_list_offsets();
+    }
+
+    template <bool BIG>
     constexpr auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
     {
         return std::make_pair(p_list_offsets[i], p_list_offsets[i + 1]);
@@ -1264,11 +1275,12 @@ namespace sparrow
         if (value.size() > 0)
         {
             SPARROW_ASSERT_TRUE(value.flat_array() != nullptr);
-            this->raw_flat_array()->insert_elements_from(
-                flat_insert_pos,
-                *value.flat_array(),
-                value.begin_index(),
-                value.end_index(),
+            array& flat_array = *this->raw_flat_array();
+            const array& value_flat_array = *value.flat_array();
+            flat_array.insert(
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_insert_pos),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
                 count
             );
         }
@@ -1361,9 +1373,12 @@ namespace sparrow
 
         if (flat_erase_count_val > 0)
         {
-            this->raw_flat_array()->erase_array_elements(
-                static_cast<size_type>(flat_erase_begin),
-                static_cast<size_type>(flat_erase_count_val)
+            array& flat_array = *this->raw_flat_array();
+            const auto erase_begin = static_cast<size_type>(flat_erase_begin);
+            const auto erase_end = erase_begin + static_cast<size_type>(flat_erase_count_val);
+            flat_array.erase(
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(erase_begin),
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(erase_end)
             );
         }
 
@@ -1431,16 +1446,21 @@ namespace sparrow
 
         if (old_size > 0)
         {
-            this->raw_flat_array()->erase_array_elements(static_cast<size_type>(flat_begin), old_size);
+            array& flat_array = *this->raw_flat_array();
+            const auto flat_begin_index = static_cast<size_type>(flat_begin);
+            flat_array.erase(
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_begin_index),
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_begin_index + old_size)
+            );
         }
         if (new_size > 0)
         {
             SPARROW_ASSERT_TRUE(source != nullptr);
-            this->raw_flat_array()->insert_elements_from(
-                static_cast<size_type>(flat_begin),
-                *source,
-                value.begin_index(),
-                value.end_index(),
+            array& flat_array = *this->raw_flat_array();
+            flat_array.insert(
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_begin),
+                source->cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
+                source->cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
                 1
             );
         }
@@ -1600,6 +1620,14 @@ namespace sparrow
     }
 
     template <bool BIG>
+    constexpr void list_view_array_impl<BIG>::slice_inplace(size_type start, size_type end)
+    {
+        base_type::slice_inplace(start, end);
+        p_list_offsets = make_list_offsets();
+        p_list_sizes = make_list_sizes();
+    }
+
+    template <bool BIG>
     inline constexpr auto list_view_array_impl<BIG>::offset_range(size_type i) const
         -> std::pair<offset_type, offset_type>
     {
@@ -1642,11 +1670,12 @@ namespace sparrow
         if (val_sz > 0)
         {
             SPARROW_ASSERT_TRUE(value.flat_array() != nullptr);
-            this->raw_flat_array()->insert_elements_from(
-                flat_append_pos,
-                *value.flat_array(),
-                value.begin_index(),
-                value.end_index(),
+            array& flat_array = *this->raw_flat_array();
+            const array& value_flat_array = *value.flat_array();
+            flat_array.insert(
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_append_pos),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
                 count
             );
         }
@@ -1792,11 +1821,12 @@ namespace sparrow
         if (value_size > 0)
         {
             SPARROW_ASSERT_TRUE(value.flat_array() != nullptr);
-            this->raw_flat_array()->insert_elements_from(
-                flat_append_pos,
-                *value.flat_array(),
-                value.begin_index(),
-                value.end_index(),
+            array& flat_array = *this->raw_flat_array();
+            const array& value_flat_array = *value.flat_array();
+            flat_array.insert(
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_append_pos),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
                 1
             );
         }
@@ -1886,11 +1916,12 @@ namespace sparrow
         if (m_list_size > 0)
         {
             SPARROW_ASSERT_TRUE(value.flat_array() != nullptr);
-            this->raw_flat_array()->insert_elements_from(
-                flat_insert_pos,
-                *value.flat_array(),
-                value.begin_index(),
-                value.end_index(),
+            array& flat_array = *this->raw_flat_array();
+            const array& value_flat_array = *value.flat_array();
+            flat_array.insert(
+                flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_insert_pos),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
+                value_flat_array.cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
                 count
             );
         }
@@ -1923,7 +1954,13 @@ namespace sparrow
 
         this->throw_if_sliced_for_mutation("fixed_sized_list_array::erase_values");
 
-        this->raw_flat_array()->erase_array_elements(flat_element_count(idx), flat_element_count(count));
+        array& flat_array = *this->raw_flat_array();
+        const auto erase_begin = flat_element_count(idx);
+        const auto erase_end = erase_begin + flat_element_count(count);
+        flat_array.erase(
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(erase_begin),
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(erase_end)
+        );
         return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
@@ -1964,12 +2001,15 @@ namespace sparrow
 
         SPARROW_ASSERT_TRUE(source != nullptr);
         const size_type flat_index = flat_element_count(index);
-        this->raw_flat_array()->erase_array_elements(flat_index, static_cast<size_type>(m_list_size));
-        this->raw_flat_array()->insert_elements_from(
-            flat_index,
-            *source,
-            value.begin_index(),
-            value.end_index(),
+        array& flat_array = *this->raw_flat_array();
+        flat_array.erase(
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_index),
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_index + static_cast<size_type>(m_list_size))
+        );
+        flat_array.insert(
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_index),
+            source->cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
+            source->cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
             1
         );
     }

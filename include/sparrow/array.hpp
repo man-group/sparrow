@@ -19,6 +19,15 @@
 
 namespace sparrow
 {
+    inline auto array::const_iterator::dereference() const -> const_reference
+    {
+        if (p_array == nullptr)
+        {
+            throw std::out_of_range("array::const_iterator: cannot dereference end iterator");
+        }
+        return (*p_array)[m_index];
+    }
+
     template <layout A>
         requires(not std::is_lvalue_reference_v<A>)
     constexpr array::array(A&& a)
