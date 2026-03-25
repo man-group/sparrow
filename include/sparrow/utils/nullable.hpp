@@ -79,6 +79,8 @@ namespace sparrow
     concept range_of_nullables = std::ranges::range<RangeOfNullables>
                                  && is_nullable<std::ranges::range_value_t<RangeOfNullables>>::value;
 
+    // TODO: nullable_get_fn should not be required since nullable implements all the required overloads
+    // of get(), but some compilers fail to build without it.
     struct nullable_get_fn
     {
         template <class N>

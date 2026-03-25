@@ -25,6 +25,9 @@
 #include "sparrow/layout/layout_concept.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/layout/list_value.hpp"
+#include "sparrow/layout/map_value.hpp"
+#include "sparrow/layout/struct_value.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
@@ -49,12 +52,8 @@ namespace sparrow
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
 
-        class const_iterator : public iterator_base<
-                                   const_iterator,
-                                   value_type,
-                                   std::random_access_iterator_tag,
-                                   const_reference,
-                                   std::ptrdiff_t>
+        class const_iterator
+            : public iterator_base<const_iterator, value_type, std::random_access_iterator_tag, const_reference, std::ptrdiff_t>
         {
         public:
 

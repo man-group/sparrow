@@ -69,17 +69,17 @@ namespace sparrow
         list_value_iterator() noexcept = default;
 
         /**
-         * @brief Constructs iterator for the given list and index.
+         * @brief Constructs iterator from the raw flat array and position info.
          *
-         * @param layout Pointer to the parent list_value
-         * @param index Index within the list (relative to list start)
+         * @param flat_array Pointer to the flat child array
+         * @param base_index Start index of the list slice within the flat array
+         * @param index Current position within the list (relative to base_index)
          *
-         * @pre layout must be a valid pointer to list_value
-         * @pre index must be <= layout->size() (end iterator allowed)
-         * @post Iterator is positioned at the specified index
-         * @post Iterator is valid for dereferencing if index < layout->size()
+         * @pre flat_array must be a valid non-null pointer
+         * @pre 0 <= index <= (end - base_index) for the owning list
+         * @post Iterator is positioned at base_index + index in the flat array
          */
-        list_value_iterator(const list_value* layout, size_type index);
+        list_value_iterator(const array* flat_array, size_type base_index, difference_type index);
 
     private:
 
@@ -152,8 +152,9 @@ namespace sparrow
          */
         [[nodiscard]] bool less_than(const self_type& rhs) const;
 
-        const list_value* m_list_value = nullptr;  ///< Pointer to parent list_value
-        difference_type m_index = 0;               ///< Current index within the list
+        const array* m_flat_array = nullptr;   ///< Pointer to the flat child array
+        size_type m_base_index = 0;             ///< Start of the list slice in the flat array
+        difference_type m_index = 0;            ///< Current position within the slice
 
         friend class iterator_access;
     };
@@ -409,7 +410,6 @@ namespace sparrow
          */
         [[nodiscard]] list_value_reverse_iterator crend() const;
 
-
     private:
 
         /// @brief Returns a pointer to the flat array backing this list view.
@@ -447,17 +447,21 @@ namespace sparrow
         friend class list_array_crtp_base;
     };
 
+    SPARROW_API bool operator==(const list_value& lhs, const list_value& rhs);
+
     template <class L>
-    class list_reference : public list_value
+    class list_reference
     {
     public:
 
         using self_type = list_reference<L>;
+        using value_type = list_value;
         using size_type = list_value::size_type;
+        using iterator = list_value_iterator;
+        using const_iterator = list_value_iterator;
 
         constexpr list_reference(L* layout, size_type index)
-            : list_value(make_view(layout, index))
-            , p_layout(layout)
+            : p_layout(layout)
             , m_index(index)
         {
         }
@@ -469,51 +473,37 @@ namespace sparrow
         self_type& operator=(const list_value& rhs)
         {
             p_layout->replace_value(m_index, rhs);
-            refresh_view();
             return *this;
         }
 
-        self_type& operator=(const self_type& rhs)
+        self_type& operator=(const self_type& rhs) { return operator=(static_cast<list_value>(rhs)); }
+        self_type& operator=(self_type&& rhs) { return operator=(static_cast<list_value>(rhs)); }
+
+        operator list_value() const noexcept
         {
-            operator=(static_cast<const list_value&>(rhs));
-            return *this;
+            const auto [b, e] = p_layout->offset_range(m_index);
+            return list_value(p_layout->raw_flat_array(), static_cast<size_type>(b), static_cast<size_type>(e));
         }
 
-        self_type& operator=(self_type&& rhs)
-        {
-            operator=(static_cast<const list_value&>(rhs));
-            return *this;
-        }
+        [[nodiscard]] size_type size() const noexcept { return view().size(); }
+        [[nodiscard]] bool empty() const noexcept { return view().empty(); }
+        [[nodiscard]] auto operator[](size_type i) const { return view()[i]; }
+        [[nodiscard]] auto front() const { return view().front(); }
+        [[nodiscard]] auto back() const { return view().back(); }
+        [[nodiscard]] iterator begin() const { return view().begin(); }
+        [[nodiscard]] iterator end() const { return view().end(); }
+        [[nodiscard]] iterator cbegin() const { return view().cbegin(); }
+        [[nodiscard]] iterator cend() const { return view().cend(); }
+
+        [[nodiscard]] bool operator==(const list_value& rhs) const { return view() == rhs; }
+        [[nodiscard]] bool operator==(const self_type& rhs) const { return view() == rhs.view(); }
 
     private:
 
-        [[nodiscard]] static constexpr list_value make_view(L* layout, size_type index)
-        {
-            const auto range = layout->offset_range(index);
-            return list_value(
-                layout->raw_flat_array(),
-                static_cast<size_type>(range.first),
-                static_cast<size_type>(range.second)
-            );
-        }
-
-        constexpr void refresh_view()
-        {
-            static_cast<list_value&>(*this) = make_view(p_layout, m_index);
-        }
+        [[nodiscard]] list_value view() const noexcept { return static_cast<list_value>(*this); }
 
         L* p_layout = nullptr;
         size_type m_index = 0;
-    };
-
-    template <class L>
-    struct nullable_traits<list_reference<L>>
-    {
-        using value_type = list_reference<L>;
-        using reference = list_reference<L>;
-        using const_reference = list_value;
-        using rvalue_reference = list_reference<L>;
-        using const_rvalue_reference = list_value;
     };
 
     /**
