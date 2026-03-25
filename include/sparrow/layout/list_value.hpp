@@ -69,17 +69,15 @@ namespace sparrow
         list_value_iterator() noexcept = default;
 
         /**
-         * @brief Constructs iterator from the raw flat array and position info.
+         * @brief Constructs iterator from the raw flat array and absolute position.
          *
          * @param flat_array Pointer to the flat child array
-         * @param base_index Start index of the list slice within the flat array
-         * @param index Current position within the list (relative to base_index)
+         * @param index Absolute position within the flat array
          *
          * @pre flat_array must be a valid non-null pointer
-         * @pre 0 <= index <= (end - base_index) for the owning list
-         * @post Iterator is positioned at base_index + index in the flat array
+         * @post Iterator is positioned at index in the flat array
          */
-        list_value_iterator(const array* flat_array, size_type base_index, difference_type index);
+        list_value_iterator(const array* flat_array, size_type index);
 
     private:
 
@@ -152,9 +150,8 @@ namespace sparrow
          */
         [[nodiscard]] bool less_than(const self_type& rhs) const;
 
-        const array* m_flat_array = nullptr;   ///< Pointer to the flat child array
-        size_type m_base_index = 0;             ///< Start of the list slice in the flat array
-        difference_type m_index = 0;            ///< Current position within the slice
+        const array* m_flat_array = nullptr;  ///< Pointer to the flat child array
+        size_type m_index = 0;                  ///< Absolute position within the flat array
 
         friend class iterator_access;
     };
