@@ -358,6 +358,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/types/data_type.cpp
     ${SPARROW_SOURCE_DIR}/union_array.cpp
     ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
+    ${SPARROW_SOURCE_DIR}/utils/sparrow_exception.cpp
     ${SPARROW_SOURCE_DIR}/utils/temporal.cpp
 )
 

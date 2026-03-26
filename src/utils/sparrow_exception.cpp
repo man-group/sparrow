@@ -12,19 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-#include <stdexcept>
-#include <string>
-
-#include "sparrow/config/config.hpp"
+#include "sparrow/utils/sparrow_exception.hpp"
 
 namespace sparrow
 {
-    class contract_assertion_error : public std::runtime_error
+    contract_assertion_error::contract_assertion_error(const std::string& message)
+        : std::runtime_error(message)
     {
-    public:
+    }
 
-        SPARROW_API explicit contract_assertion_error(const std::string& message);
-        SPARROW_API explicit contract_assertion_error(const char* message);
-    };
+    contract_assertion_error::contract_assertion_error(const char* message)
+        : std::runtime_error(message)
+    {
+    }
 }
