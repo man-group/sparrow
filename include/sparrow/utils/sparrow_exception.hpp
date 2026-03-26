@@ -20,12 +20,20 @@
 
 namespace sparrow
 {
+// MSVC warns C4275 when a dllexport class inherits from a non-dllexport base.
+// This is safe and expected for exception classes; suppress the warning.
+#ifdef _MSC_VER
+#    pragma warning(push)
+#    pragma warning(disable : 4275)
+#endif
     class SPARROW_API contract_assertion_error : public std::runtime_error
     {
     public:
 
         explicit contract_assertion_error(const std::string& message);
         explicit contract_assertion_error(const char* message);
-        ~contract_assertion_error() override;
     };
+#ifdef _MSC_VER
+#    pragma warning(pop)
+#endif
 }

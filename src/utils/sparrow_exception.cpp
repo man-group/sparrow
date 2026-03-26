@@ -25,6 +25,4 @@ namespace sparrow
         : std::runtime_error(message)
     {
     }
-
-    contract_assertion_error::~contract_assertion_error() = default;
 }
