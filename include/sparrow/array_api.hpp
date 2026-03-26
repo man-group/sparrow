@@ -18,16 +18,18 @@
 #include <ranges>
 #include <stdexcept>
 
+#include "sparrow/array_iterator.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_concept.hpp"
-#include "sparrow/null_array.hpp"
-#include "sparrow/types/data_traits.hpp"
 #include "sparrow/layout/list_value.hpp"
 #include "sparrow/layout/map_value.hpp"
 #include "sparrow/layout/struct_value.hpp"
+#include "sparrow/null_array.hpp"
+#include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
@@ -52,82 +54,7 @@ namespace sparrow
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
 
-        class const_iterator
-            : public iterator_base<const_iterator, value_type, std::random_access_iterator_tag, const_reference, std::ptrdiff_t>
-        {
-        public:
-
-            using difference_type = std::ptrdiff_t;
-            using size_type = array::size_type;
-
-            const_iterator() = default;
-
-        private:
-
-            const_iterator(const array* array_ptr, size_type index)
-                : p_array(array_ptr)
-                , m_index(index)
-            {
-            }
-
-            [[nodiscard]] const_reference dereference() const;
-
-            void increment()
-            {
-                ++m_index;
-            }
-
-            void decrement()
-            {
-                --m_index;
-            }
-
-            void advance(difference_type n)
-            {
-                if (n >= 0)
-                {
-                    m_index += static_cast<size_type>(n);
-                }
-                else
-                {
-                    if (n < -static_cast<difference_type>(m_index))
-                    {
-                        throw std::out_of_range("array::const_iterator: iterator advanced before begin");
-                    }
-                    m_index -= static_cast<size_type>(-n);
-                }
-            }
-
-            [[nodiscard]] difference_type distance_to(const const_iterator& rhs) const
-            {
-                if (p_array != rhs.p_array)
-                {
-                    throw std::invalid_argument("array::const_iterator: iterators belong to different arrays");
-                }
-                return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
-            }
-
-            [[nodiscard]] bool equal(const const_iterator& rhs) const
-            {
-                return p_array == rhs.p_array && m_index == rhs.m_index;
-            }
-
-            [[nodiscard]] bool less_than(const const_iterator& rhs) const
-            {
-                if (p_array != rhs.p_array)
-                {
-                    throw std::invalid_argument("array::const_iterator: iterators belong to different arrays");
-                }
-                return m_index < rhs.m_index;
-            }
-
-            const array* p_array = nullptr;
-            size_type m_index = 0;
-
-            friend class iterator_access;
-            friend class array;
-        };
-
+        using const_iterator = array_const_iterator;
         using iterator = const_iterator;
 
         /**
@@ -314,7 +241,6 @@ namespace sparrow
          * with bounds checking.
          *
          * @param index The position of the element in the array.
-         * @throw std::out_of_range if \p index is not within the range of the container.
          */
         [[nodiscard]] SPARROW_API const_reference at(size_type index) const;
 
@@ -500,12 +426,12 @@ namespace sparrow
 
     inline auto array::cbegin() const -> const_iterator
     {
-        return const_iterator(this, 0);
+        return {this, 0};
     }
 
     inline auto array::cend() const -> const_iterator
     {
-        return const_iterator(this, size());
+        return {this, size()};
     }
 
     /**

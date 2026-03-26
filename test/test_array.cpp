@@ -537,7 +537,7 @@ namespace sparrow
 
                 CHECK_THROWS_AS(
                     destination.insert(destination.cbegin() + 1, source.cbegin(), source.cend()),
-                    std::invalid_argument
+                    sparrow::contract_assertion_error
                 );
             }
 
@@ -564,7 +564,7 @@ namespace sparrow
 
                 CHECK_THROWS_AS(
                     destination.insert(other.cbegin(), other.cbegin(), other.cend()),
-                    std::invalid_argument
+                    sparrow::contract_assertion_error
                 );
             }
 
@@ -575,7 +575,7 @@ namespace sparrow
 
                 CHECK_THROWS_AS(
                     destination.insert(destination.cbegin(), null_iter, null_iter),
-                    std::invalid_argument
+                    sparrow::contract_assertion_error
                 );
             }
 
@@ -587,7 +587,7 @@ namespace sparrow
 
                 CHECK_THROWS_AS(
                     destination.insert(destination.cbegin(), source_a.cbegin(), source_b.cend()),
-                    std::invalid_argument
+                    sparrow::contract_assertion_error
                 );
             }
 
@@ -600,7 +600,7 @@ namespace sparrow
 
                 CHECK_THROWS_AS(
                     destination.insert(past_end, source.cbegin(), source.cend()),
-                    std::out_of_range
+                    sparrow::contract_assertion_error
                 );
             }
 
@@ -611,7 +611,7 @@ namespace sparrow
 
                 CHECK_THROWS_AS(
                     destination.insert(destination.cbegin(), source.cend(), source.cbegin()),
-                    std::invalid_argument
+                    sparrow::contract_assertion_error
                 );
             }
         }
@@ -663,14 +663,14 @@ namespace sparrow
                 array destination(test::make_int_array({1, 2, 3}));
                 array other(test::make_int_array({4, 5}));
 
-                CHECK_THROWS_AS(destination.erase(other.cbegin()), std::invalid_argument);
+                CHECK_THROWS_AS(destination.erase(other.cbegin()), sparrow::contract_assertion_error);
             }
 
             SUBCASE("erase(pos) at end (out of range) throws")
             {
                 array destination(test::make_int_array({1, 2, 3}));
 
-                CHECK_THROWS_AS(destination.erase(destination.cend()), std::out_of_range);
+                CHECK_THROWS_AS(destination.erase(destination.cend()), sparrow::contract_assertion_error);
             }
         }
 
@@ -679,20 +679,20 @@ namespace sparrow
             SUBCASE("dereferencing a default-constructed (null) iterator throws invalid_argument")
             {
                 array::const_iterator it{};
-                CHECK_THROWS_AS(*it, std::invalid_argument);
+                CHECK_THROWS_AS(*it, sparrow::contract_assertion_error);
             }
 
             SUBCASE("dereferencing end() throws out_of_range")
             {
                 array ar(test::make_int_array({10, 20, 30}));
-                CHECK_THROWS_AS(*ar.cend(), std::out_of_range);
+                CHECK_THROWS_AS(*ar.cend(), sparrow::contract_assertion_error);
             }
 
             SUBCASE("dereferencing end() of an empty array throws out_of_range")
             {
                 array ar(test::make_int_array({}));
                 // begin() == end() for an empty array; dereferencing it is still out-of-range
-                CHECK_THROWS_AS(*ar.cbegin(), std::out_of_range);
+                CHECK_THROWS_AS(*ar.cbegin(), sparrow::contract_assertion_error);
             }
 
             SUBCASE("dereferencing a valid iterator does not throw")

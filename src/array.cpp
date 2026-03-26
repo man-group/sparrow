@@ -23,6 +23,7 @@
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_helper.hpp"
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -104,9 +105,7 @@ namespace sparrow
     {
         if (index >= size())
         {
-            std::ostringstream oss117;
-            oss117 << "Index " << index << "is greater or equal to size of array (" << size() << ")";
-            throw std::out_of_range(oss117.str());
+            throw std::out_of_range("array::at: index out of range");
         }
         return array_element(*p_array, index);
     }
@@ -155,6 +154,12 @@ namespace sparrow
         return {get_arrow_proxy().slice_view(start, end)};
     }
 
+    void array::slice_inplace(size_type start, size_type end)
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        get_arrow_proxy().slice_inplace(start, end);
+    }
+
     array::iterator array::insert(const_iterator pos, const_iterator first, const_iterator last)
     {
         return insert(pos, first, last, 1);
@@ -163,45 +168,19 @@ namespace sparrow
     array::iterator
     array::insert(const_iterator pos, const_iterator first, const_iterator last, size_type count)
     {
-        if (pos.p_array != this)
-        {
-            throw std::invalid_argument("array::insert: position iterator must belong to the destination array");
-        }
-
-        if (first.p_array == nullptr)
-        {
-            throw std::invalid_argument("array::insert: source iterators must belong to a valid array");
-        }
-
-        if (first.p_array != last.p_array)
-        {
-            throw std::invalid_argument("array::insert: source iterators must belong to the same array");
-        }
+        SPARROW_ASSERT_TRUE(pos.p_array == this);
+        SPARROW_ASSERT_TRUE(first.p_array != nullptr);
+        SPARROW_ASSERT_TRUE(first.p_array == last.p_array);
 
         const array& source = *first.p_array;
         const size_type pos_index = pos.m_index;
         const size_type first_index = first.m_index;
         const size_type last_index = last.m_index;
 
-        if (source.data_type() != this->data_type())
-        {
-            throw std::invalid_argument("array::insert: source and destination must have the same data type");
-        }
-
-        if (pos_index > size())
-        {
-            throw std::out_of_range("array::insert: position is out of range");
-        }
-
-        if (first_index > last_index)
-        {
-            throw std::invalid_argument("array::insert: source iterator range is invalid");
-        }
-
-        if (last_index > source.size())
-        {
-            throw std::out_of_range("array::insert: source iterator range is out of bounds");
-        }
+        SPARROW_ASSERT_TRUE(source.data_type() == this->data_type());
+        SPARROW_ASSERT_TRUE(pos_index <= size());
+        SPARROW_ASSERT_TRUE(first_index <= last_index);
+        SPARROW_ASSERT_TRUE(last_index <= source.size());
 
         if (count == 0 || first_index == last_index)
         {
@@ -210,13 +189,7 @@ namespace sparrow
 
         const auto& destination_wrapper = *p_array;
         const auto& source_wrapper = *source.p_array;
-        if (typeid(destination_wrapper) != typeid(source_wrapper))
-        {
-            throw std::invalid_argument(
-                "array::insert: source and destination must wrap the same concrete array type"
-            );
-        }
-
+        SPARROW_ASSERT_TRUE(typeid(destination_wrapper) == typeid(source_wrapper));
         visit(
             [this, &source, pos_index, first_index, last_index, count](const auto& array_impl)
             {
@@ -303,7 +276,7 @@ namespace sparrow
                 }
                 else
                 {
-                    throw std::runtime_error("array::insert: array type does not support mutation");
+                    SPARROW_ASSERT_TRUE(false);
                 }
             }
         );
@@ -313,37 +286,20 @@ namespace sparrow
 
     array::iterator array::erase(const_iterator pos)
     {
-        if (pos.p_array != this)
-        {
-            throw std::invalid_argument("array::erase: iterator must belong to this array");
-        }
-
-        if (pos.m_index >= size())
-        {
-            throw std::out_of_range("array::erase: iterator is out of range");
-        }
+        SPARROW_ASSERT_TRUE(pos.p_array == this);
+        SPARROW_ASSERT_TRUE(pos.m_index < size());
         return erase(pos, pos + 1);
     }
 
     array::iterator array::erase(const_iterator first, const_iterator last)
     {
-        if (first.p_array != this || last.p_array != this)
-        {
-            throw std::invalid_argument("array::erase: iterators must belong to this array");
-        }
+        SPARROW_ASSERT_TRUE(first.p_array == this && last.p_array == this);
 
         const size_type first_index = first.m_index;
         const size_type last_index = last.m_index;
 
-        if (first_index > last_index)
-        {
-            throw std::invalid_argument("array::erase: iterator range is invalid");
-        }
-
-        if (last_index > size())
-        {
-            throw std::out_of_range("array::erase: iterator range is out of bounds");
-        }
+        SPARROW_ASSERT_TRUE(first_index <= last_index);
+        SPARROW_ASSERT_TRUE(last_index <= size());
 
         const auto count = last_index - first_index;
         if (count == 0)
@@ -365,7 +321,7 @@ namespace sparrow
                 }
                 else
                 {
-                    throw std::runtime_error("array::erase: array type does not support mutation");
+                    SPARROW_ASSERT_TRUE(false);
                 }
             }
         );

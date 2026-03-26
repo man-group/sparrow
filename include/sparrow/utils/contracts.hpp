@@ -172,10 +172,16 @@
 #define SPARROW_CONTRACTS_DEFAULT_CHECKS_ENABLED 1
 #define SPARROW_CONTRACTS_DEFAULT_ABORT_ON_FAILURE 1
 
-#define SPARROW_CONTRACTS_DEFAULT_ON_FAILURE(expr__, message__) \
-    SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__);           \
-    SPARROW_CONTRACTS_DEBUGBREAK();                             \
-    SPARROW_CONTRACTS_ABORT(expr__, message__);
+#if SPARROW_CONTRACTS_THROW_ON_FAILURE == 1
+#    define SPARROW_CONTRACTS_DEFAULT_ON_FAILURE(expr__, message__) \
+        SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__);           \
+        SPARROW_CONTRACTS_ABORT(expr__, message__);
+#else
+#    define SPARROW_CONTRACTS_DEFAULT_ON_FAILURE(expr__, message__) \
+        SPARROW_CONTRACTS_LOG_FAILURE(expr__, message__);           \
+        SPARROW_CONTRACTS_DEBUGBREAK();                             \
+        SPARROW_CONTRACTS_ABORT(expr__, message__);
+#endif
 
 ///////////////////////////////////////////////////////////////////
 // Apply Configuration:
