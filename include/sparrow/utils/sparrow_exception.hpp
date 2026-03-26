@@ -20,11 +20,12 @@
 
 namespace sparrow
 {
-    class contract_assertion_error : public std::runtime_error
+    class SPARROW_API contract_assertion_error : public std::runtime_error
     {
     public:
 
-        SPARROW_API explicit contract_assertion_error(const std::string& message);
-        SPARROW_API explicit contract_assertion_error(const char* message);
+        explicit contract_assertion_error(const std::string& message);
+        explicit contract_assertion_error(const char* message);
+        ~contract_assertion_error() override;
     };
 }
