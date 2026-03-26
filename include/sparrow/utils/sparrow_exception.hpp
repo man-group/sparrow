@@ -16,9 +16,11 @@
 #include <stdexcept>
 #include <string>
 
+#include "sparrow/config/config.hpp"
+
 namespace sparrow
 {
-    class contract_assertion_error : public std::runtime_error
+    class SPARROW_API contract_assertion_error : public std::runtime_error
     {
     public:
 
