@@ -57,6 +57,7 @@ jobs:
           -DBUILD_EXAMPLES=OFF \
           -DUSE_DATE_POLYFILL=ON \
           -DBUILD_TESTS=ON \
+          -DSPARROW_CONTRACTS_THROW_ON_FAILURE=ON \
           -DBUILD_DOCS=OFF \
           -DSYSROOT_PATH=$SYSROOT_PATH \
           ..
