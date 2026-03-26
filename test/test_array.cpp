@@ -17,7 +17,9 @@
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/struct_array.hpp"
+#include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/utils/sparrow_exception.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
