@@ -154,11 +154,6 @@ namespace sparrow
         return {get_arrow_proxy().slice_view(start, end)};
     }
 
-    void array::slice_inplace(size_type start, size_type end)
-    {
-        SPARROW_ASSERT_TRUE(start <= end);
-        get_arrow_proxy().slice_inplace(start, end);
-    }
 
     array::iterator array::insert(const_iterator pos, const_iterator first, const_iterator last)
     {
