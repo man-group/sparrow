@@ -17,7 +17,9 @@
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/struct_array.hpp"
+#include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/nullable.hpp"
+#include "sparrow/utils/sparrow_exception.hpp"
 
 #include "../test/external_array_data_creation.hpp"
 #include "doctest/doctest.h"
@@ -47,6 +49,17 @@ namespace sparrow
             ArrowArray ar{};
             test::fill_schema_and_array<T>(sc, ar, n, offset, {});
             return array(std::move(ar), std::move(sc));
+        }
+
+        inline auto make_int_array(std::initializer_list<std::int32_t> values)
+        {
+            std::vector<nullable<std::int32_t>> nullable_values;
+            nullable_values.reserve(values.size());
+            for (const auto value : values)
+            {
+                nullable_values.push_back(make_nullable(value));
+            }
+            return primitive_array<std::int32_t>(nullable_values);
         }
     }
 
@@ -464,6 +477,210 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(slice_view_id, testing_types);
+
+        TEST_CASE("insert")
+        {
+            using array_type = primitive_array<std::int32_t>;
+
+            SUBCASE("from another array")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array source(test::make_int_array({8, 9}));
+
+                const auto iter = destination.insert(destination.cbegin() + 1, source.cbegin(), source.cend(), 2);
+
+                CHECK_EQ(iter, destination.cbegin() + 1);
+                CHECK(destination == array(test::make_int_array({1, 8, 9, 8, 9, 2, 3})));
+            }
+
+            SUBCASE("self insertion copies the source slice first")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+
+                destination.insert(destination.cbegin() + 1, destination.cbegin(), destination.cbegin() + 2, 2);
+
+                CHECK(destination == array(test::make_int_array({1, 1, 2, 1, 2, 2, 3})));
+            }
+
+            SUBCASE("different arrays sharing the same layout still copy the source slice")
+            {
+                array_type typed_array(test::make_int_array({1, 2, 3}));
+                array destination(&typed_array);
+                array source(&typed_array);
+
+                destination.insert(destination.cbegin() + 1, source.cbegin(), source.cbegin() + 2, 2);
+
+                CHECK_EQ(typed_array, test::make_int_array({1, 1, 2, 1, 2, 2, 3}));
+            }
+
+            SUBCASE("different concrete array types with the same data type throw")
+            {
+                using extended_array_type = primitive_array<std::int32_t, simple_extension<"sparrow.test.array.insert">>;
+
+                array destination(test::make_int_array({1, 2, 3}));
+                array source(extended_array_type(test::make_arrow_proxy<std::int32_t>(2, 0)));
+
+                CHECK_THROWS_AS(
+                    destination.insert(destination.cbegin() + 1, source.cbegin(), source.cend()),
+                    sparrow::contract_assertion_error
+                );
+            }
+
+            SUBCASE("insert with count repeats the range")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array source(test::make_int_array({7, 8}));
+
+                const auto iter = destination.insert(destination.cbegin() + 1, source.cbegin(), source.cend(), 3);
+
+                CHECK_EQ(iter, destination.cbegin() + 1);
+                CHECK(destination == array(test::make_int_array({1, 7, 8, 7, 8, 7, 8, 2, 3})));
+            }
+
+            SUBCASE("pos belonging to a different array throws")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array other(test::make_int_array({4, 5}));
+
+                CHECK_THROWS_AS(
+                    destination.insert(other.cbegin(), other.cbegin(), other.cend()),
+                    sparrow::contract_assertion_error
+                );
+            }
+
+            SUBCASE("null source iterators throw")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array::const_iterator null_iter{};
+
+                CHECK_THROWS_AS(
+                    destination.insert(destination.cbegin(), null_iter, null_iter),
+                    sparrow::contract_assertion_error
+                );
+            }
+
+            SUBCASE("source iterators from different arrays throw")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array source_a(test::make_int_array({4, 5}));
+                array source_b(test::make_int_array({6, 7}));
+
+                CHECK_THROWS_AS(
+                    destination.insert(destination.cbegin(), source_a.cbegin(), source_b.cend()),
+                    sparrow::contract_assertion_error
+                );
+            }
+
+            SUBCASE("pos out of range throws")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array source(test::make_int_array({9}));
+                // Manufacture an iterator past end by advancing beyond size()
+                const auto past_end = destination.cbegin() + 10;
+
+                CHECK_THROWS_AS(
+                    destination.insert(past_end, source.cbegin(), source.cend()),
+                    sparrow::contract_assertion_error
+                );
+            }
+
+            SUBCASE("reversed source range throws")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array source(test::make_int_array({4, 5, 6}));
+
+                CHECK_THROWS_AS(
+                    destination.insert(destination.cbegin(), source.cend(), source.cbegin()),
+                    sparrow::contract_assertion_error
+                );
+            }
+        }
+
+        TEST_CASE("erase")
+        {
+            SUBCASE("erase range [first, last)")
+            {
+                array destination(test::make_int_array({1, 2, 3, 4, 5}));
+
+                const auto iter = destination.erase(destination.cbegin() + 1, destination.cbegin() + 3);
+
+                CHECK_EQ(iter, destination.cbegin() + 1);
+                CHECK(destination == array(test::make_int_array({1, 4, 5})));
+            }
+
+            SUBCASE("erase single element at pos")
+            {
+                array destination(test::make_int_array({10, 20, 30, 40}));
+
+                const auto iter = destination.erase(destination.cbegin() + 1);
+
+                CHECK_EQ(iter, destination.cbegin() + 1);
+                CHECK(destination == array(test::make_int_array({10, 30, 40})));
+            }
+
+            SUBCASE("erase first element")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+
+                const auto iter = destination.erase(destination.cbegin());
+
+                CHECK_EQ(iter, destination.cbegin());
+                CHECK(destination == array(test::make_int_array({2, 3})));
+            }
+
+            SUBCASE("erase last element")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+
+                const auto iter = destination.erase(destination.cend() - 1);
+
+                CHECK_EQ(iter, destination.cend());
+                CHECK(destination == array(test::make_int_array({1, 2})));
+            }
+
+            SUBCASE("erase(pos) with iterator from different array throws")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+                array other(test::make_int_array({4, 5}));
+
+                CHECK_THROWS_AS(destination.erase(other.cbegin()), sparrow::contract_assertion_error);
+            }
+
+            SUBCASE("erase(pos) at end (out of range) throws")
+            {
+                array destination(test::make_int_array({1, 2, 3}));
+
+                CHECK_THROWS_AS(destination.erase(destination.cend()), sparrow::contract_assertion_error);
+            }
+        }
+
+        TEST_CASE("const_iterator dereference guards")
+        {
+            SUBCASE("dereferencing a default-constructed (null) iterator throws invalid_argument")
+            {
+                array::const_iterator it{};
+                CHECK_THROWS_AS(*it, sparrow::contract_assertion_error);
+            }
+
+            SUBCASE("dereferencing end() throws out_of_range")
+            {
+                array ar(test::make_int_array({10, 20, 30}));
+                CHECK_THROWS_AS(*ar.cend(), sparrow::contract_assertion_error);
+            }
+
+            SUBCASE("dereferencing end() of an empty array throws out_of_range")
+            {
+                array ar(test::make_int_array({}));
+                // begin() == end() for an empty array; dereferencing it is still out-of-range
+                CHECK_THROWS_AS(*ar.cbegin(), sparrow::contract_assertion_error);
+            }
+
+            SUBCASE("dereferencing a valid iterator does not throw")
+            {
+                array ar(test::make_int_array({42}));
+                CHECK_NOTHROW(*ar.cbegin());
+            }
+        }
 
         TEST_CASE_TEMPLATE_DEFINE("name", AR, name_id)
         {

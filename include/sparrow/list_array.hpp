@@ -14,18 +14,20 @@
 
 #pragma once
 
+#include <limits>
 #include <ranges>
+#include <stdexcept>
 #include <string>  // for std::stoull
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
-#include "sparrow/layout/array_factory.hpp"
-#include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
@@ -226,11 +228,11 @@ namespace sparrow
         using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
         using array_type = list_array_impl<BIG>;
         using inner_value_type = list_value;
-        using inner_reference = list_value;
+        using inner_reference = list_reference<array_type>;
         using inner_const_reference = list_value;
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
-            detail::layout_value_functor<const array_type, inner_value_type>>;
+            detail::layout_value_functor<const array_type, inner_const_reference>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -240,11 +242,11 @@ namespace sparrow
         using list_size_type = std::conditional_t<BIG, std::uint64_t, std::uint32_t>;
         using array_type = list_view_array_impl<BIG>;
         using inner_value_type = list_value;
-        using inner_reference = list_value;
+        using inner_reference = list_reference<array_type>;
         using inner_const_reference = list_value;
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
-            detail::layout_value_functor<const array_type, inner_value_type>>;
+            detail::layout_value_functor<const array_type, inner_const_reference>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -254,11 +256,11 @@ namespace sparrow
         using list_size_type = std::uint64_t;
         using array_type = fixed_sized_list_array;
         using inner_value_type = list_value;
-        using inner_reference = list_value;
+        using inner_reference = list_reference<array_type>;
         using inner_const_reference = list_value;
-        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_value_type>>;
+        using value_iterator = functor_index_iterator<detail::layout_value_functor<array_type, inner_reference>>;
         using const_value_iterator = functor_index_iterator<
-            detail::layout_value_functor<const array_type, inner_value_type>>;
+            detail::layout_value_functor<const array_type, inner_const_reference>>;
         using iterator_tag = std::random_access_iterator_tag;
     };
 
@@ -273,31 +275,36 @@ namespace sparrow
      * @tparam DERIVED The derived list array type (CRTP pattern)
      *
      * @pre DERIVED must implement offset_range(size_type) method
+     * @note Mutating operations are supported only on unsliced arrays.
+     *       Arrays produced by slice() or slice_view() with a non-zero Arrow offset are
+     *       treated as read-only for mutation.
      * @post Maintains Arrow array format compatibility for list types
      * @post Provides unified interface for all list array variants
      */
     template <class DERIVED>
-    class list_array_crtp_base : public array_bitmap_base<DERIVED>
+    class list_array_crtp_base : public mutable_array_bitmap_base<DERIVED>
     {
     public:
 
         using self_type = list_array_crtp_base<DERIVED>;
-        using base_type = array_bitmap_base<DERIVED>;
+        using base_type = mutable_array_bitmap_base<DERIVED>;
         using inner_types = array_inner_types<DERIVED>;
         using value_iterator = typename inner_types::value_iterator;
         using const_value_iterator = typename inner_types::const_value_iterator;
         using size_type = typename base_type::size_type;
 
         using bitmap_type = typename base_type::bitmap_type;
+        using bitmap_reference = typename base_type::bitmap_reference;
         using bitmap_const_reference = typename base_type::bitmap_const_reference;
 
         using const_bitmap_range = typename base_type::const_bitmap_range;
 
         using inner_value_type = list_value;
-        using inner_reference = list_value;
-        using inner_const_reference = list_value;
+        using inner_reference = typename inner_types::inner_reference;
+        using inner_const_reference = typename inner_types::inner_const_reference;
 
         using value_type = nullable<inner_value_type>;
+        using reference = nullable<inner_reference, bitmap_reference>;
         using const_reference = nullable<inner_const_reference, bitmap_const_reference>;
         using iterator_tag = typename base_type::iterator_tag;
 
@@ -306,18 +313,18 @@ namespace sparrow
          *
          * @return Const pointer to the flat array containing all list elements
          *
-         * @post Returns non-null pointer to valid array_wrapper
+         * @post Returns non-null pointer to a valid flat child handle
          */
-        [[nodiscard]] constexpr const array_wrapper* raw_flat_array() const;
+        [[nodiscard]] constexpr const array* raw_flat_array() const;
 
         /**
          * @brief Gets mutable access to the underlying flat array.
          *
          * @return Pointer to the flat array containing all list elements
          *
-         * @post Returns non-null pointer to valid array_wrapper
+         * @post Returns non-null pointer to a valid flat child handle
          */
-        [[nodiscard]] constexpr array_wrapper* raw_flat_array();
+        [[nodiscard]] constexpr array* raw_flat_array();
 
     protected:
 
@@ -358,29 +365,61 @@ namespace sparrow
         constexpr list_array_crtp_base(self_type&&) noexcept = default;
         constexpr list_array_crtp_base& operator=(self_type&&) noexcept = default;
 
-    private:
+    protected:
 
-        using list_size_type = inner_types::list_size_type;
+        /**
+         * @brief Throws if a mutating operation is attempted on a sliced array.
+         *
+         * List-array mutation updates the parent offset or size buffers together with
+         * the flat child array in place. The current implementation assumes
+         * ArrowArray.offset == 0, so sliced arrays are intentionally unsupported for
+         * mutating APIs.
+         *
+         * @param operation Name of the mutating operation for diagnostics.
+         *
+         * @throws std::logic_error if this array has a non-zero Arrow offset.
+         */
+        constexpr void throw_if_sliced_for_mutation(const char* operation) const;
 
         [[nodiscard]] constexpr value_iterator value_begin();
         [[nodiscard]] constexpr value_iterator value_end();
         [[nodiscard]] constexpr const_value_iterator value_cbegin() const;
         [[nodiscard]] constexpr const_value_iterator value_cend() const;
 
+        // Inserts `count` copies of value's flat elements into the flat array at flat_pos.
+        // No-op if value.size() == 0.
+        constexpr void insert_flat_elements(size_type flat_pos, const list_value& value, size_type count);
+
+        // Erases flat_count consecutive flat elements starting at flat_begin.
+        // No-op if flat_count == 0.
+        constexpr void erase_flat_elements(size_type flat_begin, size_type flat_count);
+
+    private:
+
+        using list_size_type = inner_types::list_size_type;
+
+        constexpr void resize_values(size_type new_length, const list_value& value);
+
+        template <std::input_iterator InputIt>
+            requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
+        constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
+
         [[nodiscard]] constexpr inner_reference value(size_type i);
         [[nodiscard]] constexpr inner_const_reference value(size_type i) const;
 
-        [[nodiscard]] cloning_ptr<array_wrapper> make_flat_array();
+        [[nodiscard]] array make_flat_array();
 
         // data members
-        cloning_ptr<array_wrapper> p_flat_array;
+        array p_flat_array;
 
         // friend classes
         friend class array_crtp_base<DERIVED>;
+        friend class mutable_array_base<DERIVED>;
+        friend class list_reference<DERIVED>;
 
         // needs access to this->value(i)
-        friend class detail::layout_value_functor<DERIVED, inner_value_type>;
-        friend class detail::layout_value_functor<const DERIVED, inner_value_type>;
+        friend class detail::layout_value_functor<DERIVED, inner_reference>;
+        friend class detail::layout_value_functor<const DERIVED, inner_const_reference>;
     };
 
     template <bool BIG>
@@ -393,6 +432,8 @@ namespace sparrow
         using base_type = list_array_crtp_base<list_array_impl<BIG>>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
+        using value_iterator = typename base_type::value_iterator;
+        using const_value_iterator = typename base_type::const_value_iterator;
         using offset_type = std::conditional_t<BIG, const std::int64_t, const std::int32_t>;
         using offset_buffer_type = u8_buffer<std::remove_const_t<offset_type>>;
 
@@ -435,6 +476,8 @@ namespace sparrow
 
         constexpr list_array_impl(self_type&&) noexcept = default;
         constexpr list_array_impl& operator=(self_type&&) noexcept = default;
+
+        constexpr void slice_inplace(size_type start, size_type end);
 
         /**
          * @brief Generic constructor for creating list array from various inputs.
@@ -586,11 +629,21 @@ namespace sparrow
 
         [[nodiscard]] constexpr offset_type* make_list_offsets();
 
+        void replace_value(size_type index, const list_value& value);
+
+        constexpr value_iterator
+        insert_value(const_value_iterator pos, const list_value& value, size_type count);
+
+        constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
+
         offset_type* p_list_offsets;
 
         // friend classes
         friend class array_crtp_base<self_type>;
+        friend class mutable_array_base<self_type>;
         friend class list_array_crtp_base<self_type>;
+        template <class L>
+        friend class list_reference;
     };
 
     template <bool BIG>
@@ -603,6 +656,8 @@ namespace sparrow
         using base_type = list_array_crtp_base<list_view_array_impl<BIG>>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
+        using value_iterator = typename base_type::value_iterator;
+        using const_value_iterator = typename base_type::const_value_iterator;
         using offset_type = std::conditional_t<BIG, const std::int64_t, const std::int32_t>;
         using offset_buffer_type = u8_buffer<std::remove_const_t<offset_type>>;
         using size_buffer_type = u8_buffer<std::remove_const_t<list_size_type>>;
@@ -646,6 +701,8 @@ namespace sparrow
 
         constexpr list_view_array_impl(self_type&&) = default;
         constexpr list_view_array_impl& operator=(self_type&&) = default;
+
+        constexpr void slice_inplace(size_type start, size_type end);
 
         /**
          * @brief Generic constructor for creating list view array from various inputs.
@@ -772,15 +829,29 @@ namespace sparrow
         static constexpr std::size_t SIZES_BUFFER_INDEX = 2;
         [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
-        [[nodiscard]] constexpr offset_type* make_list_offsets();
-        [[nodiscard]] constexpr offset_type* make_list_sizes();
+        [[nodiscard]] constexpr offset_type* make_list_offsets() const;
+        [[nodiscard]] constexpr const list_size_type* make_list_sizes() const;
+
+        void replace_value(size_type index, const list_value& value);
+
+        constexpr value_iterator
+        insert_value(const_value_iterator pos, const list_value& value, size_type count);
+
+        template <std::input_iterator InputIt>
+            requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
+        constexpr value_iterator insert_values(const_value_iterator pos, InputIt first, InputIt last);
+
+        constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
         offset_type* p_list_offsets;
-        offset_type* p_list_sizes;
+        const list_size_type* p_list_sizes;
 
         // friend classes
         friend class array_crtp_base<self_type>;
+        friend class mutable_array_base<self_type>;
         friend class list_array_crtp_base<self_type>;
+        template <class L>
+        friend class list_reference;
     };
 
     class fixed_sized_list_array final : public list_array_crtp_base<fixed_sized_list_array>
@@ -792,6 +863,8 @@ namespace sparrow
         using base_type = list_array_crtp_base<self_type>;
         using list_size_type = inner_types::list_size_type;
         using size_type = typename base_type::size_type;
+        using value_iterator = typename base_type::value_iterator;
+        using const_value_iterator = typename base_type::const_value_iterator;
         using offset_type = std::uint64_t;
 
         /**
@@ -917,11 +990,22 @@ namespace sparrow
          */
         [[nodiscard]] constexpr std::pair<offset_type, offset_type> offset_range(size_type i) const;
 
+        [[nodiscard]] constexpr size_type flat_element_count(size_type list_count) const;
+
+        void replace_value(size_type index, const list_value& value);
+
+        value_iterator insert_value(const_value_iterator pos, const list_value& value, size_type count);
+
+        value_iterator erase_values(const_value_iterator pos, size_type count);
+
         uint64_t m_list_size;
 
         // friend classes
         friend class array_crtp_base<self_type>;
+        friend class mutable_array_base<self_type>;
         friend class list_array_crtp_base<self_type>;
+        template <class L>
+        friend class list_reference;
     };
 
     /***************************************
@@ -951,28 +1035,37 @@ namespace sparrow
     }
 
     template <class DERIVED>
-    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array_wrapper*
+    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() const -> const array*
     {
-        return p_flat_array.get();
+        return &p_flat_array;
     }
 
     template <class DERIVED>
-    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array_wrapper*
+    constexpr auto list_array_crtp_base<DERIVED>::raw_flat_array() -> array*
     {
-        return p_flat_array.get();
+        return &p_flat_array;
+    }
+
+    template <class DERIVED>
+    constexpr void list_array_crtp_base<DERIVED>::throw_if_sliced_for_mutation(const char* operation) const
+    {
+        if (this->get_arrow_proxy().offset() != 0)
+        {
+            throw std::logic_error(std::string(operation) + " does not support sliced arrays (non-zero offset)");
+        }
     }
 
     template <class DERIVED>
     constexpr auto list_array_crtp_base<DERIVED>::value_begin() -> value_iterator
     {
-        return value_iterator(detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()), 0);
+        return value_iterator(detail::layout_value_functor<DERIVED, inner_reference>(&this->derived_cast()), 0);
     }
 
     template <class DERIVED>
     constexpr auto list_array_crtp_base<DERIVED>::value_end() -> value_iterator
     {
         return value_iterator(
-            detail::layout_value_functor<DERIVED, inner_value_type>(&this->derived_cast()),
+            detail::layout_value_functor<DERIVED, inner_reference>(&this->derived_cast()),
             this->size()
         );
     }
@@ -981,7 +1074,7 @@ namespace sparrow
     constexpr auto list_array_crtp_base<DERIVED>::value_cbegin() const -> const_value_iterator
     {
         return const_value_iterator(
-            detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()),
+            detail::layout_value_functor<const DERIVED, inner_const_reference>(&this->derived_cast()),
             0
         );
     }
@@ -990,7 +1083,7 @@ namespace sparrow
     constexpr auto list_array_crtp_base<DERIVED>::value_cend() const -> const_value_iterator
     {
         return const_value_iterator(
-            detail::layout_value_functor<const DERIVED, inner_value_type>(&this->derived_cast()),
+            detail::layout_value_functor<const DERIVED, inner_const_reference>(&this->derived_cast()),
             this->size()
         );
     }
@@ -998,9 +1091,7 @@ namespace sparrow
     template <class DERIVED>
     constexpr auto list_array_crtp_base<DERIVED>::value(size_type i) -> inner_reference
     {
-        const auto r = this->derived_cast().offset_range(i);
-        using st = typename list_value::size_type;
-        return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
+        return inner_reference(&this->derived_cast(), i);
     }
 
     template <class DERIVED>
@@ -1008,13 +1099,83 @@ namespace sparrow
     {
         const auto r = this->derived_cast().offset_range(i);
         using st = typename list_value::size_type;
-        return list_value{p_flat_array.get(), static_cast<st>(r.first), static_cast<st>(r.second)};
+        return list_value{&p_flat_array, static_cast<st>(r.first), static_cast<st>(r.second)};
     }
 
     template <class DERIVED>
-    cloning_ptr<array_wrapper> list_array_crtp_base<DERIVED>::make_flat_array()
+    array list_array_crtp_base<DERIVED>::make_flat_array()
     {
-        return array_factory(this->get_arrow_proxy().children()[0].view());
+        auto& child_proxy = this->get_arrow_proxy().children()[0];
+        return array{&child_proxy.array(), &child_proxy.schema()};
+    }
+
+    template <class DERIVED>
+    constexpr void
+    list_array_crtp_base<DERIVED>::insert_flat_elements(size_type flat_pos, const list_value& value, size_type count)
+    {
+        if (value.size() == 0)
+        {
+            return;
+        }
+        SPARROW_ASSERT_TRUE(value.flat_array() != nullptr);
+        array& flat_array = *raw_flat_array();
+        flat_array.insert(
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_pos),
+            value.flat_array()->cbegin() + static_cast<std::ptrdiff_t>(value.begin_index()),
+            value.flat_array()->cbegin() + static_cast<std::ptrdiff_t>(value.end_index()),
+            count
+        );
+    }
+
+    template <class DERIVED>
+    constexpr void
+    list_array_crtp_base<DERIVED>::erase_flat_elements(size_type flat_begin, size_type flat_count)
+    {
+        if (flat_count == 0)
+        {
+            return;
+        }
+        array& flat_array = *raw_flat_array();
+        flat_array.erase(
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_begin),
+            flat_array.cbegin() + static_cast<std::ptrdiff_t>(flat_begin + flat_count)
+        );
+    }
+
+    template <class DERIVED>
+    constexpr void list_array_crtp_base<DERIVED>::resize_values(size_type new_length, const list_value& value)
+    {
+        DERIVED& derived = static_cast<DERIVED&>(*this);
+        const size_type n = this->size();
+        if (new_length < n)
+        {
+            derived.erase_values(
+                sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(new_length)),
+                n - new_length
+            );
+        }
+        else if (new_length > n)
+        {
+            derived.insert_value(this->value_cend(), value, new_length - n);
+        }
+    }
+
+    template <class DERIVED>
+    template <std::input_iterator InputIt>
+        requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
+    constexpr auto
+    list_array_crtp_base<DERIVED>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
+    {
+        DERIVED& derived = static_cast<DERIVED&>(*this);
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        size_type count = 0;
+        for (auto it = first; it != last; ++it, ++count)
+        {
+            auto cur_pos = sparrow::next(this->value_cbegin(), static_cast<std::ptrdiff_t>(idx + count));
+            derived.insert_value(cur_pos, *it, 1);
+        }
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
     }
 
     /**********************************
@@ -1149,6 +1310,13 @@ namespace sparrow
     }
 
     template <bool BIG>
+    constexpr void list_array_impl<BIG>::slice_inplace(size_type start, size_type end)
+    {
+        base_type::slice_inplace(start, end);
+        p_list_offsets = make_list_offsets();
+    }
+
+    template <bool BIG>
     constexpr auto list_array_impl<BIG>::offset_range(size_type i) const -> std::pair<offset_type, offset_type>
     {
         return std::make_pair(p_list_offsets[i], p_list_offsets[i + 1]);
@@ -1157,9 +1325,212 @@ namespace sparrow
     template <bool BIG>
     constexpr auto list_array_impl<BIG>::make_list_offsets() -> offset_type*
     {
-        return reinterpret_cast<offset_type*>(
-            this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
+        return this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<offset_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
+    }
+
+    template <bool BIG>
+    constexpr auto
+    list_array_impl<BIG>::insert_value(const_value_iterator pos, const list_value& value, size_type count)
+        -> value_iterator
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        auto& proxy = this->get_arrow_proxy();
+
+        this->throw_if_sliced_for_mutation("list_array_impl::insert_value");
+
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+        const size_type n = offset_adaptor.size() - 1;
+
+        // Insert flat elements: count copies of value's slice
+        const auto flat_insert_pos = static_cast<size_type>(p_list_offsets[idx]);
+        this->insert_flat_elements(flat_insert_pos, value, count);
+
+        // Update offset buffer
+        const auto value_size = value.size();
+        const auto count_size = count;
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value_size));
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(count_size));
+        const auto val_sz = static_cast<mutable_offset_type>(value_size);
+        const auto count_mt = static_cast<mutable_offset_type>(count_size);
+        const auto max_offset = std::numeric_limits<mutable_offset_type>::max();
+        // Check multiplication overflow for total_delta = count * val_sz
+        if (val_sz != mutable_offset_type{})
+        {
+            SPARROW_ASSERT_TRUE(count_mt <= max_offset / val_sz);
+        }
+        const mutable_offset_type total_delta = count_mt * val_sz;
+        // Existing offsets should fit in the representable range once delta is applied
+        const mutable_offset_type existing_max = offset_adaptor[n];
+        SPARROW_ASSERT_TRUE(existing_max <= max_offset - total_delta);
+
+        offset_adaptor.resize(n + 1 + count, mutable_offset_type{});
+
+        // Shift existing entries [idx+1..n] to [idx+count+1..n+count], adding delta
+        for (size_type i = n; i > idx; --i)
+        {
+            offset_adaptor[i + count] = offset_adaptor[i] + total_delta;
+        }
+
+        const auto flat_insert_offset = static_cast<mutable_offset_type>(flat_insert_pos);
+        SPARROW_ASSERT_TRUE(flat_insert_offset <= max_offset - total_delta);
+        for (size_type k = 1; k <= count; ++k)
+        {
+            offset_adaptor[idx + k] = flat_insert_offset + static_cast<mutable_offset_type>(k) * val_sz;
+        }
+
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+    }
+
+    template <bool BIG>
+    constexpr auto list_array_impl<BIG>::erase_values(const_value_iterator pos, size_type count)
+        -> value_iterator
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        const size_type n = this->size();
+        auto& proxy = this->get_arrow_proxy();
+
+        if (count == 0)
+        {
+            return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+        }
+
+        this->throw_if_sliced_for_mutation("list_array_impl::erase_values");
+
+        // Erase flat elements
+        const mutable_offset_type flat_erase_begin = p_list_offsets[idx];
+        const mutable_offset_type flat_erase_end = p_list_offsets[idx + count];
+        const mutable_offset_type flat_erase_count_val = flat_erase_end - flat_erase_begin;
+
+        this->erase_flat_elements(
+            static_cast<size_type>(flat_erase_begin),
+            static_cast<size_type>(flat_erase_count_val)
         );
+
+        // Update offset buffer: remove count entries, shift remaining down
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+        std::copy(
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + count + 1),
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(n + 1),
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + 1)
+        );
+        auto delta_begin = offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + 1);
+        auto delta_end = offset_adaptor.begin() + static_cast<std::ptrdiff_t>(n + 1 - count);
+        std::transform(
+            delta_begin,
+            delta_end,
+            delta_begin,
+            [flat_erase_count_val](mutable_offset_type v)
+            {
+                return v - flat_erase_count_val;
+            }
+        );
+        offset_adaptor.resize(n + 1 - count);
+
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+    }
+
+    template <bool BIG>
+    void list_array_impl<BIG>::replace_value(size_type index, const list_value& value)
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+
+        this->throw_if_sliced_for_mutation("list_array_impl::replace_value");
+        const size_type new_size = value.size();
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(new_size));
+
+        const size_type n = this->size();
+        const auto [flat_begin, flat_end] = offset_range(index);
+        const auto old_size = static_cast<size_type>(flat_end - flat_begin);
+        const auto old_size_mt = static_cast<mutable_offset_type>(old_size);
+        const auto new_size_mt = static_cast<mutable_offset_type>(new_size);
+
+        array source_owner;
+        const array* source = value.flat_array();
+        if (source != nullptr && this->raw_flat_array() == source)
+        {
+            source_owner = *source;
+            source = &source_owner;
+        }
+
+        if (old_size == new_size)
+        {
+            if (new_size == 0)
+            {
+                return;
+            }
+            // Same element count: overwrite flat data in-place, no offset adjustment needed.
+            SPARROW_ASSERT_TRUE(source != nullptr);
+            const auto flat_begin_index = static_cast<size_type>(flat_begin);
+            this->erase_flat_elements(flat_begin_index, old_size);
+            this->insert_flat_elements(
+                flat_begin_index,
+                list_value{source, value.begin_index(), value.end_index()},
+                1
+            );
+            auto& proxy_eq = this->get_arrow_proxy();
+            proxy_eq.update_buffers();
+            p_list_offsets = make_list_offsets();
+            return;
+        }
+
+        this->erase_flat_elements(static_cast<size_type>(flat_begin), old_size);
+        if (new_size > 0)
+        {
+            SPARROW_ASSERT_TRUE(source != nullptr);
+            this->insert_flat_elements(
+                static_cast<size_type>(flat_begin),
+                list_value{source, value.begin_index(), value.end_index()},
+                1
+            );
+        }
+
+        auto& proxy = this->get_arrow_proxy();
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+
+        // delta != 0 here (equal-size case already returned above)
+        auto tail_begin = offset_adaptor.begin() + static_cast<std::ptrdiff_t>(index + 1);
+        auto tail_end = offset_adaptor.begin() + static_cast<std::ptrdiff_t>(n + 1);
+        if (new_size_mt > old_size_mt)
+        {
+            const mutable_offset_type delta = new_size_mt - old_size_mt;
+            const auto max_offset = std::numeric_limits<mutable_offset_type>::max();
+            SPARROW_ASSERT_TRUE(offset_adaptor[n] <= max_offset - delta);
+            std::transform(
+                tail_begin,
+                tail_end,
+                tail_begin,
+                [delta](mutable_offset_type v)
+                {
+                    return v + delta;
+                }
+            );
+        }
+        else
+        {
+            const mutable_offset_type delta = old_size_mt - new_size_mt;
+            std::transform(
+                tail_begin,
+                tail_end,
+                tail_begin,
+                [delta](mutable_offset_type v)
+                {
+                    return v - delta;
+                }
+            );
+        }
+
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
     }
 
     /***************************************
@@ -1290,27 +1661,226 @@ namespace sparrow
     }
 
     template <bool BIG>
+    constexpr void list_view_array_impl<BIG>::slice_inplace(size_type start, size_type end)
+    {
+        base_type::slice_inplace(start, end);
+        p_list_offsets = make_list_offsets();
+        p_list_sizes = make_list_sizes();
+    }
+
+    template <bool BIG>
     inline constexpr auto list_view_array_impl<BIG>::offset_range(size_type i) const
         -> std::pair<offset_type, offset_type>
     {
         const auto offset = p_list_offsets[i];
-        return std::make_pair(offset, offset + p_list_sizes[i]);
+        SPARROW_ASSERT_TRUE(std::in_range<std::remove_const_t<offset_type>>(p_list_sizes[i]));
+        return std::make_pair(offset, offset + static_cast<offset_type>(p_list_sizes[i]));
     }
 
     template <bool BIG>
-    constexpr auto list_view_array_impl<BIG>::make_list_offsets() -> offset_type*
+    constexpr auto list_view_array_impl<BIG>::make_list_offsets() const -> offset_type*
     {
-        return reinterpret_cast<offset_type*>(
-            this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
-        );
+        return this->get_arrow_proxy().buffers()[OFFSET_BUFFER_INDEX].template data<offset_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
     }
 
     template <bool BIG>
-    constexpr auto list_view_array_impl<BIG>::make_list_sizes() -> offset_type*
+    constexpr auto list_view_array_impl<BIG>::make_list_sizes() const -> const list_size_type*
     {
-        return reinterpret_cast<offset_type*>(
-            this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].data() + this->get_arrow_proxy().offset()
+        return this->get_arrow_proxy().buffers()[SIZES_BUFFER_INDEX].template data<list_size_type>()
+               + static_cast<size_type>(this->get_arrow_proxy().offset());
+    }
+
+    template <bool BIG>
+    constexpr auto
+    list_view_array_impl<BIG>::insert_value(const_value_iterator pos, const list_value& value, size_type count)
+        -> value_iterator
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+        using mutable_size_type = std::remove_const_t<list_size_type>;
+        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+
+        this->throw_if_sliced_for_mutation("list_view_array_impl::insert_value");
+
+        // Append new element(s) at the end of the flat array
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value.size()));
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_size_type>(value.size()));
+        const mutable_offset_type val_sz = static_cast<mutable_offset_type>(value.size());
+        const size_type flat_append_pos = this->raw_flat_array()->size();
+
+        this->insert_flat_elements(flat_append_pos, value, count);
+
+        auto& proxy = this->get_arrow_proxy();
+
+        // Insert count new (offset, size) entries in the offset and sizes buffers at position idx
+        const size_type n = this->size();
+
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+        offset_adaptor.resize(n + count);
+
+        auto& sizes_buffer = proxy.get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
+        auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
+        sizes_adaptor.resize(n + count);
+
+        // Shift existing entries [idx..n) → [idx+count..n+count): pure backward copy, no delta.
+        // std::copy_backward lowers to memmove for trivially-copyable offset/size types.
+        std::copy_backward(
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx),
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(n),
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(n + count)
         );
+        std::copy_backward(
+            sizes_adaptor.begin() + static_cast<std::ptrdiff_t>(idx),
+            sizes_adaptor.begin() + static_cast<std::ptrdiff_t>(n),
+            sizes_adaptor.begin() + static_cast<std::ptrdiff_t>(n + count)
+        );
+
+        // Write new entries for the count inserted lists
+        // Before writing, assert that the computed offsets are representable
+        if (count > 0 && val_sz > 0)
+        {
+            const auto base_offset_ull = static_cast<unsigned long long>(flat_append_pos);
+            const auto step_ull = static_cast<unsigned long long>(val_sz);
+            const auto max_k_ull = static_cast<unsigned long long>(count - 1);
+            const auto max_offset_ull = static_cast<unsigned long long>(
+                std::numeric_limits<mutable_offset_type>::max()
+            );
+            const auto last_offset_ull = base_offset_ull + max_k_ull * step_ull;
+            SPARROW_ASSERT_TRUE(base_offset_ull <= max_offset_ull);
+            SPARROW_ASSERT_TRUE(last_offset_ull <= max_offset_ull);
+        }
+        for (size_type k = 0; k < count; ++k)
+        {
+            offset_adaptor[idx + k] = static_cast<mutable_offset_type>(flat_append_pos)
+                                      + static_cast<mutable_offset_type>(k) * val_sz;
+            sizes_adaptor[idx + k] = static_cast<mutable_size_type>(val_sz);
+        }
+
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
+        p_list_sizes = make_list_sizes();
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+    }
+
+    template <bool BIG>
+    template <std::input_iterator InputIt>
+        requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
+    constexpr auto
+    list_view_array_impl<BIG>::insert_values(const_value_iterator pos, InputIt first, InputIt last)
+        -> value_iterator
+    {
+        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        auto& proxy = this->get_arrow_proxy();
+        const size_type original_size = this->size();
+        if constexpr (std::forward_iterator<InputIt>)
+        {
+            const auto count = static_cast<size_type>(std::distance(first, last));
+            if (count == 0)
+            {
+                return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+            }
+            size_type inserted_count = 0;
+            // Temporarily extend logical length once for the whole bulk insertion.
+            proxy.set_length(original_size + count);
+            for (auto it = first; it != last; ++it)
+            {
+                auto cur_pos = sparrow::next(
+                    this->value_cbegin(),
+                    static_cast<std::ptrdiff_t>(idx + inserted_count)
+                );
+                insert_value(cur_pos, *it, 1);
+                ++inserted_count;
+            }
+            proxy.set_length(original_size);
+        }
+        else
+        {
+            size_type inserted_count = 0;
+            for (auto it = first; it != last; ++it)
+            {
+                auto cur_pos = sparrow::next(
+                    this->value_cbegin(),
+                    static_cast<std::ptrdiff_t>(idx + inserted_count)
+                );
+                insert_value(cur_pos, *it, 1);
+                ++inserted_count;
+                proxy.set_length(original_size + inserted_count);
+            }
+            proxy.set_length(original_size);
+        }
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+    }
+
+    template <bool BIG>
+    constexpr auto list_view_array_impl<BIG>::erase_values(const_value_iterator pos, size_type count)
+        -> value_iterator
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+        using mutable_size_type = std::remove_const_t<list_size_type>;
+        const size_type idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        const size_type n = this->size();
+
+        if (count == 0)
+        {
+            return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+        }
+
+        this->throw_if_sliced_for_mutation("list_view_array_impl::erase_values");
+
+        auto& proxy = this->get_arrow_proxy();
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+
+        auto& sizes_buffer = proxy.get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
+        auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
+
+        // Shift entries [idx+count..n) to [idx..n-count)
+        std::copy(
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + count),
+            offset_adaptor.end(),
+            offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx)
+        );
+        std::copy(
+            sizes_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + count),
+            sizes_adaptor.end(),
+            sizes_adaptor.begin() + static_cast<std::ptrdiff_t>(idx)
+        );
+        offset_adaptor.resize(n - count);
+        sizes_adaptor.resize(n - count);
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
+        p_list_sizes = make_list_sizes();
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+    }
+
+    template <bool BIG>
+    void list_view_array_impl<BIG>::replace_value(size_type index, const list_value& value)
+    {
+        using mutable_offset_type = std::remove_const_t<offset_type>;
+        using mutable_size_type = std::remove_const_t<list_size_type>;
+
+        this->throw_if_sliced_for_mutation("list_view_array_impl::replace_value");
+
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(value.size()));
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_size_type>(value.size()));
+
+        const auto value_size = static_cast<mutable_offset_type>(value.size());
+        const size_type flat_append_pos = this->raw_flat_array()->size();
+        SPARROW_ASSERT_TRUE(std::in_range<mutable_offset_type>(flat_append_pos));
+
+        this->insert_flat_elements(flat_append_pos, value, 1);
+
+        auto& proxy = this->get_arrow_proxy();
+        auto& offset_buffer = proxy.get_array_private_data()->buffers()[OFFSET_BUFFER_INDEX];
+        auto offset_adaptor = make_buffer_adaptor<mutable_offset_type>(offset_buffer);
+        auto& sizes_buffer = proxy.get_array_private_data()->buffers()[SIZES_BUFFER_INDEX];
+        auto sizes_adaptor = make_buffer_adaptor<mutable_size_type>(sizes_buffer);
+        offset_adaptor[index] = static_cast<mutable_offset_type>(flat_append_pos);
+        sizes_adaptor[index] = static_cast<mutable_size_type>(value_size);
+        proxy.update_buffers();
+        p_list_offsets = make_list_offsets();
+        p_list_sizes = make_list_sizes();
     }
 
 #ifdef __GNUC__
@@ -1356,8 +1926,72 @@ namespace sparrow
     constexpr auto fixed_sized_list_array::offset_range(size_type i) const
         -> std::pair<offset_type, offset_type>
     {
-        const auto offset = i * m_list_size;
+        const auto offset = (i + this->offset()) * m_list_size;
         return std::make_pair(offset, offset + m_list_size);
+    }
+
+    constexpr auto fixed_sized_list_array::flat_element_count(size_type list_count) const -> size_type
+    {
+        const offset_type max_flat_count = static_cast<offset_type>(std::numeric_limits<size_type>::max());
+        SPARROW_ASSERT_TRUE(
+            m_list_size == 0 || static_cast<offset_type>(list_count) <= max_flat_count / m_list_size
+        );
+        return static_cast<size_type>(static_cast<offset_type>(list_count) * m_list_size);
+    }
+
+    inline auto
+    fixed_sized_list_array::insert_value(const_value_iterator pos, const list_value& value, size_type count)
+        -> value_iterator
+    {
+        SPARROW_ASSERT_TRUE(value.size() == m_list_size);
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+
+        this->throw_if_sliced_for_mutation("fixed_sized_list_array::insert_value");
+
+        const size_type flat_insert_pos = flat_element_count(idx);
+
+        this->insert_flat_elements(flat_insert_pos, value, count);
+
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+    }
+
+    inline auto fixed_sized_list_array::erase_values(const_value_iterator pos, size_type count) -> value_iterator
+    {
+        const auto idx = static_cast<size_type>(std::distance(this->value_cbegin(), pos));
+        if (count == 0)
+        {
+            return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+        }
+
+        this->throw_if_sliced_for_mutation("fixed_sized_list_array::erase_values");
+
+        this->erase_flat_elements(flat_element_count(idx), flat_element_count(count));
+        return sparrow::next(this->value_begin(), static_cast<std::ptrdiff_t>(idx));
+    }
+
+    inline void fixed_sized_list_array::replace_value(size_type index, const list_value& value)
+    {
+        SPARROW_ASSERT_TRUE(value.size() == m_list_size);
+
+        this->throw_if_sliced_for_mutation("fixed_sized_list_array::replace_value");
+
+        if (m_list_size == 0)
+        {
+            return;
+        }
+
+        array source_owner;
+        const array* source = value.flat_array();
+        if (source != nullptr && this->raw_flat_array() == source)
+        {
+            source_owner = *source;
+            source = &source_owner;
+        }
+
+        SPARROW_ASSERT_TRUE(source != nullptr);
+        const size_type flat_index = flat_element_count(index);
+        this->erase_flat_elements(flat_index, static_cast<size_type>(m_list_size));
+        this->insert_flat_elements(flat_index, list_value{source, value.begin_index(), value.end_index()}, 1);
     }
 
     template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>

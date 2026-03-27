@@ -20,7 +20,6 @@
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/utils/memory.hpp"
-#include "sparrow/utils/mp_utils.hpp"
 
 namespace sparrow
 {

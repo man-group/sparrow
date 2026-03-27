@@ -334,7 +334,10 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(this->bitmap_cbegin() <= pos)
         SPARROW_ASSERT_TRUE(pos <= this->bitmap_cend());
-        SPARROW_ASSERT_TRUE(first <= last);
+        if constexpr (std::random_access_iterator<InputIt>)
+        {
+            SPARROW_ASSERT_TRUE(first <= last);
+        }
         const auto pos_index = static_cast<size_t>(std::distance(this->bitmap_cbegin(), pos));
         const auto idx = this->get_arrow_proxy().insert_bitmap(pos_index, std::ranges::subrange(first, last));
         return sparrow::next(this->bitmap_begin(), idx);

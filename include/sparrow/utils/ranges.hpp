@@ -63,6 +63,13 @@ namespace sparrow
                 return true;
             }
 
+            // GCC false-positive: dereferencing a transform_view iterator that yields a container
+            // value type (e.g. vector<byte>) is incorrectly flagged as a potential null dereference
+            // when the copy constructor is deeply inlined.
+#ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wnull-dereference"
+#endif
             const std::size_t first_size = range.front().size();
             return std::ranges::all_of(
                 range,
@@ -71,6 +78,9 @@ namespace sparrow
                     return element.size() == first_size;
                 }
             );
+#ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#endif
         }
     }
 

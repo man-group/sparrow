@@ -17,14 +17,19 @@
 #include <ostream>
 
 #include "sparrow/config/config.hpp"
-#include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/array_helper.hpp"
 #include "sparrow/types/data_traits.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
+    class array;
 
     class list_value;
+
+    template <class L>
+    class list_reference;
 
     /**
      * @brief Iterator for traversing elements within a list_value.
@@ -64,17 +69,15 @@ namespace sparrow
         list_value_iterator() noexcept = default;
 
         /**
-         * @brief Constructs iterator for the given list and index.
+         * @brief Constructs iterator from the raw flat array and absolute position.
          *
-         * @param layout Pointer to the parent list_value
-         * @param index Index within the list (relative to list start)
+         * @param flat_array Pointer to the flat child array
+         * @param index Absolute position within the flat array
          *
-         * @pre layout must be a valid pointer to list_value
-         * @pre index must be <= layout->size() (end iterator allowed)
-         * @post Iterator is positioned at the specified index
-         * @post Iterator is valid for dereferencing if index < layout->size()
+         * @pre flat_array must be a valid non-null pointer
+         * @post Iterator is positioned at index in the flat array
          */
-        list_value_iterator(const list_value* layout, size_type index);
+        list_value_iterator(const array* flat_array, size_type index);
 
     private:
 
@@ -147,8 +150,8 @@ namespace sparrow
          */
         [[nodiscard]] bool less_than(const self_type& rhs) const;
 
-        const list_value* m_list_value = nullptr;  ///< Pointer to parent list_value
-        difference_type m_index;                   ///< Current index within the list
+        const array* m_flat_array = nullptr;  ///< Pointer to the flat child array
+        size_type m_index = 0;                ///< Absolute position within the flat array
 
         friend class iterator_access;
     };
@@ -221,14 +224,14 @@ namespace sparrow
          * @param index_begin Starting index of the list (inclusive)
          * @param index_end Ending index of the list (exclusive)
          *
-         * @pre flat_array must be a valid pointer to array_wrapper
+         * @pre flat_array must be a valid pointer to the flat child handle
          * @pre index_begin must be <= index_end
          * @pre index_end must be <= flat_array->size()
          * @post size() returns (index_end - index_begin)
          * @post List provides view over elements [index_begin, index_end)
          * @post Iterators are valid for traversing the specified range
          */
-        list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end);
+        list_value(const array* flat_array, size_type index_begin, size_type index_end);
 
         /**
          * @brief Gets the number of elements in the list.
@@ -406,9 +409,150 @@ namespace sparrow
 
     private:
 
-        const array_wrapper* p_flat_array = nullptr;  ///< Pointer to underlying flattened array
-        size_type m_index_begin = 0u;                 ///< Starting index in flattened array
-        size_type m_index_end = 0u;                   ///< Ending index in flattened array (exclusive)
+        /// @brief Returns a pointer to the flat array backing this list view.
+        [[nodiscard]] const array* flat_array() const noexcept
+        {
+            return p_flat_array;
+        }
+
+        /// @brief Returns the inclusive start index of this list slice in the flat array.
+        [[nodiscard]] size_type begin_index() const noexcept
+        {
+            return m_index_begin;
+        }
+
+        /// @brief Returns the exclusive end index of this list slice in the flat array.
+        [[nodiscard]] size_type end_index() const noexcept
+        {
+            return m_index_end;
+        }
+
+        const array* p_flat_array = nullptr;  ///< Pointer to underlying flattened array
+        size_type m_index_begin = 0u;         ///< Starting index in flattened array
+        size_type m_index_end = 0u;           ///< Ending index in flattened array (exclusive)
+
+
+        template <bool BIG>
+        friend class list_array_impl;
+
+        template <bool BIG>
+        friend class list_view_array_impl;
+
+        friend class fixed_sized_list_array;
+
+        template <class DERIVED>
+        friend class list_array_crtp_base;
+    };
+
+    SPARROW_API bool operator==(const list_value& lhs, const list_value& rhs);
+
+    template <class L>
+    class list_reference
+    {
+    public:
+
+        using self_type = list_reference<L>;
+        using value_type = list_value;
+        using size_type = list_value::size_type;
+        using iterator = list_value_iterator;
+        using const_iterator = list_value_iterator;
+
+        constexpr list_reference(L* layout, size_type index)
+            : p_layout(layout)
+            , m_index(index)
+        {
+        }
+
+        constexpr list_reference(const self_type&) noexcept = default;
+        constexpr list_reference(self_type&&) noexcept = default;
+        ~list_reference() = default;
+
+        self_type& operator=(const list_value& rhs)
+        {
+            p_layout->replace_value(m_index, rhs);
+            return *this;
+        }
+
+        self_type& operator=(const self_type& rhs)
+        {
+            return operator=(static_cast<list_value>(rhs));
+        }
+
+        self_type& operator=(self_type&& rhs)
+        {
+            return operator=(static_cast<list_value>(rhs));
+        }
+
+        operator list_value() const noexcept
+        {
+            const auto [b, e] = p_layout->offset_range(m_index);
+            return list_value(p_layout->raw_flat_array(), static_cast<size_type>(b), static_cast<size_type>(e));
+        }
+
+        [[nodiscard]] size_type size() const noexcept
+        {
+            return view().size();
+        }
+
+        [[nodiscard]] bool empty() const noexcept
+        {
+            return view().empty();
+        }
+
+        [[nodiscard]] auto operator[](size_type i) const
+        {
+            return view()[i];
+        }
+
+        [[nodiscard]] auto front() const
+        {
+            return view().front();
+        }
+
+        [[nodiscard]] auto back() const
+        {
+            return view().back();
+        }
+
+        [[nodiscard]] iterator begin() const
+        {
+            return view().begin();
+        }
+
+        [[nodiscard]] iterator end() const
+        {
+            return view().end();
+        }
+
+        [[nodiscard]] iterator cbegin() const
+        {
+            return view().cbegin();
+        }
+
+        [[nodiscard]] iterator cend() const
+        {
+            return view().cend();
+        }
+
+        [[nodiscard]] bool operator==(const list_value& rhs) const
+        {
+            return view() == rhs;
+        }
+
+        [[nodiscard]] bool operator==(const self_type& rhs) const
+        {
+            return view() == rhs.view();
+        }
+
+    private:
+
+        [[nodiscard]] list_value view() const noexcept
+        {
+            return static_cast<list_value>(*this);
+        }
+
+        L* p_layout = nullptr;
+        size_type m_index = 0;
     };
 
     /**

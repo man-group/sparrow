@@ -632,13 +632,7 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        auto values = range
-                      | std::views::transform(
-                          [](const auto& v)
-                          {
-                              return v.get();
-                          }
-                      );
+        auto values = range | std::views::transform(nullable_get);
         auto is_non_null = range
                            | std::views::transform(
                                [](const auto& v)

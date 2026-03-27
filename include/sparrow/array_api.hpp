@@ -14,16 +14,23 @@
 
 #pragma once
 
+#include <iterator>
 #include <ranges>
+#include <stdexcept>
 
+#include "sparrow/array_iterator.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
 #include "sparrow/layout/layout_concept.hpp"
-#include "sparrow/layout/nested_value_types.hpp"
+#include "sparrow/layout/list_value.hpp"
+#include "sparrow/layout/map_value.hpp"
+#include "sparrow/layout/struct_value.hpp"
 #include "sparrow/null_array.hpp"
 #include "sparrow/types/data_traits.hpp"
+#include "sparrow/utils/contracts.hpp"
+#include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
 namespace sparrow
@@ -46,6 +53,9 @@ namespace sparrow
         using size_type = std::size_t;
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
+
+        using const_iterator = array_const_iterator;
+        using iterator = const_iterator;
 
         /**
          * Constructs an empty array.
@@ -231,7 +241,6 @@ namespace sparrow
          * with bounds checking.
          *
          * @param index The position of the element in the array.
-         * @throw std::out_of_range if \p index is not within the range of the container.
          */
         [[nodiscard]] SPARROW_API const_reference at(size_type index) const;
 
@@ -257,6 +266,34 @@ namespace sparrow
          * @return Constant reference to the last element.
          */
         [[nodiscard]] SPARROW_API const_reference back() const;
+
+        /**
+         * Returns an iterator to the beginning of the array.
+         *
+         * @return Iterator to the beginning of the array.
+         */
+        [[nodiscard]] SPARROW_API iterator begin() const;
+
+        /**
+         * Returns an iterator to the end of the array.
+         *
+         * @return Iterator to the end of the array.
+         */
+        [[nodiscard]] SPARROW_API iterator end() const;
+
+        /**
+         * Returns a constant iterator to the beginning of the array.
+         *
+         * @return Constant iterator to the beginning of the array.
+         */
+        [[nodiscard]] SPARROW_API const_iterator cbegin() const;
+
+        /**
+         * Returns a constant iterator to the end of the array.
+         *
+         * @return Constant iterator to the end of the array.
+         */
+        [[nodiscard]] SPARROW_API const_iterator cend() const;
 
         template <class F>
         using visit_result_t = std::invoke_result_t<F, null_array>;
@@ -289,6 +326,11 @@ namespace sparrow
         [[nodiscard]] SPARROW_API bool is_view() const;
 
         /**
+         * @returns true if the array is dictionary-encoded, false otherwise.
+         */
+        [[nodiscard]] SPARROW_API bool is_dictionary() const;
+
+        /**
          * Slices the array to keep only the elements between the given \p start and \p end.
          * A deep copy of the underlying Arrow data is returned. The copied ArrowArray.offset and
          * ArrowArray.length are then updated to represent the requested range. If \p end is greater than
@@ -311,6 +353,61 @@ namespace sparrow
          * @return A sliced view of the array.
          */
         [[nodiscard]] SPARROW_API array slice_view(size_type start, size_type end) const;
+
+        /**
+         * Inserts \p count copies of elements from \p source[src_begin, src_end) at position \p pos.
+         *
+         * @param pos Insertion point (0-based index into this array's flat storage).
+         * Slices the array in place to keep only the elements between the given \p start and \p end.
+         * The data is not modified, only the ArrowArray.offset and ArrowArray.length are updated.
+         *
+         * @pre source.data_type() == this->data_type()
+         * @pre pos <= this->size()
+         * @pre src_begin <= src_end <= source.size()
+         */
+
+        /**
+         * Inserts elements from the range [first, last) before the element at the specified position.
+         *
+         * @param pos The position before which the new elements will be inserted.
+         * @param first The beginning of the range of elements to insert.
+         * @param last The end of the range of elements to insert.
+         * @return An iterator to the first of the newly inserted elements.
+         */
+        SPARROW_API iterator insert(const_iterator pos, const_iterator first, const_iterator last);
+
+        /**
+         * Inserts elements from the range [first, last) before the element at the specified position,
+         * repeating the insertion count times.
+         *
+         * @param pos The position before which the new elements will be inserted.
+         * @param first The beginning of the range of elements to insert.
+         * @param last The end of the range of elements to insert.
+         * @param count The number of times to repeat the insertion.
+         * @return An iterator to the first of the newly inserted elements.
+         */
+        SPARROW_API
+        iterator insert(const_iterator pos, const_iterator first, const_iterator last, size_type count);
+
+        /**
+         * Inserts a copy of \c value before \c pos in the array, repeating the insertion count times.
+         *
+         * @param pos The iterator before which the element will be inserted (\c pos may be the end()
+         * iterator).
+         * @param value The element to insert.
+         * @param count The number of times to repeat the insertion.
+         * @return An iterator pointing to the first of the inserted values.
+         */
+        SPARROW_API iterator erase(const_iterator pos);
+
+        /**
+         * Removes the elements in the range [ \c first , \c last ) from the array.
+         *
+         * @param first The iterator to the first element to remove.
+         * @param last The iterator to the element following the last element to remove.
+         * @return The iterator following the last element removed.
+         */
+        SPARROW_API iterator erase(const_iterator first, const_iterator last);
 
     private:
 

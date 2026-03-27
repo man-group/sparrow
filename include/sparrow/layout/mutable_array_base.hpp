@@ -113,7 +113,10 @@ namespace sparrow
         {
             SPARROW_ASSERT_TRUE(pos >= this->cbegin())
             SPARROW_ASSERT_TRUE(pos <= this->cend());
-            SPARROW_ASSERT_TRUE(first <= last);
+            if constexpr (std::random_access_iterator<InputIt>)
+            {
+                SPARROW_ASSERT_TRUE(first <= last);
+            }
             const difference_type distance = std::distance(this->cbegin(), pos);
             const auto validity_range = std::ranges::subrange(first, last)
                                         | std::views::transform(
@@ -129,13 +132,7 @@ namespace sparrow
                 validity_range.end()
             );
 
-            const auto value_range = std::ranges::subrange(first, last)
-                                     | std::views::transform(
-                                         [](const auto& obj)
-                                         {
-                                             return obj.get();
-                                         }
-                                     );
+            const auto value_range = std::ranges::subrange(first, last) | std::views::transform(nullable_get);
             derived.insert_values(
                 sparrow::next(derived.value_cbegin(), distance),
                 value_range.begin(),

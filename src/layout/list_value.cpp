@@ -14,19 +14,20 @@
 
 #include "sparrow/layout/list_value.hpp"
 
+#include "sparrow/array_api.hpp"
 #include "sparrow/layout/array_registry.hpp"
 
 namespace sparrow
 {
-    list_value_iterator::list_value_iterator(const list_value* layout, size_type index)
-        : m_list_value(layout)
+    list_value_iterator::list_value_iterator(const array* flat_array, size_type index)
+        : m_flat_array(flat_array)
         , m_index(index)
     {
     }
 
     auto list_value_iterator::dereference() const -> reference
     {
-        return m_list_value->operator[](m_index);
+        return (*m_flat_array)[m_index];
     }
 
     void list_value_iterator::increment()
@@ -41,17 +42,17 @@ namespace sparrow
 
     void list_value_iterator::advance(difference_type n)
     {
-        m_index += n;
+        m_index = static_cast<size_type>(static_cast<difference_type>(m_index) + n);
     }
 
     auto list_value_iterator::distance_to(const self_type& rhs) const -> difference_type
     {
-        return rhs.m_index - m_index;
+        return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
     }
 
     bool list_value_iterator::equal(const self_type& rhs) const
     {
-        return (m_list_value == rhs.m_list_value) && (m_index == rhs.m_index);
+        return m_flat_array == rhs.m_flat_array && m_index == rhs.m_index;
     }
 
     bool list_value_iterator::less_than(const self_type& rhs) const
@@ -59,7 +60,7 @@ namespace sparrow
         return m_index < rhs.m_index;
     }
 
-    list_value::list_value(const array_wrapper* flat_array, size_type index_begin, size_type index_end)
+    list_value::list_value(const array* flat_array, size_type index_begin, size_type index_end)
         : p_flat_array(flat_array)
         , m_index_begin(index_begin)
         , m_index_end(index_end)
@@ -79,7 +80,7 @@ namespace sparrow
 
     auto list_value::operator[](size_type i) const -> const_reference
     {
-        return array_element(*p_flat_array, m_index_begin + i);
+        return (*p_flat_array)[m_index_begin + i];
     }
 
     auto list_value::front() const -> const_reference
@@ -99,32 +100,32 @@ namespace sparrow
 
     list_value_iterator list_value::begin()
     {
-        return {this, 0};
+        return {p_flat_array, m_index_begin};
     }
 
     list_value_iterator list_value::begin() const
     {
-        return {this, 0};
+        return {p_flat_array, m_index_begin};
     }
 
     list_value_iterator list_value::cbegin() const
     {
-        return {this, 0};
+        return {p_flat_array, m_index_begin};
     }
 
     list_value_iterator list_value::end()
     {
-        return {this, size()};
+        return {p_flat_array, m_index_end};
     }
 
     list_value_iterator list_value::end() const
     {
-        return {this, size()};
+        return {p_flat_array, m_index_end};
     }
 
     list_value_iterator list_value::cend() const
     {
-        return {this, size()};
+        return {p_flat_array, m_index_end};
     }
 
     auto list_value::rbegin() -> list_value_reverse_iterator
@@ -156,8 +157,6 @@ namespace sparrow
     {
         return rend();
     }
-
-
 }
 
 #if defined(__cpp_lib_format)

@@ -828,13 +828,7 @@ namespace sparrow
     )
     {
         // split into values and is_non_null ranges
-        const auto values = range
-                            | std::views::transform(
-                                [](const auto& v)
-                                {
-                                    return v.get();
-                                }
-                            );
+        const auto values = range | std::views::transform(nullable_get);
         const auto is_non_null = range
                                  | std::views::transform(
                                      [](const auto& v)
@@ -1002,7 +996,7 @@ namespace sparrow
 
         const uint8_t* uint8_ptr = reinterpret_cast<const uint8_t*>(value.data());
         const std::vector<uint8_t> casted_value(uint8_ptr, uint8_ptr + value.size());
-        const repeat_view<std::vector<uint8_t>> my_repeat_view{casted_value, count};
+        const auto my_repeat_view = repeat_view{casted_value, count};
         const auto joined_repeated_value_range = std::ranges::views::join(my_repeat_view);
         auto& data_buffer = get_data_buffer();
         const auto offset_begin = byte_offset(idx);

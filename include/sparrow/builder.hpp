@@ -391,14 +391,14 @@ namespace sparrow
             {
                 auto flat_keys = t
                                  | std::views::transform(
-                                     [](const auto& kv)
+                                     [](const auto& kv) -> decltype(auto)
                                      {
                                          return kv.first;
                                      }
                                  );
                 auto flat_items = t
                                   | std::views::transform(
-                                      [](const auto& kv)
+                                      [](const auto& kv) -> decltype(auto)
                                       {
                                           return kv.second;
                                       }
@@ -436,7 +436,7 @@ namespace sparrow
                     {
                         auto tuple_i_col = t
                                            | std::views::transform(
-                                               [](const auto& maybe_nullable_tuple)
+                                               [](const auto& maybe_nullable_tuple) -> decltype(auto)
                                                {
                                                    const auto& tuple_val = ensure_value(maybe_nullable_tuple);
                                                    return std::get<decltype(i)::value>(tuple_val);
@@ -508,11 +508,16 @@ namespace sparrow
                         using type_at_index = std::variant_alternative_t<decltype(i)::value, variant_type>;
                         auto type_i_col = t
                                           | std::views::transform(
-                                              [](const auto& variant)
+                                              [](const auto& variant) -> const type_at_index&
                                               {
-                                                  return variant.index() == decltype(i)::value
-                                                             ? std::get<type_at_index>(variant)
-                                                             : type_at_index{};
+                                                  if (const auto* active_value = std::get_if<type_at_index>(
+                                                          &variant
+                                                      ))
+                                                  {
+                                                      return *active_value;
+                                                  }
+                                                  static const type_at_index inactive_value{};
+                                                  return inactive_value;
                                               }
                                           );
 

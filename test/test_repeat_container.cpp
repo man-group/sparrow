@@ -24,7 +24,7 @@ TEST_SUITE("repeat_container")
 
     TEST_CASE("constructor")
     {
-        const sparrow::repeat_view view(value, 5);
+        [[maybe_unused]] const sparrow::repeat_view view(value, 5);
     }
 
     TEST_CASE("begin")
@@ -57,5 +57,24 @@ TEST_SUITE("repeat_container")
         CHECK_EQ(*(++iter), value);
         CHECK_EQ(*(++iter), value);
         CHECK_EQ(++iter, view.end());
+    }
+
+    TEST_CASE("ctad borrows lvalues")
+    {
+        std::string mutable_value = "test";
+        const sparrow::repeat_view view{mutable_value, 3};
+
+        mutable_value = "updated";
+
+        CHECK_EQ(*view.begin(), mutable_value);
+        CHECK_EQ(view.size(), 3);
+    }
+
+    TEST_CASE("ctad owns rvalues")
+    {
+        const sparrow::repeat_view view{std::string("test"), 2};
+
+        CHECK_EQ(*view.begin(), "test");
+        CHECK_EQ(view.size(), 2);
     }
 }

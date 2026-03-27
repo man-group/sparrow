@@ -334,6 +334,7 @@ set(SPARROW_HEADERS
 
 set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/array.cpp
+    ${SPARROW_SOURCE_DIR}/array_iterator.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_schema_proxy.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_stream_proxy.cpp
     ${SPARROW_SOURCE_DIR}/arrow_interface/arrow_array_stream.cpp
@@ -357,6 +358,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/types/data_type.cpp
     ${SPARROW_SOURCE_DIR}/union_array.cpp
     ${SPARROW_SOURCE_DIR}/utils/metadata.cpp
+    ${SPARROW_SOURCE_DIR}/utils/sparrow_exception.cpp
     ${SPARROW_SOURCE_DIR}/utils/temporal.cpp
 )
 
