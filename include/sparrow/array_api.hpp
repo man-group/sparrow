@@ -267,10 +267,33 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API const_reference back() const;
 
-        [[nodiscard]] iterator begin() const;
-        [[nodiscard]] iterator end() const;
-        [[nodiscard]] const_iterator cbegin() const;
-        [[nodiscard]] const_iterator cend() const;
+        /**
+         * Returns an iterator to the beginning of the array.
+         *
+         * @return Iterator to the beginning of the array.
+         */
+        [[nodiscard]] SPARROW_API iterator begin() const;
+
+        /**
+         * Returns an iterator to the end of the array.
+         *
+         * @return Iterator to the end of the array.
+         */
+        [[nodiscard]] SPARROW_API iterator end() const;
+
+        /**
+         * Returns a constant iterator to the beginning of the array.
+         *
+         * @return Constant iterator to the beginning of the array.
+         */
+        [[nodiscard]] SPARROW_API const_iterator cbegin() const;
+
+        /**
+         * Returns a constant iterator to the end of the array.
+         *
+         * @return Constant iterator to the end of the array.
+         */
+        [[nodiscard]] SPARROW_API const_iterator cend() const;
 
         template <class F>
         using visit_result_t = std::invoke_result_t<F, null_array>;
@@ -414,25 +437,7 @@ namespace sparrow
         friend class detail::array_access;
     };
 
-    inline auto array::begin() const -> iterator
-    {
-        return cbegin();
-    }
 
-    inline auto array::end() const -> iterator
-    {
-        return cend();
-    }
-
-    inline auto array::cbegin() const -> const_iterator
-    {
-        return {this, 0};
-    }
-
-    inline auto array::cend() const -> const_iterator
-    {
-        return {this, size()};
-    }
 
     /**
      * Compares the content of two arrays.

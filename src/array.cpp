@@ -334,6 +334,26 @@ namespace sparrow
         return p_array->get_arrow_proxy();
     }
 
+    array::iterator array::begin() const
+    {
+        return cbegin();
+    }
+
+    array::iterator array::end() const
+    {
+        return cend();
+    }
+
+    array::const_iterator array::cbegin() const
+    {
+        return {this, 0};
+    }
+
+    array::const_iterator array::cend() const
+    {
+        return {this, size()};
+    }
+
     bool operator==(const array& lhs, const array& rhs)
     {
         return lhs.visit(
