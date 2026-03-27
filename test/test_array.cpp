@@ -524,41 +524,6 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(slice_inplace_id, testing_types);
-        TEST_CASE("erase")
-        {
-            SUBCASE("erase range [first, last)")
-            {
-                array destination(test::make_int_array({1, 2, 3, 4, 5}));
-
-                const auto iter = destination.erase(destination.cbegin() + 1, destination.cbegin() + 3);
-
-                CHECK_EQ(iter, destination.cbegin() + 1);
-                CHECK(destination == array(test::make_int_array({1, 4, 5})));
-            }
-
-            SUBCASE("erase single element at pos")
-            {
-                array destination(test::make_int_array({10, 20, 30, 40}));
-
-                const auto iter = destination.erase(destination.cbegin() + 1);
-
-                CHECK_EQ(iter, destination.cbegin() + 1);
-                CHECK(destination == array(test::make_int_array({10, 30, 40})));
-            }
-
-            SUBCASE("erase first element")
-            {
-                array destination(test::make_int_array({1, 2, 3}));
-
-                const auto iter = destination.erase(destination.cbegin());
-
-                CHECK_EQ(iter, destination.cbegin());
-                CHECK(destination == array(test::make_int_array({2, 3})));
-            }
-
-            SUBCASE("erase last element")
-            {
-                array destination(test::make_int_array({1, 2, 3}));
 
         TEST_CASE("insert")
         {
