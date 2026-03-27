@@ -487,12 +487,7 @@ namespace sparrow
                 array destination(test::make_int_array({1, 2, 3}));
                 array source(test::make_int_array({8, 9}));
 
-                const auto iter = destination.insert(
-                    destination.cbegin() + 1,
-                    source.cbegin(),
-                    source.cend(),
-                    2
-                );
+                const auto iter = destination.insert(destination.cbegin() + 1, source.cbegin(), source.cend(), 2);
 
                 CHECK_EQ(iter, destination.cbegin() + 1);
                 CHECK(destination == array(test::make_int_array({1, 8, 9, 8, 9, 2, 3})));
@@ -502,12 +497,7 @@ namespace sparrow
             {
                 array destination(test::make_int_array({1, 2, 3}));
 
-                destination.insert(
-                    destination.cbegin() + 1,
-                    destination.cbegin(),
-                    destination.cbegin() + 2,
-                    2
-                );
+                destination.insert(destination.cbegin() + 1, destination.cbegin(), destination.cbegin() + 2, 2);
 
                 CHECK(destination == array(test::make_int_array({1, 1, 2, 1, 2, 2, 3})));
             }
@@ -518,21 +508,14 @@ namespace sparrow
                 array destination(&typed_array);
                 array source(&typed_array);
 
-                destination.insert(
-                    destination.cbegin() + 1,
-                    source.cbegin(),
-                    source.cbegin() + 2,
-                    2
-                );
+                destination.insert(destination.cbegin() + 1, source.cbegin(), source.cbegin() + 2, 2);
 
                 CHECK_EQ(typed_array, test::make_int_array({1, 1, 2, 1, 2, 2, 3}));
             }
 
             SUBCASE("different concrete array types with the same data type throw")
             {
-                using extended_array_type = primitive_array<
-                    std::int32_t,
-                    simple_extension<"sparrow.test.array.insert">>;
+                using extended_array_type = primitive_array<std::int32_t, simple_extension<"sparrow.test.array.insert">>;
 
                 array destination(test::make_int_array({1, 2, 3}));
                 array source(extended_array_type(test::make_arrow_proxy<std::int32_t>(2, 0)));
@@ -548,12 +531,7 @@ namespace sparrow
                 array destination(test::make_int_array({1, 2, 3}));
                 array source(test::make_int_array({7, 8}));
 
-                const auto iter = destination.insert(
-                    destination.cbegin() + 1,
-                    source.cbegin(),
-                    source.cend(),
-                    3
-                );
+                const auto iter = destination.insert(destination.cbegin() + 1, source.cbegin(), source.cend(), 3);
 
                 CHECK_EQ(iter, destination.cbegin() + 1);
                 CHECK(destination == array(test::make_int_array({1, 7, 8, 7, 8, 7, 8, 2, 3})));

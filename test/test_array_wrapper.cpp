@@ -18,6 +18,7 @@
 
 #include "doctest/doctest.h"
 #include "external_array_data_creation.hpp"
+
 namespace sparrow
 {
     using test::make_arrow_proxy;
@@ -134,6 +135,5 @@ namespace sparrow
             }
         }
         TEST_CASE_TEMPLATE_APPLY(array_wrapper_clone, testing_types);
-
     }
 }

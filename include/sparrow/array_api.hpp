@@ -437,8 +437,6 @@ namespace sparrow
         friend class detail::array_access;
     };
 
-
-
     /**
      * Compares the content of two arrays.
      *

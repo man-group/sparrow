@@ -19,8 +19,8 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/types/data_traits.hpp"
-#include "sparrow/utils/nullable.hpp"
 #include "sparrow/utils/iterator.hpp"
+#include "sparrow/utils/nullable.hpp"
 
 namespace sparrow
 {
@@ -151,7 +151,7 @@ namespace sparrow
         [[nodiscard]] bool less_than(const self_type& rhs) const;
 
         const array* m_flat_array = nullptr;  ///< Pointer to the flat child array
-        size_type m_index = 0;                  ///< Absolute position within the flat array
+        size_type m_index = 0;                ///< Absolute position within the flat array
 
         friend class iterator_access;
     };
@@ -427,9 +427,9 @@ namespace sparrow
             return m_index_end;
         }
 
-        const array* p_flat_array = nullptr;              ///< Pointer to underlying flattened array
-        size_type m_index_begin = 0u;                     ///< Starting index in flattened array
-        size_type m_index_end = 0u;                       ///< Ending index in flattened array (exclusive)
+        const array* p_flat_array = nullptr;  ///< Pointer to underlying flattened array
+        size_type m_index_begin = 0u;         ///< Starting index in flattened array
+        size_type m_index_end = 0u;           ///< Ending index in flattened array (exclusive)
 
 
         template <bool BIG>
@@ -473,8 +473,15 @@ namespace sparrow
             return *this;
         }
 
-        self_type& operator=(const self_type& rhs) { return operator=(static_cast<list_value>(rhs)); }
-        self_type& operator=(self_type&& rhs) { return operator=(static_cast<list_value>(rhs)); }
+        self_type& operator=(const self_type& rhs)
+        {
+            return operator=(static_cast<list_value>(rhs));
+        }
+
+        self_type& operator=(self_type&& rhs)
+        {
+            return operator=(static_cast<list_value>(rhs));
+        }
 
         operator list_value() const noexcept
         {
@@ -482,22 +489,67 @@ namespace sparrow
             return list_value(p_layout->raw_flat_array(), static_cast<size_type>(b), static_cast<size_type>(e));
         }
 
-        [[nodiscard]] size_type size() const noexcept { return view().size(); }
-        [[nodiscard]] bool empty() const noexcept { return view().empty(); }
-        [[nodiscard]] auto operator[](size_type i) const { return view()[i]; }
-        [[nodiscard]] auto front() const { return view().front(); }
-        [[nodiscard]] auto back() const { return view().back(); }
-        [[nodiscard]] iterator begin() const { return view().begin(); }
-        [[nodiscard]] iterator end() const { return view().end(); }
-        [[nodiscard]] iterator cbegin() const { return view().cbegin(); }
-        [[nodiscard]] iterator cend() const { return view().cend(); }
+        [[nodiscard]] size_type size() const noexcept
+        {
+            return view().size();
+        }
 
-        [[nodiscard]] bool operator==(const list_value& rhs) const { return view() == rhs; }
-        [[nodiscard]] bool operator==(const self_type& rhs) const { return view() == rhs.view(); }
+        [[nodiscard]] bool empty() const noexcept
+        {
+            return view().empty();
+        }
+
+        [[nodiscard]] auto operator[](size_type i) const
+        {
+            return view()[i];
+        }
+
+        [[nodiscard]] auto front() const
+        {
+            return view().front();
+        }
+
+        [[nodiscard]] auto back() const
+        {
+            return view().back();
+        }
+
+        [[nodiscard]] iterator begin() const
+        {
+            return view().begin();
+        }
+
+        [[nodiscard]] iterator end() const
+        {
+            return view().end();
+        }
+
+        [[nodiscard]] iterator cbegin() const
+        {
+            return view().cbegin();
+        }
+
+        [[nodiscard]] iterator cend() const
+        {
+            return view().cend();
+        }
+
+        [[nodiscard]] bool operator==(const list_value& rhs) const
+        {
+            return view() == rhs;
+        }
+
+        [[nodiscard]] bool operator==(const self_type& rhs) const
+        {
+            return view() == rhs.view();
+        }
 
     private:
 
-        [[nodiscard]] list_value view() const noexcept { return static_cast<list_value>(*this); }
+        [[nodiscard]] list_value view() const noexcept
+        {
+            return static_cast<list_value>(*this);
+        }
 
         L* p_layout = nullptr;
         size_type m_index = 0;

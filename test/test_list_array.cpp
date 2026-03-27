@@ -952,8 +952,8 @@ namespace sparrow
                 // source: sizes {2,4,2}: source[0]=[0,1], source[1]=[2,3,4,5], source[2]=[6,7]
                 list_view_array source(test::make_list_view_proxy<inner_scalar_type>(n_flat2, sizes2));
 
-                auto element = arr[1].value();    // arr[1]=[1,2]
-                element = source[2].value();      // source[2]=[6,7]
+                auto element = arr[1].value();  // arr[1]=[1,2]
+                element = source[2].value();    // source[2]=[6,7]
 
                 REQUIRE_EQ(arr.size(), n);
                 // arr[0]=[0] unchanged
@@ -973,7 +973,7 @@ namespace sparrow
                 arr.pop_back();  // removes arr[3]=[6,7,8,9]
 
                 REQUIRE_EQ(arr.size(), n - 1u);
-                CHECK_EQ(arr[0].value().size(), 1u);       // arr[0]=[0]
+                CHECK_EQ(arr[0].value().size(), 1u);  // arr[0]=[0]
                 CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], static_cast<inner_scalar_type>(0));
                 CHECK_EQ(arr[n - 2u].value().size(), 3u);  // was arr[2]=[3,4,5]
                 CHECK_NULLABLE_VARIANT_EQ(arr[n - 2u].value()[0], static_cast<inner_scalar_type>(3));
@@ -1071,8 +1071,8 @@ namespace sparrow
                     // source: sizes {2,4,2}: source[0]=[0,1], source[1]=[2,3,4,5], source[2]=[6,7]
                     list_view_array source(test::make_list_view_proxy<inner_scalar_type>(n_flat2, sizes2));
                     const std::vector<list_view_array::value_type> to_insert = {
-                        make_nullable(source[0].value()),   // [0,1]
-                        make_nullable(source[1].value())    // [2,3,4,5]
+                        make_nullable(source[0].value()),  // [0,1]
+                        make_nullable(source[1].value())   // [2,3,4,5]
                     };
 
                     const auto it = arr.insert(arr.cbegin(), to_insert.begin(), to_insert.end());
@@ -1145,7 +1145,7 @@ namespace sparrow
             const std::size_t list_size2 = 4;
 
             arrow_proxy proxy = test::make_fixed_sized_list_proxy<inner_scalar_type>(n_flat, list_size);
-            fixed_sized_list_array list_arr(proxy);   // keep proxy alive for mutable subcases
+            fixed_sized_list_array list_arr(proxy);  // keep proxy alive for mutable subcases
 
             SUBCASE("copy")
             {
@@ -1280,8 +1280,8 @@ namespace sparrow
                     test::make_fixed_sized_list_proxy<inner_scalar_type>(list_size, list_size)
                 );
 
-                auto element = arr[3].value();       // arr[3]=[15..19]
-                element = source[0].value();         // source[0]=[0..4]
+                auto element = arr[3].value();  // arr[3]=[15..19]
+                element = source[0].value();    // source[0]=[0..4]
 
                 REQUIRE_EQ(arr.size(), 4u);
                 CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], static_cast<inner_scalar_type>(0));
@@ -1357,8 +1357,10 @@ namespace sparrow
                     CHECK_EQ(arr[0].value().size(), 5u);  // newly inserted
                     CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], static_cast<inner_scalar_type>(0));
                     CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[4], static_cast<inner_scalar_type>(4));
-                    CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], static_cast<inner_scalar_type>(0));   // was arr[0]
-                    CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], static_cast<inner_scalar_type>(15));  // was arr[3]
+                    CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], static_cast<inner_scalar_type>(0));  // was
+                                                                                                      // arr[0]
+                    CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], static_cast<inner_scalar_type>(15));  // was
+                                                                                                       // arr[3]
                 }
 
                 SUBCASE("in the middle")
@@ -1369,12 +1371,17 @@ namespace sparrow
                     arr.insert(sparrow::next(arr.cbegin(), 2), make_nullable(val));
 
                     REQUIRE_EQ(arr.size(), 5u);
-                    CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], static_cast<inner_scalar_type>(0));  // was arr[0]
-                    CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], static_cast<inner_scalar_type>(5));  // was arr[1]
+                    CHECK_NULLABLE_VARIANT_EQ(arr[0].value()[0], static_cast<inner_scalar_type>(0));  // was
+                                                                                                      // arr[0]
+                    CHECK_NULLABLE_VARIANT_EQ(arr[1].value()[0], static_cast<inner_scalar_type>(5));  // was
+                                                                                                      // arr[1]
                     CHECK(arr[2].has_value());
-                    CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], static_cast<inner_scalar_type>(0));   // newly inserted
-                    CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], static_cast<inner_scalar_type>(10));  // was arr[2]
-                    CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], static_cast<inner_scalar_type>(15));  // was arr[3]
+                    CHECK_NULLABLE_VARIANT_EQ(arr[2].value()[0], static_cast<inner_scalar_type>(0));  // newly
+                                                                                                      // inserted
+                    CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], static_cast<inner_scalar_type>(10));  // was
+                                                                                                       // arr[2]
+                    CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], static_cast<inner_scalar_type>(15));  // was
+                                                                                                       // arr[3]
                 }
 
                 SUBCASE("at end")
@@ -1385,7 +1392,8 @@ namespace sparrow
                     arr.insert(arr.cend(), make_nullable(val));
 
                     REQUIRE_EQ(arr.size(), 5u);
-                    CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], static_cast<inner_scalar_type>(15));  // was arr[3]
+                    CHECK_NULLABLE_VARIANT_EQ(arr[3].value()[0], static_cast<inner_scalar_type>(15));  // was
+                                                                                                       // arr[3]
                     CHECK(arr[4].has_value());
                     CHECK_EQ(arr[4].value().size(), 5u);  // newly inserted
                     CHECK_NULLABLE_VARIANT_EQ(arr[4].value()[0], static_cast<inner_scalar_type>(0));

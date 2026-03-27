@@ -154,7 +154,6 @@ namespace sparrow
         return {get_arrow_proxy().slice_view(start, end)};
     }
 
-
     array::iterator array::insert(const_iterator pos, const_iterator first, const_iterator last)
     {
         return insert(pos, first, last, 1);
@@ -249,14 +248,13 @@ namespace sparrow
                     {
                         // Type mismatch (e.g. nullable<string_view> -> nullable<string>):
                         const auto elem_count = static_cast<std::ptrdiff_t>(last_index - first_index);
-                        const auto converting_view =
-                            std::ranges::subrange(source_first, source_last)
-                            | std::views::transform(
-                                [](const auto& elem) -> typename array_type::value_type
-                                {
-                                    return typename array_type::value_type(elem);
-                                }
-                            );
+                        const auto converting_view = std::ranges::subrange(source_first, source_last)
+                                                     | std::views::transform(
+                                                         [](const auto& elem) -> typename array_type::value_type
+                                                         {
+                                                             return typename array_type::value_type(elem);
+                                                         }
+                                                     );
                         auto current_offset = static_cast<std::ptrdiff_t>(pos_index);
                         for (size_type i = 0; i < count; ++i)
                         {

@@ -631,7 +631,8 @@ namespace sparrow
 
         void replace_value(size_type index, const list_value& value);
 
-        constexpr value_iterator insert_value(const_value_iterator pos, const list_value& value, size_type count);
+        constexpr value_iterator
+        insert_value(const_value_iterator pos, const list_value& value, size_type count);
 
         constexpr value_iterator erase_values(const_value_iterator pos, size_type count);
 
@@ -833,7 +834,8 @@ namespace sparrow
 
         void replace_value(size_type index, const list_value& value);
 
-        constexpr value_iterator insert_value(const_value_iterator pos, const list_value& value, size_type count);
+        constexpr value_iterator
+        insert_value(const_value_iterator pos, const list_value& value, size_type count);
 
         template <std::input_iterator InputIt>
             requires std::convertible_to<typename std::iterator_traits<InputIt>::value_type, list_value>
@@ -1420,8 +1422,15 @@ namespace sparrow
         );
         auto delta_begin = offset_adaptor.begin() + static_cast<std::ptrdiff_t>(idx + 1);
         auto delta_end = offset_adaptor.begin() + static_cast<std::ptrdiff_t>(n + 1 - count);
-        std::transform(delta_begin, delta_end, delta_begin, [flat_erase_count_val](mutable_offset_type v)
-                       { return v - flat_erase_count_val; });
+        std::transform(
+            delta_begin,
+            delta_end,
+            delta_begin,
+            [flat_erase_count_val](mutable_offset_type v)
+            {
+                return v - flat_erase_count_val;
+            }
+        );
         offset_adaptor.resize(n + 1 - count);
 
         proxy.update_buffers();
@@ -1463,7 +1472,9 @@ namespace sparrow
             const auto flat_begin_index = static_cast<size_type>(flat_begin);
             this->erase_flat_elements(flat_begin_index, old_size);
             this->insert_flat_elements(
-                flat_begin_index, list_value{source, value.begin_index(), value.end_index()}, 1
+                flat_begin_index,
+                list_value{source, value.begin_index(), value.end_index()},
+                1
             );
             auto& proxy_eq = this->get_arrow_proxy();
             proxy_eq.update_buffers();
@@ -1494,14 +1505,28 @@ namespace sparrow
             const mutable_offset_type delta = new_size_mt - old_size_mt;
             const auto max_offset = std::numeric_limits<mutable_offset_type>::max();
             SPARROW_ASSERT_TRUE(offset_adaptor[n] <= max_offset - delta);
-            std::transform(tail_begin, tail_end, tail_begin, [delta](mutable_offset_type v)
-                           { return v + delta; });
+            std::transform(
+                tail_begin,
+                tail_end,
+                tail_begin,
+                [delta](mutable_offset_type v)
+                {
+                    return v + delta;
+                }
+            );
         }
         else
         {
             const mutable_offset_type delta = old_size_mt - new_size_mt;
-            std::transform(tail_begin, tail_end, tail_begin, [delta](mutable_offset_type v)
-                           { return v - delta; });
+            std::transform(
+                tail_begin,
+                tail_end,
+                tail_begin,
+                [delta](mutable_offset_type v)
+                {
+                    return v - delta;
+                }
+            );
         }
 
         proxy.update_buffers();
@@ -1966,9 +1991,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(source != nullptr);
         const size_type flat_index = flat_element_count(index);
         this->erase_flat_elements(flat_index, static_cast<size_type>(m_list_size));
-        this->insert_flat_elements(
-            flat_index, list_value{source, value.begin_index(), value.end_index()}, 1
-        );
+        this->insert_flat_elements(flat_index, list_value{source, value.begin_index(), value.end_index()}, 1);
     }
 
     template <validity_bitmap_input R, input_metadata_container METADATA_RANGE>
