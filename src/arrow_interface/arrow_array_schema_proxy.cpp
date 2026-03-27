@@ -1000,6 +1000,11 @@ namespace sparrow
             ap.create_bitmap_view(null_count);
             ap.array().null_count = static_cast<int64_t>(null_count);
         }
+        else
+        {
+            // Null arrays have no bitmap; every element is null by definition.
+            ap.array().null_count = static_cast<int64_t>(new_length);
+        }
         return ap;
     }
 
@@ -1026,6 +1031,11 @@ namespace sparrow
             const auto null_count = new_length - new_non_null;
             create_bitmap_view(null_count);
             set_null_count(static_cast<int64_t>(null_count));
+        }
+        else
+        {
+            // Null arrays have no bitmap; every element is null by definition.
+            set_null_count(static_cast<int64_t>(new_length));
         }
     }
 
