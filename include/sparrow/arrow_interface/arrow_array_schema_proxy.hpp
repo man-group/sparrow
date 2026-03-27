@@ -952,6 +952,16 @@ namespace sparrow
         [[nodiscard]] SPARROW_API arrow_proxy slice_view(size_t start, size_t end) const;
 
         /**
+         * Slices the array in place to keep only the elements between the given \p start and \p end.
+         * The underlying data is not modified, only the ArrowArray.offset and ArrowArray.length are updated
+         * relative to the current view.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        SPARROW_API void slice_inplace(size_t start, size_t end);
+
+        /**
          * Refresh the buffers views. This method should be called after modifying the buffers of the array.
          */
         SPARROW_API void update_buffers();

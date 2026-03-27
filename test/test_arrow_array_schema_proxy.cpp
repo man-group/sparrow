@@ -450,6 +450,22 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         }
     }
 
+    TEST_CASE("slice_inplace")
+    {
+        auto [array, schema] = test::make_arrow_schema_and_array(false);
+        sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+
+        proxy.slice_inplace(2, 7);
+        CHECK_EQ(proxy.offset(), 2);
+        CHECK_EQ(proxy.length(), 5);
+        CHECK_EQ(proxy.null_count(), 2);
+
+        proxy.slice_inplace(1, 3);
+        CHECK_EQ(proxy.offset(), 3);
+        CHECK_EQ(proxy.length(), 2);
+        CHECK_EQ(proxy.null_count(), 1);
+    }
+
     TEST_CASE("n_buffers")
     {
         auto [array, schema] = test::make_arrow_schema_and_array(false);

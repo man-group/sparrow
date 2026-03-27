@@ -410,6 +410,21 @@ namespace sparrow
          */
         [[nodiscard]] constexpr D slice_view(size_type start, size_type end) const;
 
+        /**
+         * @brief Slices the array in place.
+         *
+         * Updates this array so that it keeps only elements between start and end.
+         * The underlying data buffers are not copied.
+         *
+         * @param start Index of the first element to keep (inclusive)
+         * @param end Index of the first element to exclude (exclusive)
+         *
+         * @pre start must be <= end
+         * @post This array has length (end - start)
+         * @post This array offset is advanced relative to its current view
+         */
+        constexpr void slice_inplace(size_type start, size_type end);
+
     protected:
 
         /**
@@ -711,6 +726,12 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(start <= end);
         return D{get_arrow_proxy().slice_view(start, end)};
+    }
+
+    template <class D>
+    constexpr void array_crtp_base<D>::slice_inplace(size_type start, size_type end)
+    {
+        get_arrow_proxy().slice_inplace(start, end);
     }
 
     /*

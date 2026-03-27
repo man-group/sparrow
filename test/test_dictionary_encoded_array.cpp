@@ -330,6 +330,23 @@ namespace sparrow
             }
         }
 
+        TEST_CASE("slice_inplace")
+        {
+            auto dict = make_dictionary();
+            dict.slice_inplace(2, 6);
+            CHECK_EQ(dict.size(), 4);
+            CHECK_EQ(dict.offset(), 3);  // initial offset=1 (from make_dictionary's slice), +2 = 3
+
+            dict.slice_inplace(1, 3);
+            CHECK_EQ(dict.size(), 2);
+            CHECK_EQ(dict.offset(), 4);  // previous offset=3, +1 = 4
+
+            for (size_t i = 0; i < dict.size(); ++i)
+            {
+                [[maybe_unused]] auto element = dict[i];
+            }
+        }
+
         TEST_CASE("name_and_metadata")
         {
             const layout_type dict = make_dictionary();
