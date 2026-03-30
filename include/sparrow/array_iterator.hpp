@@ -24,13 +24,12 @@ namespace sparrow
 {
     class array;
 
-    class SPARROW_API array_const_iterator
-        : public pointer_index_iterator_base<
-              array_const_iterator,
-              const array,
-              array_traits::value_type,
-              array_traits::const_reference,
-              std::random_access_iterator_tag>
+    class SPARROW_API array_const_iterator : public pointer_index_iterator_base<
+                                                 array_const_iterator,
+                                                 const array,
+                                                 array_traits::value_type,
+                                                 array_traits::const_reference,
+                                                 std::random_access_iterator_tag>
     {
     public:
 

@@ -75,7 +75,8 @@ namespace sparrow
             }
         }
 
-        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
+        [[nodiscard]] constexpr difference_type
+        distance_to(const self_type& rhs) const noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
         {
             SPARROW_ASSERT_TRUE(rhs.m_index >= m_index);
             return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);

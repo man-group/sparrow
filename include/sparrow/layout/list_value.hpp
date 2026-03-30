@@ -48,13 +48,12 @@ namespace sparrow
      * @post Dereferencing yields const_reference to array elements
      * @post Supports all random access iterator operations
      */
-    class SPARROW_API list_value_iterator
-        : public pointer_index_iterator_base<
-              list_value_iterator,
-              const array,
-              array_traits::const_reference,
-              array_traits::const_reference,
-              std::random_access_iterator_tag>
+    class SPARROW_API list_value_iterator : public pointer_index_iterator_base<
+                                                list_value_iterator,
+                                                const array,
+                                                array_traits::const_reference,
+                                                array_traits::const_reference,
+                                                std::random_access_iterator_tag>
     {
     public:
 
