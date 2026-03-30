@@ -6,7 +6,7 @@ dependencies:
   - cmake
   - ninja
   # Tests
-  - doctest
+  - doctest == 2.4.11
   - catch2
   - nlohmann_json
   - benchmark
