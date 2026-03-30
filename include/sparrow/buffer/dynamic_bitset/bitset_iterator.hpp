@@ -34,20 +34,22 @@ namespace sparrow
      * a const iterator.
      */
     template <class B, bool is_const>
-    class bitset_iterator : public iterator_base<
+    class bitset_iterator : public pointer_index_iterator_base<
                                 bitset_iterator<B, is_const>,
+                                mpl::constify_t<B, is_const>,
                                 mpl::constify_t<typename B::value_type, is_const>,
-                                std::random_access_iterator_tag,
-                                std::conditional_t<is_const, bool, bitset_reference<B>>>
+                                std::conditional_t<is_const, bool, bitset_reference<B>>,
+                                std::random_access_iterator_tag>
     {
     public:
 
         using self_type = bitset_iterator<B, is_const>;
-        using base_type = iterator_base<
+        using base_type = pointer_index_iterator_base<
             self_type,
+            mpl::constify_t<B, is_const>,
             mpl::constify_t<typename B::value_type, is_const>,
-            std::contiguous_iterator_tag,
-            std::conditional_t<is_const, bool, bitset_reference<B>>>;
+            std::conditional_t<is_const, bool, bitset_reference<B>>,
+            std::random_access_iterator_tag>;
         using reference = typename base_type::reference;
         using difference_type = typename base_type::difference_type;
 
@@ -60,110 +62,28 @@ namespace sparrow
 
     private:
 
-        constexpr reference dereference() const noexcept;
-        constexpr void increment() noexcept;
-        constexpr void decrement() noexcept;
         constexpr void advance(difference_type n) noexcept;
-        [[nodiscard]] constexpr difference_type
-        distance_to(const self_type& rhs) const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE);
-        [[nodiscard]] constexpr bool
-        equal(const self_type& rhs) const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE);
-        [[nodiscard]] constexpr bool
-        less_than(const self_type& rhs) const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE);
-
-        [[nodiscard]] static constexpr difference_type as_signed(size_type i) noexcept;
-        [[nodiscard]] static constexpr size_type as_unsigned(difference_type i) noexcept;
-
-        bitset_type* p_bitset = nullptr;
-        size_type m_index;
 
         friend class iterator_access;
     };
 
     template <class B, bool is_const>
     constexpr bitset_iterator<B, is_const>::bitset_iterator(bitset_type* bitset, size_type index)
-        : p_bitset(bitset)
-        , m_index(index)
+        : base_type(bitset, index)
     {
-    }
-
-    template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::dereference() const noexcept -> reference
-    {
-        if constexpr (is_const)
-        {
-            if (p_bitset->data() == nullptr)
-            {
-                return true;
-            }
-            return p_bitset->test(m_index);
-        }
-        else
-        {
-            return bitset_reference<B>(*p_bitset, m_index);
-        }
-    }
-
-    template <class B, bool is_const>
-    constexpr void bitset_iterator<B, is_const>::increment() noexcept
-    {
-        ++m_index;
-    }
-
-    template <class B, bool is_const>
-    constexpr void bitset_iterator<B, is_const>::decrement() noexcept
-    {
-        --m_index;
     }
 
     template <class B, bool is_const>
     constexpr void bitset_iterator<B, is_const>::advance(difference_type n) noexcept
     {
-        if (n < 0 && static_cast<size_type>(-n) > m_index)
+        if (n < 0 && static_cast<size_type>(-n) > this->m_index)
         {
             // Prevent underflow by clamping m_index to 0
-            m_index = 0;
+            this->m_index = 0;
         }
         else
         {
-            m_index = as_unsigned(as_signed(m_index) + n);
+            this->m_index = static_cast<size_type>(static_cast<difference_type>(this->m_index) + n);
         }
-    }
-
-    template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::distance_to(const self_type& rhs) const noexcept(
-        !SPARROW_CONTRACTS_THROW_ON_FAILURE
-    ) -> difference_type
-    {
-        SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
-        return as_signed(rhs.m_index) - as_signed(m_index);
-    }
-
-    template <class B, bool is_const>
-    constexpr bool
-    bitset_iterator<B, is_const>::equal(const self_type& rhs) const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE)
-    {
-        SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
-        return m_index == rhs.m_index;
-    }
-
-    template <class B, bool is_const>
-    constexpr bool
-    bitset_iterator<B, is_const>::less_than(const self_type& rhs) const noexcept(!SPARROW_CONTRACTS_THROW_ON_FAILURE)
-    {
-        SPARROW_ASSERT_TRUE(p_bitset == rhs.p_bitset);
-        return m_index < rhs.m_index;
-    }
-
-    template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::as_signed(size_type i) noexcept -> difference_type
-    {
-        return static_cast<difference_type>(i);
-    }
-
-    template <class B, bool is_const>
-    constexpr auto bitset_iterator<B, is_const>::as_unsigned(difference_type i) noexcept -> size_type
-    {
-        return static_cast<size_type>(i);
     }
 }

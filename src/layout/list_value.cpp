@@ -20,44 +20,8 @@
 namespace sparrow
 {
     list_value_iterator::list_value_iterator(const array* flat_array, size_type index)
-        : m_flat_array(flat_array)
-        , m_index(index)
+        : base_type(flat_array, index)
     {
-    }
-
-    auto list_value_iterator::dereference() const -> reference
-    {
-        return (*m_flat_array)[m_index];
-    }
-
-    void list_value_iterator::increment()
-    {
-        ++m_index;
-    }
-
-    void list_value_iterator::decrement()
-    {
-        --m_index;
-    }
-
-    void list_value_iterator::advance(difference_type n)
-    {
-        m_index = static_cast<size_type>(static_cast<difference_type>(m_index) + n);
-    }
-
-    auto list_value_iterator::distance_to(const self_type& rhs) const -> difference_type
-    {
-        return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
-    }
-
-    bool list_value_iterator::equal(const self_type& rhs) const
-    {
-        return m_flat_array == rhs.m_flat_array && m_index == rhs.m_index;
-    }
-
-    bool list_value_iterator::less_than(const self_type& rhs) const
-    {
-        return m_index < rhs.m_index;
     }
 
     list_value::list_value(const array* flat_array, size_type index_begin, size_type index_end)

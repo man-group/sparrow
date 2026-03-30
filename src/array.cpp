@@ -162,11 +162,11 @@ namespace sparrow
     array::iterator
     array::insert(const_iterator pos, const_iterator first, const_iterator last, size_type count)
     {
-        SPARROW_ASSERT_TRUE(pos.p_array == this);
-        SPARROW_ASSERT_TRUE(first.p_array != nullptr);
-        SPARROW_ASSERT_TRUE(first.p_array == last.p_array);
+        SPARROW_ASSERT_TRUE(pos.p_object == this);
+        SPARROW_ASSERT_TRUE(first.p_object != nullptr);
+        SPARROW_ASSERT_TRUE(first.p_object == last.p_object);
 
-        const array& source = *first.p_array;
+        const array& source = *first.p_object;
         const size_type pos_index = pos.m_index;
         const size_type first_index = first.m_index;
         const size_type last_index = last.m_index;
@@ -279,14 +279,14 @@ namespace sparrow
 
     array::iterator array::erase(const_iterator pos)
     {
-        SPARROW_ASSERT_TRUE(pos.p_array == this);
+        SPARROW_ASSERT_TRUE(pos.p_object == this);
         SPARROW_ASSERT_TRUE(pos.m_index < size());
         return erase(pos, pos + 1);
     }
 
     array::iterator array::erase(const_iterator first, const_iterator last)
     {
-        SPARROW_ASSERT_TRUE(first.p_array == this && last.p_array == this);
+        SPARROW_ASSERT_TRUE(first.p_object == this && last.p_object == this);
 
         const size_type first_index = first.m_index;
         const size_type last_index = last.m_index;

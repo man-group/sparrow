@@ -48,16 +48,23 @@ namespace sparrow
      * @post Dereferencing yields const_reference to array elements
      * @post Supports all random access iterator operations
      */
-    class SPARROW_API list_value_iterator : public iterator_base<
-                                                list_value_iterator,
-                                                array_traits::const_reference,
-                                                std::random_access_iterator_tag,
-                                                array_traits::const_reference>
+    class SPARROW_API list_value_iterator
+        : public pointer_index_iterator_base<
+              list_value_iterator,
+              const array,
+              array_traits::const_reference,
+              array_traits::const_reference,
+              std::random_access_iterator_tag>
     {
     public:
 
         using self_type = list_value_iterator;
-        using base_type = iterator_base<list_value_iterator, list_value, std::random_access_iterator_tag>;
+        using base_type = pointer_index_iterator_base<
+            list_value_iterator,
+            const array,
+            array_traits::const_reference,
+            array_traits::const_reference,
+            std::random_access_iterator_tag>;
         using size_type = size_t;
 
         /**
@@ -78,82 +85,6 @@ namespace sparrow
          * @post Iterator is positioned at index in the flat array
          */
         list_value_iterator(const array* flat_array, size_type index);
-
-    private:
-
-        /**
-         * @brief Dereferences the iterator to get the current element.
-         *
-         * @return Const reference to the element at current position
-         *
-         * @pre Iterator must be valid and not at end position
-         * @pre Parent list_value must still be valid
-         * @post Returns valid reference to array element
-         */
-        [[nodiscard]] reference dereference() const;
-
-        /**
-         * @brief Advances iterator to next position.
-         *
-         * @pre Iterator must not be at end position
-         * @post Iterator is advanced by one position
-         */
-        void increment();
-
-        /**
-         * @brief Moves iterator to previous position.
-         *
-         * @pre Iterator must not be at begin position
-         * @post Iterator is moved back by one position
-         */
-        void decrement();
-
-        /**
-         * @brief Advances iterator by specified offset.
-         *
-         * @param n Number of positions to advance (can be negative)
-         *
-         * @pre Final position must be within valid range [begin, end]
-         * @post Iterator is advanced by n positions
-         */
-        void advance(difference_type n);
-
-        /**
-         * @brief Calculates distance to another iterator.
-         *
-         * @param rhs Target iterator to measure distance to
-         * @return Number of positions between this and rhs
-         *
-         * @pre Both iterators must refer to the same list_value
-         * @post Returns rhs.index - this.index
-         */
-        [[nodiscard]] difference_type distance_to(const self_type& rhs) const;
-
-        /**
-         * @brief Checks equality with another iterator.
-         *
-         * @param rhs Iterator to compare with
-         * @return true if iterators point to same position
-         *
-         * @post Returns true iff both iterators have same parent and index
-         */
-        [[nodiscard]] bool equal(const self_type& rhs) const;
-
-        /**
-         * @brief Checks if this iterator is less than another.
-         *
-         * @param rhs Iterator to compare with
-         * @return true if this iterator comes before rhs
-         *
-         * @pre Both iterators must refer to the same list_value
-         * @post Returns true iff this.index < rhs.index
-         */
-        [[nodiscard]] bool less_than(const self_type& rhs) const;
-
-        const array* m_flat_array = nullptr;  ///< Pointer to the flat child array
-        size_type m_index = 0;                ///< Absolute position within the flat array
-
-        friend class iterator_access;
     };
 
     /**
@@ -415,13 +346,21 @@ namespace sparrow
             return p_flat_array;
         }
 
-        /// @brief Returns the inclusive start index of this list slice in the flat array.
+        /**
+         * @brief Returns the inclusive start index of this list slice in the flat array.
+         *
+         * @return Inclusive start index in the flattened array
+         */
         [[nodiscard]] size_type begin_index() const noexcept
         {
             return m_index_begin;
         }
 
-        /// @brief Returns the exclusive end index of this list slice in the flat array.
+        /**
+         * @brief Returns the exclusive end index of this list slice in the flat array.
+         *
+         * @return Exclusive end index in the flattened array
+         */
         [[nodiscard]] size_type end_index() const noexcept
         {
             return m_index_end;
