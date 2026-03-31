@@ -16,9 +16,12 @@
 
 #include <compare>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <type_traits>
 #include <utility>
+
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
