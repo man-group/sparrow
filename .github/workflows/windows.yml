@@ -119,9 +119,7 @@ jobs:
 
     - name: Enable tests coverage
       if: matrix.config.name == 'Debug' && matrix.toolchain.compiler == 'msvc'
-      run: |
-        choco install opencppcoverage
-        echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON'" >> $GITHUB_ENV
+      uses: KungFuDonkey/Install-OpenCppCoverage@v1
       
     - name: Set CMake generator environment variable
       run: |
