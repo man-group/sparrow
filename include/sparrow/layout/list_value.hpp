@@ -84,6 +84,12 @@ namespace sparrow
          * @post Iterator is positioned at index in the flat array
          */
         list_value_iterator(const array* flat_array, size_type index);
+
+    private:
+
+        [[nodiscard]] reference dereference() const;
+
+        friend class iterator_access;
     };
 
     /**
