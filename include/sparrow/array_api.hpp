@@ -331,40 +331,58 @@ namespace sparrow
         [[nodiscard]] SPARROW_API bool is_dictionary() const;
 
         /**
-         * Slices the array to keep only the elements between the given \p start and \p end.
-         * A deep copy of the underlying Arrow data is returned. The copied ArrowArray.offset and
-         * ArrowArray.length are then updated to represent the requested range. If \p end is greater than
-         * the size of the buffers, the following elements will be invalid.
+         * Returns a deep-copy of the array restricted to the elements in the half-open range
+         * [\p start, \p end).
          *
-         * @param start The index of the first element to keep. Must be less than \p end.
-         * @param end The index of the first element to discard. Must be less than the size of the buffers.
-         * @return A sliced copy of the array.
+         * A full copy of the underlying Arrow buffers is made. The new ArrowArray.offset and
+         * ArrowArray.length are updated to represent the requested range. The returned array owns
+         * its data independently of \c *this.
+         *
+         * \note Prefer \ref slice_view when read-only access to the slice is sufficient, to avoid
+         *       the cost of copying the buffers. Prefer \ref slice_inplace when you want to restrict
+         *       the current array itself without creating a new object.
+         *
+         * @param start Index of the first element to keep. Must satisfy \p start <= \p end.
+         * @param end   Index one past the last element to keep. Must be <= size of the buffers.
+         * @return A new, independently-owned \ref array containing the requested elements.
          */
         [[nodiscard]] SPARROW_API array slice(size_type start, size_type end) const;
 
         /**
-         * Slices the array to keep only the elements between the given \p start and \p end.
-         * A view of the \ref array is returned. The underlying data is shared, and only the
-         * ArrowArray.offset and ArrowArray.length are updated. If \p end is greater than the size of the
-         * buffers, the following elements will be invalid.
+         * Returns a zero-copy view of the array restricted to the elements in the half-open range
+         * [\p start, \p end).
          *
-         * @param start The index of the first element to keep. Must be less than \p end.
-         * @param end The index of the first element to discard. Must be less than the size of the buffers.
-         * @return A sliced view of the array.
+         * No buffer data is copied. The returned \ref array shares ownership of the underlying Arrow
+         * buffers with \c *this, and only its ArrowArray.offset and ArrowArray.length differ. The
+         * returned object is in a view state (i.e. \ref is_view returns \c true), reflecting that it
+         * does not own the data.
+         *
+         * \warning The returned view remains valid only as long as the original array (or any other
+         *          owner of the shared buffers) is kept alive.
+         *
+         * \note Prefer \ref slice when you need an independent copy. Prefer \ref slice_inplace when
+         *       you want to restrict the current array in place without creating a new object.
+         *
+         * @param start Index of the first element to keep. Must satisfy \p start <= \p end.
+         * @param end   Index one past the last element to keep. Must be <= size of the buffers.
+         * @return A non-owning \ref array view over the requested range, sharing the underlying data.
          */
         [[nodiscard]] SPARROW_API array slice_view(size_type start, size_type end) const;
 
         /**
-         * Inserts \p count copies of elements from \p source[src_begin, src_end) at position \p pos.
+         * Restricts \c *this to the elements in the half-open range [\p start, \p end) in place.
          *
-         * @param pos Insertion point (0-based index into this array's flat storage).
-         * Slices the array in place to keep only the elements between the given \p start and \p end.
-         * The data is not modified, only the ArrowArray.offset and ArrowArray.length are updated.
+         * Only the ArrowArray.offset and ArrowArray.length of the current array are updated; no
+         * buffer data is copied or reallocated. This is the most efficient slicing variant when the
+         * caller does not need to retain the original range.
          *
-         * @pre source.data_type() == this->data_type()
-         * @pre pos <= this->size()
-         * @pre src_begin <= src_end <= source.size()
+         * \note Prefer \ref slice for an independent copy with the same range, or \ref slice_view
+         *       for a lightweight non-owning view without modifying the current object.
+         *
+         * @param start Index of the first element to keep. Must satisfy \p start <= \p end.
+         * @param end   Index one past the last element to keep. Must be <= size of the buffers.
          */
+        SPARROW_API void slice_inplace(size_type start, size_type end);
 
         /**
          * Inserts elements from the range [first, last) before the element at the specified position.
@@ -408,6 +426,7 @@ namespace sparrow
          * @return The iterator following the last element removed.
          */
         SPARROW_API iterator erase(const_iterator first, const_iterator last);
+
 
     private:
 

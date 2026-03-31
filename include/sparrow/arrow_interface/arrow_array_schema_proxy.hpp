@@ -930,26 +930,53 @@ namespace sparrow
         [[nodiscard]] SPARROW_API arrow_array_private_data* get_array_private_data();
 
         /**
-         * Slices the array to keep only the elements between the given \p start and \p end.
-         * A deep copy of the \ref array is created. The copied ArrowArray.offset and
-         * ArrowArray.length are then updated to represent the requested range. If \p end is greater than
-         * the size of the buffers, the following elements will be invalid.
+         * Returns a deep-copy of this proxy restricted to the half-open range [\p start, \p end).
          *
-         * @param start The index of the first element to keep. Must be less than \p end.
-         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         * A full copy of the underlying Arrow buffers is made. The new ArrowArray.offset and
+         * ArrowArray.length are updated to represent the requested range. The returned proxy owns
+         * its data independently of \c *this.
+         *
+         * \note Prefer \ref slice_view when read-only access is sufficient, to avoid copying buffers.
+         *       Prefer \ref slice_inplace when you want to restrict \c *this in place.
+         *
+         * @param start Index of the first element to keep. Must satisfy \p start <= \p end.
+         * @param end   Index one past the last element to keep. Must be <= size of the buffers.
+         * @return A new, independently-owned arrow_proxy containing the requested elements.
          */
         [[nodiscard]] SPARROW_API arrow_proxy slice(size_t start, size_t end) const;
 
         /**
-         * Slices the array to keep only the elements between the given \p start and \p end.
-         * A view of the \ref array is returned. The underlying data is shared, and only the
-         * ArrowArray.offset and ArrowArray.length are updated. If \p end is greater than the size of the
-         * buffers, the following elements will be invalid.
+         * Returns a zero-copy view of this proxy restricted to the half-open range [\p start, \p end).
          *
-         * @param start The index of the first element to keep. Must be less than \p end.
-         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         * No buffer data is copied. The returned proxy shares ownership of the underlying Arrow
+         * buffers with \c *this, with only ArrowArray.offset and ArrowArray.length adjusted.
+         *
+         * \warning The returned view remains valid only as long as the original proxy (or any other
+         *          owner of the shared buffers) is kept alive.
+         *
+         * \note Prefer \ref slice for an independent copy. Prefer \ref slice_inplace to restrict
+         *       \c *this without creating a new object.
+         *
+         * @param start Index of the first element to keep. Must satisfy \p start <= \p end.
+         * @param end   Index one past the last element to keep. Must be <= size of the buffers.
+         * @return A non-owning arrow_proxy view over the requested range, sharing the underlying data.
          */
         [[nodiscard]] SPARROW_API arrow_proxy slice_view(size_t start, size_t end) const;
+
+        /**
+         * Restricts \c *this to the half-open range [\p start, \p end) in place.
+         *
+         * Only ArrowArray.offset and ArrowArray.length are updated relative to the current view;
+         * no buffer data is copied or reallocated. This is the most efficient slicing variant when
+         * the caller does not need to retain the original range.
+         *
+         * \note Prefer \ref slice for an independent copy with the same range, or \ref slice_view
+         *       for a lightweight non-owning view without modifying \c *this.
+         *
+         * @param start Index of the first element to keep. Must satisfy \p start <= \p end.
+         * @param end   Index one past the last element to keep. Must be <= size of the buffers.
+         */
+        SPARROW_API void slice_inplace(size_t start, size_t end);
 
         /**
          * Refresh the buffers views. This method should be called after modifying the buffers of the array.
