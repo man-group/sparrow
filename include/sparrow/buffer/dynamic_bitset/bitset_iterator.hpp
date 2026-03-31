@@ -62,6 +62,7 @@ namespace sparrow
 
     private:
 
+        constexpr reference dereference() const noexcept;
         constexpr void advance(difference_type n) noexcept;
 
         friend class iterator_access;
@@ -71,6 +72,19 @@ namespace sparrow
     constexpr bitset_iterator<B, is_const>::bitset_iterator(bitset_type* bitset, size_type index)
         : base_type(bitset, index)
     {
+    }
+
+    template <class B, bool is_const>
+    constexpr auto bitset_iterator<B, is_const>::dereference() const noexcept -> reference
+    {
+        if constexpr (is_const)
+        {
+            return this->p_object->test(this->m_index);
+        }
+        else
+        {
+            return bitset_reference<B>(*this->p_object, this->m_index);
+        }
     }
 
     template <class B, bool is_const>

@@ -23,4 +23,11 @@ namespace sparrow
         : pointer_index_iterator_base(array_ptr, index)
     {
     }
+
+    auto array_const_iterator::dereference() const -> array_traits::const_reference
+    {
+        SPARROW_ASSERT_TRUE(p_object != nullptr);
+        SPARROW_ASSERT_TRUE(m_index < p_object->size());
+        return (*p_object)[m_index];
+    }
 }

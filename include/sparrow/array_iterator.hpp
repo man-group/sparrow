@@ -41,7 +41,9 @@ namespace sparrow
     private:
 
         array_const_iterator(const array* array_ptr, size_type index);
+        [[nodiscard]] array_traits::const_reference dereference() const;
 
+        friend class iterator_access;
         friend class array;
     };
 }
