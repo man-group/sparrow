@@ -24,6 +24,11 @@ namespace sparrow
     {
     }
 
+    auto list_value_iterator::dereference() const -> reference
+    {
+        return (*p_object)[m_index];
+    }
+
     list_value::list_value(const array* flat_array, size_type index_begin, size_type index_end)
         : p_flat_array(flat_array)
         , m_index_begin(index_begin)

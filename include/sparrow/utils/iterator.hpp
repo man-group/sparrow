@@ -595,15 +595,6 @@ namespace sparrow
             return m_index < rhs.m_index;
         }
 
-        // The dummy template parameter prevents MSVC from eagerly instantiating this
-        // function body when the enclosing class template is instantiated with an
-        // incomplete Ptr type. Member function templates are only instantiated on call.
-        template <class = void>
-        [[nodiscard]] constexpr Reference dereference() const
-        {
-            return (*p_object)[m_index];
-        }
-
         friend class iterator_access;
     };
 
