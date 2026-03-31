@@ -595,10 +595,12 @@ namespace sparrow
             return m_index < rhs.m_index;
         }
 
+        // The dummy template parameter prevents MSVC from eagerly instantiating this
+        // function body when the enclosing class template is instantiated with an
+        // incomplete Ptr type. Member function templates are only instantiated on call.
+        template <class = void>
         [[nodiscard]] constexpr Reference dereference() const
         {
-            SPARROW_ASSERT_TRUE(p_object != nullptr);
-            SPARROW_ASSERT_TRUE(m_index < p_object->size());
             return (*p_object)[m_index];
         }
 
