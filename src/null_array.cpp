@@ -172,6 +172,12 @@ namespace sparrow
         m_proxy.set_null_count(static_cast<int64_t>(new_size));
     }
 
+    void null_array::slice_inplace(size_type start, size_type end)
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        m_proxy.slice_inplace(start, end);
+    }
+
     auto null_array::ssize() const -> difference_type
     {
         return static_cast<difference_type>(size());

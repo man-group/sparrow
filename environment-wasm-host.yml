@@ -3,4 +3,4 @@ channels:
   - https://prefix.dev/emscripten-forge-4x
 dependencies:
   - howardhinnant_date
-  - doctest == 2.4.11
+  - doctest <2.5

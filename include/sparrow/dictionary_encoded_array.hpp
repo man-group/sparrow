@@ -387,6 +387,20 @@ namespace sparrow
          */
         [[nodiscard]] constexpr self_type slice_view(size_type start, size_type end) const;
 
+        /**
+         * Slices the array in place to keep only the elements between the given \p start and \p end.
+         * The underlying data is not modified, only the ArrowArray.offset and ArrowArray.length are updated.
+         *
+         * @param start The index of the first element to keep. Must be less than \p end.
+         * @param end The index of the first element to discard. Must be less than the size of the buffers.
+         */
+        constexpr void slice_inplace(size_type start, size_type end);
+
+        /**
+         * @returns the starting offset within the buffers (i.e. ArrowArray.offset).
+         */
+        [[nodiscard]] constexpr size_type offset() const;
+
     private:
 
         /**
@@ -908,6 +922,19 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(start <= end);
         return self_type{get_arrow_proxy().slice_view(start, end)};
+    }
+
+    template <std::integral IT>
+    constexpr void dictionary_encoded_array<IT>::slice_inplace(size_type start, size_type end)
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+        get_arrow_proxy().slice_inplace(start, end);
+    }
+
+    template <std::integral IT>
+    constexpr auto dictionary_encoded_array<IT>::offset() const -> size_type
+    {
+        return static_cast<size_type>(get_arrow_proxy().offset());
     }
 
     /*template <std::integral IT>

@@ -538,6 +538,16 @@ namespace sparrow
          */
         SPARROW_API void resize(size_type new_size);
 
+        /**
+         * @brief Slices the array in place, updating offset and length.
+         *
+         * @param start The index of the first element to keep.
+         * @param end One past the index of the last element to keep.
+         *
+         * @pre start <= end
+         */
+        SPARROW_API void slice_inplace(size_type start, size_type end);
+
     private:
 
         /**

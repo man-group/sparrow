@@ -478,6 +478,53 @@ namespace sparrow
         }
         TEST_CASE_TEMPLATE_APPLY(slice_view_id, testing_types);
 
+        TEST_CASE_TEMPLATE_DEFINE("slice_inplace", AR, slice_inplace_id)
+        {
+            using const_reference = typename AR::const_reference;
+            using scalar_value_type = typename AR::inner_value_type;
+
+            constexpr size_t size = 10;
+            array ar = test::make_array<scalar_value_type>(size);
+
+            ar.slice_inplace(2, 8);
+            REQUIRE_EQ(ar.size(), 6);
+            CHECK_EQ(ar.offset(), 2);
+
+            scalar_value_type scalar_value = 0;
+            if constexpr (std::same_as<scalar_value_type, bool>)
+            {
+                scalar_value = false;
+            }
+            else
+            {
+                scalar_value = static_cast<scalar_value_type>(2);
+            }
+            for (size_t i = 0; i < ar.size(); ++i)
+            {
+                CHECK_EQ(std::get<const_reference>(ar[i]).get(), scalar_value);
+                scalar_value = detail::next_test_value(scalar_value);
+            }
+
+            ar.slice_inplace(1, 4);
+            REQUIRE_EQ(ar.size(), 3);
+            CHECK_EQ(ar.offset(), 3);
+
+            if constexpr (std::same_as<scalar_value_type, bool>)
+            {
+                scalar_value = true;
+            }
+            else
+            {
+                scalar_value = static_cast<scalar_value_type>(3);
+            }
+            for (size_t i = 0; i < ar.size(); ++i)
+            {
+                CHECK_EQ(std::get<const_reference>(ar[i]).get(), scalar_value);
+                scalar_value = detail::next_test_value(scalar_value);
+            }
+        }
+        TEST_CASE_TEMPLATE_APPLY(slice_inplace_id, testing_types);
+
         TEST_CASE("insert")
         {
             using array_type = primitive_array<std::int32_t>;

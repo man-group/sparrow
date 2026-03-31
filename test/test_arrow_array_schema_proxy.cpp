@@ -450,6 +450,64 @@ TEST_SUITE("ArrowArrowSchemaProxy")
         }
     }
 
+    TEST_CASE("slice_inplace")
+    {
+        auto [array, schema] = test::make_arrow_schema_and_array(false);
+        sparrow::arrow_proxy proxy(std::move(array), std::move(schema));
+
+        proxy.slice_inplace(2, 7);
+        CHECK_EQ(proxy.offset(), 2);
+        CHECK_EQ(proxy.length(), 5);
+        CHECK_EQ(proxy.null_count(), 2);
+
+        proxy.slice_inplace(1, 3);
+        CHECK_EQ(proxy.offset(), 3);
+        CHECK_EQ(proxy.length(), 2);
+        CHECK_EQ(proxy.null_count(), 1);
+
+        SUBCASE("null_count updated for NA type - slice_inplace")
+        {
+            // NA (null) arrays have no bitmap; null_count must always equal length.
+            auto na_proxy = sparrow::test::make_arrow_proxy<sparrow::null_type>(10);
+            CHECK_EQ(na_proxy.null_count(), 10);
+
+            na_proxy.slice_inplace(3, 8);
+            CHECK_EQ(na_proxy.length(), 5);
+            CHECK_EQ(na_proxy.null_count(), 5);
+
+            na_proxy.slice_inplace(1, 3);
+            CHECK_EQ(na_proxy.length(), 2);
+            CHECK_EQ(na_proxy.null_count(), 2);
+
+            // Empty slice: start == end
+            na_proxy.slice_inplace(1, 1);
+            CHECK_EQ(na_proxy.length(), 0);
+            CHECK_EQ(na_proxy.null_count(), 0);
+        }
+
+        SUBCASE("null_count updated for NA type - slice_view")
+        {
+            auto na_proxy = sparrow::test::make_arrow_proxy<sparrow::null_type>(10);
+
+            const auto view = na_proxy.slice_view(2, 7);
+            CHECK_EQ(view.length(), 5);
+            CHECK_EQ(view.null_count(), 5);
+
+            const auto view2 = na_proxy.slice_view(0, 0);
+            CHECK_EQ(view2.length(), 0);
+            CHECK_EQ(view2.null_count(), 0);
+        }
+
+        SUBCASE("null_count updated for NA type - slice (copy)")
+        {
+            auto na_proxy = sparrow::test::make_arrow_proxy<sparrow::null_type>(10);
+
+            const auto copy = na_proxy.slice(4, 9);
+            CHECK_EQ(copy.length(), 5);
+            CHECK_EQ(copy.null_count(), 5);
+        }
+    }
+
     TEST_CASE("n_buffers")
     {
         auto [array, schema] = test::make_arrow_schema_and_array(false);

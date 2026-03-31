@@ -968,19 +968,7 @@ namespace sparrow
         SPARROW_ASSERT_TRUE(start <= end);
         arrow_proxy copy = *this;
 
-        const auto new_length = end - start;
-
-        copy.set_offset(start);
-        copy.set_length(new_length);
-
-        if (has_bitmap(data_type()))
-        {
-            const auto& bitmap_buffer = copy.buffers()[bitmap_buffer_index];
-            const auto new_non_null = count_non_null(bitmap_buffer.data(), new_length, bitmap_buffer.size(), start);
-            const auto null_count = new_length - new_non_null;
-            copy.create_bitmap_view(null_count);
-            copy.update_null_count();
-        }
+        copy.slice_inplace(start, end);
 
         return copy;
     }
@@ -991,7 +979,9 @@ namespace sparrow
         ArrowSchema as = schema();
         as.release = empty_release_arrow_schema;
         ArrowArray ar = array();
-        ar.offset = static_cast<int64_t>(start);
+        const auto current_offset = offset();
+        const auto absolute_start = current_offset + start;
+        ar.offset = static_cast<int64_t>(absolute_start);
         const auto new_length = end - start;
         ar.length = static_cast<int64_t>(new_length);
         ar.release = empty_release_arrow_array;
@@ -1000,11 +990,53 @@ namespace sparrow
         if (has_bitmap(data_type()))
         {
             const auto& bitmap_buffer = ap.buffers()[bitmap_buffer_index];
-            const auto new_non_null = count_non_null(bitmap_buffer.data(), new_length, bitmap_buffer.size(), start);
-            ap.create_bitmap_view(new_non_null);
-            ap.array().null_count = static_cast<int64_t>(new_non_null);
+            const auto new_non_null = count_non_null(
+                bitmap_buffer.data(),
+                new_length,
+                bitmap_buffer.size(),
+                absolute_start
+            );
+            const auto null_count = new_length - new_non_null;
+            ap.create_bitmap_view(null_count);
+            ap.array().null_count = static_cast<int64_t>(null_count);
+        }
+        else
+        {
+            // Null arrays have no bitmap; every element is null by definition.
+            ap.array().null_count = static_cast<int64_t>(new_length);
         }
         return ap;
+    }
+
+    void arrow_proxy::slice_inplace(size_t start, size_t end)
+    {
+        SPARROW_ASSERT_TRUE(start <= end);
+
+        const auto current_offset = offset();
+        const auto absolute_start = current_offset + start;
+        const auto new_length = end - start;
+
+        set_offset(absolute_start);
+        set_length(new_length);
+
+        if (has_bitmap(data_type()))
+        {
+            const auto& bitmap_buffer = buffers()[bitmap_buffer_index];
+            const auto new_non_null = count_non_null(
+                bitmap_buffer.data(),
+                new_length,
+                bitmap_buffer.size(),
+                absolute_start
+            );
+            const auto null_count = new_length - new_non_null;
+            create_bitmap_view(null_count);
+            set_null_count(static_cast<int64_t>(null_count));
+        }
+        else
+        {
+            // Null arrays have no bitmap; every element is null by definition.
+            set_null_count(static_cast<int64_t>(new_length));
+        }
     }
 
     void arrow_proxy::sanitize_schema()
