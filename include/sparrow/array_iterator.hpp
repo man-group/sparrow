@@ -33,6 +33,12 @@ namespace sparrow
     {
     public:
 
+        using base_type = pointer_index_iterator_base<
+            array_const_iterator,
+            const array,
+            array_traits::value_type,
+            array_traits::const_reference,
+            std::random_access_iterator_tag>;
         using difference_type = std::ptrdiff_t;
         using size_type = std::size_t;
 

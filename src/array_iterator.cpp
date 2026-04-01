@@ -20,7 +20,7 @@
 namespace sparrow
 {
     array_const_iterator::array_const_iterator(const array* array_ptr, size_type index)
-        : pointer_index_iterator_base(array_ptr, index)
+        : base_type(array_ptr, index)
     {
     }
 
