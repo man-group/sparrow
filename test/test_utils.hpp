@@ -9,6 +9,22 @@
 namespace sparrow::test
 {
 
+#if SPARROW_GCC_11_2_WORKAROUND
+    template <class T>
+    constexpr decltype(auto) unwrap_gcc11_variant_base(const T& value)
+    {
+        if constexpr (requires { typename T::base_type; }
+                      && std::derived_from<T, typename T::base_type>)
+        {
+            return unwrap_gcc11_variant_base(static_cast<const typename T::base_type&>(value));
+        }
+        else
+        {
+            return (value);
+        }
+    }
+#endif
+
     template <class ARRAY_TYPE>
     void generic_consistency_test_impl(ARRAY_TYPE&& typed_arr)
     {
@@ -101,7 +117,7 @@ namespace sparrow::test
                 }
             },
 #if SPARROW_GCC_11_2_WORKAROUND
-            static_cast<const typename V::base_type&>(variant)
+            unwrap_gcc11_variant_base(variant)
 #else
             variant
 #endif
