@@ -10,13 +10,29 @@ namespace sparrow::test
 {
 
 #if SPARROW_GCC_11_2_WORKAROUND
+    template <class T, class = void>
+    struct has_base_type : std::false_type
+    {
+    };
+
+    template <class T>
+    struct has_base_type<T, std::void_t<typename T::base_type>> : std::true_type
+    {
+    };
+
     template <class T>
     constexpr decltype(auto) unwrap_gcc11_variant_base(const T& value)
     {
-        if constexpr (requires { typename T::base_type; }
-                      && std::derived_from<T, typename T::base_type>)
+        if constexpr (has_base_type<T>::value)
         {
-            return unwrap_gcc11_variant_base(static_cast<const typename T::base_type&>(value));
+            if constexpr (std::derived_from<T, typename T::base_type>)
+            {
+                return unwrap_gcc11_variant_base(static_cast<const typename T::base_type&>(value));
+            }
+            else
+            {
+                return (value);
+            }
         }
         else
         {
