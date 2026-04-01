@@ -126,6 +126,13 @@ namespace sparrow
         SPARROW_API array(ArrowArray* array, ArrowSchema* schema);
 
         /**
+         * Constructs an array from an arrow proxy.
+         *
+         * @param proxy The arrow proxy to construct from.
+         */
+        SPARROW_API array(arrow_proxy&& proxy);
+
+        /**
          * Performs a deep copy of the given array, even if it does not have the ownership
          * of its internal data.
          *
@@ -429,13 +436,6 @@ namespace sparrow
 
 
     private:
-
-        /**
-         * Constructs an array from an arrow proxy.
-         *
-         * @param proxy The arrow proxy to construct from.
-         */
-        SPARROW_API array(arrow_proxy&& proxy);
 
         /**
          * Gets a reference to the internal arrow proxy.
