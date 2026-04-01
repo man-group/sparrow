@@ -69,15 +69,16 @@ namespace sparrow
                 };
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
+                const auto& const_arr = arr;
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
                 REQUIRE_EQ(arr.size(), 5);
-                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("hello"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("world"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
-                CHECK(!arr[4].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[0], std::string_view("hello"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[1], std::string_view("world"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[2], std::string_view("hello"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[3], std::string_view("world"));
+                CHECK(!const_arr[4].has_value());
             }
 
             SUBCASE("run_end_encode[struct[int,float]]")
@@ -158,14 +159,15 @@ namespace sparrow
                 };
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
+                const auto& const_arr = arr;
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
                 REQUIRE_EQ(arr.size(), 4);
-                CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
-                CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("hello"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[2], 2);
-                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[0], 1);
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[1], std::string_view("hello"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[2], 2);
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[3], std::string_view("world"));
             }
 
             SUBCASE("list[run_end_encode[int]]")
