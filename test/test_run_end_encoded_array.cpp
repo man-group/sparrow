@@ -135,7 +135,7 @@ namespace sparrow
 
             SUBCASE("operator[]")
             {
-                SUBACASE("const")
+                SUBCASE("const")
                 {
                     // check elements
                     for (std::size_t i = 0; i < n; ++i)
