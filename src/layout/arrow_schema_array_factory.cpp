@@ -12,25 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sparrow/array.hpp"
 #include "sparrow/layout/arrow_schema_array_factory.hpp"
+
+#include "sparrow/array.hpp"
 
 namespace sparrow::detail
 {
     // ─── Primitive array ───────────────────────────────────────────────────────
 
-    ArrowArray make_primitive_arrow_array(
-        std::int64_t size,
-        std::optional<validity_bitmap>&& bitmap,
-        buffer<uint8_t>&& data_buf
-    )
+    ArrowArray
+    make_primitive_arrow_array(std::int64_t size, std::optional<validity_bitmap>&& bitmap, buffer<uint8_t>&& data_buf)
     {
         auto [null_count, bitmap_buf] = extract_bitmap(std::move(bitmap));
         std::vector<buffer<uint8_t>> buffers;
         buffers.reserve(2);
         buffers.emplace_back(std::move(bitmap_buf));
         buffers.emplace_back(std::move(data_buf));
-        return make_arrow_array(size, null_count, 0, std::move(buffers), nullptr, repeat_view<bool>(true, 0), nullptr, true);
+        return make_arrow_array(
+            size,
+            null_count,
+            0,
+            std::move(buffers),
+            nullptr,
+            repeat_view<bool>(true, 0),
+            nullptr,
+            true
+        );
     }
 
     // ─── Fixed-width binary array ─────────────────────────────────────────────
@@ -46,7 +53,16 @@ namespace sparrow::detail
         buffers.reserve(2);
         buffers.emplace_back(std::move(bitmap_buf));
         buffers.emplace_back(std::move(data_buf));
-        return make_arrow_array(element_count, null_count, 0, std::move(buffers), nullptr, repeat_view<bool>(true, 0), nullptr, true);
+        return make_arrow_array(
+            element_count,
+            null_count,
+            0,
+            std::move(buffers),
+            nullptr,
+            repeat_view<bool>(true, 0),
+            nullptr,
+            true
+        );
     }
 
     // ─── Variable-size binary array ───────────────────────────────────────────
@@ -64,41 +80,60 @@ namespace sparrow::detail
         buffers.emplace_back(std::move(bitmap_buf));
         buffers.emplace_back(std::move(offset_buf));
         buffers.emplace_back(std::move(data_buf));
-        return make_arrow_array(size, null_count, 0, std::move(buffers), nullptr, repeat_view<bool>(true, 0), nullptr, true);
+        return make_arrow_array(
+            size,
+            null_count,
+            0,
+            std::move(buffers),
+            nullptr,
+            repeat_view<bool>(true, 0),
+            nullptr,
+            true
+        );
     }
-
-    
 
     // ─── Decimal array ────────────────────────────────────────────────────────
 
-    ArrowArray make_decimal_arrow_array(
-        std::int64_t size,
-        std::optional<validity_bitmap>&& bitmap,
-        buffer<uint8_t>&& data_buf
-    )
+    ArrowArray
+    make_decimal_arrow_array(std::int64_t size, std::optional<validity_bitmap>&& bitmap, buffer<uint8_t>&& data_buf)
     {
         auto [null_count, bitmap_buf] = extract_bitmap(std::move(bitmap));
         std::vector<buffer<uint8_t>> buffers;
         buffers.reserve(2);
         buffers.emplace_back(std::move(bitmap_buf));
         buffers.emplace_back(std::move(data_buf));
-        return make_arrow_array(size, null_count, 0, std::move(buffers), nullptr, repeat_view<bool>(true, 0), nullptr, true);
+        return make_arrow_array(
+            size,
+            null_count,
+            0,
+            std::move(buffers),
+            nullptr,
+            repeat_view<bool>(true, 0),
+            nullptr,
+            true
+        );
     }
 
     // ─── Timestamp array ──────────────────────────────────────────────────────
 
-    ArrowArray make_timestamp_arrow_array(
-        std::int64_t size,
-        std::optional<validity_bitmap>&& bitmap,
-        buffer<uint8_t>&& data_buf
-    )
+    ArrowArray
+    make_timestamp_arrow_array(std::int64_t size, std::optional<validity_bitmap>&& bitmap, buffer<uint8_t>&& data_buf)
     {
         auto [null_count, bitmap_buf] = extract_bitmap(std::move(bitmap));
         std::vector<buffer<uint8_t>> buffers;
         buffers.reserve(2);
         buffers.emplace_back(std::move(bitmap_buf));
         buffers.emplace_back(std::move(data_buf));
-        return make_arrow_array(size, null_count, 0, std::move(buffers), nullptr, repeat_view<bool>(true, 0), nullptr, true);
+        return make_arrow_array(
+            size,
+            null_count,
+            0,
+            std::move(buffers),
+            nullptr,
+            repeat_view<bool>(true, 0),
+            nullptr,
+            true
+        );
     }
 
     // ─── Map array ────────────────────────────────────────────────────────────
@@ -190,7 +225,16 @@ namespace sparrow::detail
         {
             buffers.emplace_back(std::move(data_buffer));
         }
-        return make_arrow_array(size, null_count, 0, std::move(buffers), nullptr, repeat_view<bool>(true, 0), nullptr, true);
+        return make_arrow_array(
+            size,
+            null_count,
+            0,
+            std::move(buffers),
+            nullptr,
+            repeat_view<bool>(true, 0),
+            nullptr,
+            true
+        );
     }
 
     // ─── Run-end encoded array ────────────────────────────────────────────────
@@ -203,11 +247,12 @@ namespace sparrow::detail
     )
     {
         ArrowArray acc_arr = extract_arrow_array(std::move(acc_lengths));
-        ArrowArray ev_arr  = extract_arrow_array(std::move(encoded_values));
+        ArrowArray ev_arr = extract_arrow_array(std::move(encoded_values));
         ArrowArray** ptrs = new ArrowArray*[2];
         ptrs[0] = new ArrowArray(std::move(acc_arr));
         ptrs[1] = new ArrowArray(std::move(ev_arr));
         std::vector<buffer<uint8_t>> empty_buffers;
+
         return make_arrow_array(
             length,
             null_count,

@@ -539,8 +539,7 @@ namespace sparrow::detail
     }
 
     // Both arrays are consumed: extract_arrow_array is called on each.
-    // `null_count` and `length` must be pre-computed (e.g. via extract_length_and_null_count)
-    // before any extraction is performed on acc_lengths / encoded_values.
+    // `length` and `null_count` must be computed before extraction.
     SPARROW_API ArrowArray make_run_end_encoded_arrow_array(
         std::int64_t length,
         std::int64_t null_count,
