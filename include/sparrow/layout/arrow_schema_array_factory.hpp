@@ -24,11 +24,11 @@
 #include "sparrow/arrow_interface/arrow_flag_utils.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
 #include "sparrow/buffer/buffer.hpp"
-#include "sparrow/layout/array_access.hpp"
-#include "sparrow/layout/layout_concept.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/c_interface.hpp"
 #include "sparrow/config/config.hpp"
+#include "sparrow/layout/array_access.hpp"
+#include "sparrow/layout/layout_concept.hpp"
 #include "sparrow/utils/contracts.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/repeat_container.hpp"
@@ -48,7 +48,7 @@ namespace sparrow::detail
     inline std::optional<std::unordered_set<ArrowFlag>> nullable_to_flags(bool nullable)
     {
         return nullable ? std::make_optional<std::unordered_set<ArrowFlag>>({ArrowFlag::NULLABLE})
-                       : std::nullopt;
+                        : std::nullopt;
     }
 
     // Extracts null_count and bitmap buffer from an optional validity_bitmap.
@@ -63,10 +63,8 @@ namespace sparrow::detail
         return {0, buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()}};
     }
 
-    // ─── Primitive array ───────────────────────────────────────────────────────
-
     template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-    [[nodiscard]] ArrowSchema make_primitive_arrow_schema(
+    [[nodiscard]] ArrowSchema make_leaf_arrow_schema(
         std::string_view format,
         bool nullable,
         std::optional<std::string_view> name,
@@ -85,6 +83,93 @@ namespace sparrow::detail
         );
     }
 
+    template <typename CHILD>
+    [[nodiscard]] CHILD** make_owned_children(std::vector<CHILD>&& children)
+    {
+        if (children.empty())
+        {
+            return nullptr;
+        }
+
+        auto** child_ptrs = new CHILD*[children.size()];
+        for (std::size_t i = 0; i < children.size(); ++i)
+        {
+            child_ptrs[i] = new CHILD(children[i]);
+        }
+        return child_ptrs;
+    }
+
+    template <std::ranges::input_range CHILDREN_RANGE>
+        requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, sparrow::array>
+    [[nodiscard]] std::vector<ArrowSchema> extract_child_schemas(CHILDREN_RANGE& children)
+    {
+        std::vector<ArrowSchema> child_schemas;
+        if constexpr (std::ranges::sized_range<CHILDREN_RANGE>)
+        {
+            child_schemas.reserve(std::ranges::size(children));
+        }
+
+        for (auto& child : children)
+        {
+            child_schemas.push_back(array_access::get_arrow_proxy(child).extract_schema());
+        }
+
+        return child_schemas;
+    }
+
+    template <std::ranges::input_range CHILDREN_RANGE>
+        requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, sparrow::array>
+    [[nodiscard]] std::vector<ArrowArray> extract_child_arrays(CHILDREN_RANGE&& children)
+    {
+        std::vector<ArrowArray> child_arrays;
+        if constexpr (std::ranges::sized_range<CHILDREN_RANGE>)
+        {
+            child_arrays.reserve(std::ranges::size(children));
+        }
+
+        for (auto&& child : children)
+        {
+            child_arrays.push_back(array_access::get_arrow_proxy(child).extract_array());
+        }
+
+        return child_arrays;
+    }
+
+    template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+    [[nodiscard]] ArrowSchema make_arrow_schema_with_children(
+        std::string_view format,
+        std::optional<std::unordered_set<ArrowFlag>> flags,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata,
+        std::vector<ArrowSchema>&& child_schemas
+    )
+    {
+        const auto child_count = child_schemas.size();
+        return make_arrow_schema(
+            format,
+            std::move(name),
+            std::move(metadata),
+            std::move(flags),
+            make_owned_children(std::move(child_schemas)),
+            repeat_view<bool>(true, child_count),
+            nullptr,
+            true
+        );
+    }
+
+    // ─── Primitive array ───────────────────────────────────────────────────────
+
+    template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+    [[nodiscard]] ArrowSchema make_primitive_arrow_schema(
+        std::string_view format,
+        bool nullable,
+        std::optional<std::string_view> name,
+        std::optional<METADATA_RANGE> metadata
+    )
+    {
+        return make_leaf_arrow_schema(format, nullable, std::move(name), std::move(metadata));
+    }
+
     SPARROW_API ArrowArray make_primitive_arrow_array(
         std::int64_t size,
         std::optional<validity_bitmap>&& bitmap,
@@ -101,16 +186,7 @@ namespace sparrow::detail
         std::optional<METADATA_RANGE> metadata
     )
     {
-        return make_arrow_schema(
-            std::move(format),
-            std::move(name),
-            std::move(metadata),
-            nullable_to_flags(nullable),
-            nullptr,
-            repeat_view<bool>(true, 0),
-            nullptr,
-            true
-        );
+        return make_leaf_arrow_schema(format, nullable, std::move(name), std::move(metadata));
     }
 
     SPARROW_API ArrowArray make_fixed_width_binary_arrow_array(
@@ -129,16 +205,7 @@ namespace sparrow::detail
         std::optional<METADATA_RANGE> metadata
     )
     {
-        return make_arrow_schema(
-            std::move(format),
-            std::move(name),
-            std::move(metadata),
-            nullable_to_flags(nullable),
-            nullptr,
-            repeat_view<bool>(true, 0),
-            nullptr,
-            true
-        );
+        return make_leaf_arrow_schema(format, nullable, std::move(name), std::move(metadata));
     }
 
     SPARROW_API ArrowArray make_variable_size_binary_arrow_array(
@@ -158,16 +225,7 @@ namespace sparrow::detail
         std::optional<METADATA_RANGE> metadata
     )
     {
-        return make_arrow_schema(
-            std::string(format),
-            std::move(name),
-            std::move(metadata),
-            nullable_to_flags(nullable),
-            nullptr,
-            repeat_view<bool>(true, 0),
-            nullptr,
-            true
-        );
+        return make_leaf_arrow_schema(format, nullable, std::move(name), std::move(metadata));
     }
 
     SPARROW_API ArrowArray make_variable_size_binary_view_arrow_array(
@@ -186,16 +244,7 @@ namespace sparrow::detail
         std::optional<METADATA_RANGE> metadata
     )
     {
-        return make_arrow_schema(
-            std::move(format),
-            std::move(name),
-            std::move(metadata),
-            nullable_to_flags(nullable),
-            nullptr,
-            repeat_view<bool>(true, 0),
-            nullptr,
-            true
-        );
+        return make_leaf_arrow_schema(format, nullable, std::move(name), std::move(metadata));
     }
 
     SPARROW_API ArrowArray make_decimal_arrow_array(
@@ -214,16 +263,7 @@ namespace sparrow::detail
         std::optional<METADATA_RANGE> metadata
     )
     {
-        return make_arrow_schema(
-            std::move(format),
-            std::move(name),
-            std::move(metadata),
-            nullable_to_flags(nullable),
-            nullptr,
-            repeat_view<bool>(true, 0),
-            nullptr,
-            true
-        );
+        return make_leaf_arrow_schema(format, nullable, std::move(name), std::move(metadata));
     }
 
     SPARROW_API ArrowArray make_timestamp_arrow_array(
@@ -236,9 +276,7 @@ namespace sparrow::detail
     // children is taken by lvalue reference: extract_arrow_schema is called on each child,
     // leaving each child's ArrowArray intact for a subsequent make_struct_arrow_array call.
 
-    template <
-        std::ranges::input_range CHILDREN_RANGE,
-        input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+    template <std::ranges::input_range CHILDREN_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, sparrow::array>
     [[nodiscard]] ArrowSchema make_struct_arrow_schema(
         CHILDREN_RANGE& children,
@@ -247,58 +285,24 @@ namespace sparrow::detail
         std::optional<METADATA_RANGE> metadata
     )
     {
-        std::vector<ArrowSchema> child_schemas;
-        if constexpr (std::ranges::sized_range<CHILDREN_RANGE>)
-        {
-            child_schemas.reserve(std::ranges::size(children));
-        }
-        for (auto& child : children)
-        {
-            child_schemas.push_back(array_access::get_arrow_proxy(child).extract_schema());
-        }
-        const std::size_t n = child_schemas.size();
-        ArrowSchema** schemas_ptr = new ArrowSchema*[n];
-        for (std::size_t i = 0; i < n; ++i)
-        {
-            schemas_ptr[i] = new ArrowSchema(std::move(child_schemas[i]));
-        }
-        return make_arrow_schema(
-            std::string("+s"),
+        return make_arrow_schema_with_children(
+            "+s",
+            nullable_to_flags(nullable),
             std::move(name),
             std::move(metadata),
-            nullable_to_flags(nullable),
-            schemas_ptr,
-            repeat_view<bool>(true, n),
-            nullptr,
-            true
+            extract_child_schemas(children)
         );
     }
 
     // children is consumed: extract_arrow_array is called on each child (after schemas have been extracted).
     template <std::ranges::input_range CHILDREN_RANGE>
         requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, sparrow::array>
-    [[nodiscard]] ArrowArray make_struct_arrow_array(
-        std::int64_t size,
-        std::optional<validity_bitmap>&& bitmap,
-        CHILDREN_RANGE&& children
-    )
+    [[nodiscard]] ArrowArray
+    make_struct_arrow_array(std::int64_t size, std::optional<validity_bitmap>&& bitmap, CHILDREN_RANGE&& children)
     {
         auto [null_count, bitmap_buf] = extract_bitmap(std::move(bitmap));
-        std::vector<ArrowArray> child_arrays;
-        if constexpr (std::ranges::sized_range<CHILDREN_RANGE>)
-        {
-            child_arrays.reserve(std::ranges::size(children));
-        }
-        for (auto&& child : children)
-        {
-            child_arrays.push_back(array_access::get_arrow_proxy(child).extract_array());
-        }
+        auto child_arrays = extract_child_arrays(std::forward<CHILDREN_RANGE>(children));
         const std::size_t n = child_arrays.size();
-        ArrowArray** ptrs = new ArrowArray*[n];
-        for (std::size_t i = 0; i < n; ++i)
-        {
-            ptrs[i] = new ArrowArray(std::move(child_arrays[i]));
-        }
         std::vector<buffer<uint8_t>> buffers;
         buffers.reserve(1);
         buffers.emplace_back(std::move(bitmap_buf));
@@ -307,7 +311,7 @@ namespace sparrow::detail
             null_count,
             0,
             std::move(buffers),
-            ptrs,
+            make_owned_children(std::move(child_arrays)),
             repeat_view<bool>(true, n),
             nullptr,
             true
@@ -337,16 +341,14 @@ namespace sparrow::detail
             }
             flags->insert(ArrowFlag::MAP_KEYS_SORTED);
         }
-        const repeat_view<bool> children_ownership{true, 1};
-        return make_arrow_schema(
-            std::string("+m"),
+        std::vector<ArrowSchema> child_schemas;
+        child_schemas.push_back(entries_schema);
+        return make_arrow_schema_with_children(
+            "+m",
+            std::move(flags),
             std::move(name),
             std::move(metadata),
-            std::move(flags),
-            new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
-            children_ownership,
-            nullptr,
-            true
+            std::move(child_schemas)
         );
     }
 
@@ -361,9 +363,7 @@ namespace sparrow::detail
     // ─── Union arrays (dense and sparse) ─────────────────────────────────────
     // children is taken by lvalue reference (schema extraction only).
 
-    template <
-        std::ranges::input_range CHILDREN_RANGE,
-        input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+    template <std::ranges::input_range CHILDREN_RANGE, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
         requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, sparrow::array>
     [[nodiscard]] ArrowSchema make_union_arrow_schema(
         std::string_view format,
@@ -372,15 +372,7 @@ namespace sparrow::detail
         std::optional<METADATA_RANGE> metadata
     )
     {
-        std::vector<ArrowSchema> child_schemas;
-        if constexpr (std::ranges::sized_range<CHILDREN_RANGE>)
-        {
-            child_schemas.reserve(std::ranges::size(children));
-        }
-        for (auto& child : children)
-        {
-            child_schemas.push_back(array_access::get_arrow_proxy(child).extract_schema());
-        }
+        auto child_schemas = extract_child_schemas(children);
         const bool is_nullable = !child_schemas.empty()
                                  && std::all_of(
                                      child_schemas.begin(),
@@ -390,54 +382,29 @@ namespace sparrow::detail
                                          return to_set_of_ArrowFlags(s.flags).contains(ArrowFlag::NULLABLE);
                                      }
                                  );
-        const std::size_t n = child_schemas.size();
-        ArrowSchema** schemas_ptr = new ArrowSchema*[n];
-        for (std::size_t i = 0; i < n; ++i)
-        {
-            schemas_ptr[i] = new ArrowSchema(std::move(child_schemas[i]));
-        }
-        return make_arrow_schema(
+        return make_arrow_schema_with_children(
             format,
+            nullable_to_flags(is_nullable),
             std::move(name),
             std::move(metadata),
-            nullable_to_flags(is_nullable),
-            schemas_ptr,
-            repeat_view<bool>(true, n),
-            nullptr,
-            true
+            std::move(child_schemas)
         );
     }
 
     // children is consumed: extract_arrow_array is called on each child.
     template <std::ranges::input_range CHILDREN_RANGE>
         requires std::same_as<std::ranges::range_value_t<CHILDREN_RANGE>, sparrow::array>
-    [[nodiscard]] ArrowArray make_union_arrow_array(
-        std::int64_t size,
-        std::vector<buffer<uint8_t>>&& buffers,
-        CHILDREN_RANGE&& children
-    )
+    [[nodiscard]] ArrowArray
+    make_union_arrow_array(std::int64_t size, std::vector<buffer<uint8_t>>&& buffers, CHILDREN_RANGE&& children)
     {
-        std::vector<ArrowArray> child_arrays;
-        if constexpr (std::ranges::sized_range<CHILDREN_RANGE>)
-        {
-            child_arrays.reserve(std::ranges::size(children));
-        }
-        for (auto&& child : children)
-        {
-            child_arrays.push_back(array_access::get_arrow_proxy(child).extract_array());
-        }
+        auto child_arrays = extract_child_arrays(std::forward<CHILDREN_RANGE>(children));
         const std::size_t n = child_arrays.size();
-        ArrowArray** ptrs = new ArrowArray*[n];
-        for (std::size_t i = 0; i < n; ++i)
-        {
-            ptrs[i] = new ArrowArray(std::move(child_arrays[i]));
-        }
         return make_arrow_array(
             size,
             0,  // unions have no validity bitmap; nullability lives in individual children
             0,
             std::move(buffers),
-            ptrs,
+            make_owned_children(std::move(child_arrays)),
             repeat_view<bool>(true, n),
             nullptr,
             true
@@ -466,7 +433,7 @@ namespace sparrow::detail
             nullable_to_flags(nullable),
             nullptr,
             children_ownership,
-            new ArrowSchema(std::move(value_schema)),
+            new ArrowSchema(value_schema),
             true
         );
     }
@@ -482,10 +449,8 @@ namespace sparrow::detail
     // ─── Null array ───────────────────────────────────────────────────────────
 
     template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-    [[nodiscard]] ArrowSchema make_null_arrow_schema(
-        std::optional<std::string_view> name,
-        std::optional<METADATA_RANGE> metadata
-    )
+    [[nodiscard]] ArrowSchema
+    make_null_arrow_schema(std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata)
     {
         using namespace std::literals;
         static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
@@ -507,10 +472,7 @@ namespace sparrow::detail
     // acc_lengths and encoded_values are taken by lvalue reference: extract_arrow_schema is called
     // on each, leaving their ArrowArrays intact for make_run_end_encoded_arrow_array.
 
-    template <
-        typename ACC_ARRAY,
-        typename EV_ARRAY,
-        input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
+    template <typename ACC_ARRAY, typename EV_ARRAY, input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
     [[nodiscard]] ArrowSchema make_run_end_encoded_arrow_schema(
         ACC_ARRAY& acc_lengths,
         EV_ARRAY& encoded_values,
@@ -519,22 +481,17 @@ namespace sparrow::detail
     )
     {
         ArrowSchema acc_sch = array_access::get_arrow_proxy(acc_lengths).extract_schema();
-        ArrowSchema ev_sch  = array_access::get_arrow_proxy(encoded_values).extract_schema();
+        ArrowSchema ev_sch = array_access::get_arrow_proxy(encoded_values).extract_schema();
         // Nullable flag is derived from the encoded-values child schema.
-        std::optional<std::unordered_set<ArrowFlag>> flags =
-            std::make_optional(to_set_of_ArrowFlags(ev_sch.flags));
-        ArrowSchema** schemas_ptr = new ArrowSchema*[2];
-        schemas_ptr[0] = new ArrowSchema(std::move(acc_sch));
-        schemas_ptr[1] = new ArrowSchema(std::move(ev_sch));
-        return make_arrow_schema(
-            std::string("+r"),
+        std::vector<ArrowSchema> child_schemas;
+        child_schemas.push_back(acc_sch);
+        child_schemas.push_back(ev_sch);
+        return make_arrow_schema_with_children(
+            "+r",
+            std::make_optional(to_set_of_ArrowFlags(ev_sch.flags)),
             std::move(name),
             std::move(metadata),
-            std::move(flags),
-            schemas_ptr,
-            repeat_view<bool>(true, 2),
-            nullptr,
-            true
+            std::move(child_schemas)
         );
     }
 
@@ -562,14 +519,17 @@ namespace sparrow::detail
     {
         ArrowSchema flat_schema = array_access::get_arrow_proxy(flat_values).extract_schema();
         const repeat_view<bool> children_ownership{true, 1};
-        std::optional<std::unordered_set<ArrowFlag>> flags =
-            nullable ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}} : std::nullopt;
+        std::optional<std::unordered_set<ArrowFlag>>
+            flags = nullable ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}}
+                             : std::nullopt;
+        std::vector<ArrowSchema> child_schemas;
+        child_schemas.push_back(flat_schema);
         return make_arrow_schema(
             format,
             std::move(name),
             std::move(metadata),
             std::move(flags),
-            new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},
+            make_owned_children(std::move(child_schemas)),
             children_ownership,
             nullptr,
             true
