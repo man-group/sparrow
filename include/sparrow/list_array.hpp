@@ -25,10 +25,10 @@
 #include "sparrow/array_api.hpp"
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
@@ -1177,10 +1177,17 @@ namespace sparrow
 
         const std::string_view format = BIG ? "+L" : "+l";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            format, flat_values, std::move(name), std::move(metadata), /*nullable=*/true
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/true
         );
         ArrowArray arr = detail::make_list_arrow_array(
-            static_cast<std::int64_t>(size), std::move(vbitmap), std::move(extra_buffs), std::move(flat_values)
+            static_cast<std::int64_t>(size),
+            std::move(vbitmap),
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -1214,10 +1221,17 @@ namespace sparrow
 
         const std::string_view format = BIG ? "+L" : "+l";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            format, flat_values, std::move(name), std::move(metadata), /*nullable=*/false
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/false
         );
         ArrowArray arr = detail::make_list_arrow_array(
-            static_cast<std::int64_t>(size), std::nullopt, std::move(extra_buffs), std::move(flat_values)
+            static_cast<std::int64_t>(size),
+            std::nullopt,
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -1500,10 +1514,17 @@ namespace sparrow
 
         const std::string_view format = BIG ? "+vL" : "+vl";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            format, flat_values, std::move(name), std::move(metadata), /*nullable=*/true
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/true
         );
         ArrowArray arr = detail::make_list_arrow_array(
-            static_cast<std::int64_t>(size), std::move(vbitmap), std::move(extra_buffs), std::move(flat_values)
+            static_cast<std::int64_t>(size),
+            std::move(vbitmap),
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -1541,10 +1562,17 @@ namespace sparrow
 
         const std::string_view format = BIG ? "+vL" : "+vl";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            format, flat_values, std::move(name), std::move(metadata), /*nullable=*/false
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/false
         );
         ArrowArray arr = detail::make_list_arrow_array(
-            static_cast<std::int64_t>(size), std::nullopt, std::move(extra_buffs), std::move(flat_values)
+            static_cast<std::int64_t>(size),
+            std::nullopt,
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -1919,7 +1947,11 @@ namespace sparrow
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = detail::make_list_arrow_schema(
-            format, flat_values, std::move(name), std::move(metadata), /*nullable=*/true
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/true
         );
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
@@ -1954,7 +1986,11 @@ namespace sparrow
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = detail::make_list_arrow_schema(
-            format, flat_values, std::move(name), std::move(metadata), /*nullable=*/false
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/false
         );
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
