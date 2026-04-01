@@ -46,10 +46,10 @@ namespace sparrow
 
         template <class ARRAY>
         constexpr bool supports_encoded_value_erase_v = requires(
-                                                            ARRAY& array,
-                                                            typename ARRAY::const_iterator first,
-                                                            typename ARRAY::const_iterator last
-                                                        ) { array.erase(first, last); };
+            ARRAY& array,
+            typename ARRAY::const_iterator first,
+            typename ARRAY::const_iterator last
+        ) { array.erase(first, last); };
 
         template <class ACC_LENGTH_TYPE, class HAS_VALUE_FUNC>
         auto extract_length_and_null_count_from_data(
