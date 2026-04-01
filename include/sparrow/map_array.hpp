@@ -18,6 +18,7 @@
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/struct_array.hpp"
@@ -360,9 +361,8 @@ namespace sparrow
             array&& flat_keys,
             array&& flat_items,
             offset_buffer_type&& list_offsets,
-            buffer<std::uint8_t>&& validity_buffer,
-            std::int64_t null_count,
-            std::optional<std::unordered_set<ArrowFlag>> flags,
+            std::optional<validity_bitmap>&& bitmap,
+            bool keys_sorted,
             std::optional<std::string_view> name,
             std::optional<METADATA_RANGE> metadata
         );
@@ -553,9 +553,8 @@ namespace sparrow
         array&& flat_keys,
         array&& flat_items,
         offset_buffer_type&& list_offsets,
-        buffer<std::uint8_t>&& validity_buffer,
-        std::int64_t null_count,
-        std::optional<std::unordered_set<ArrowFlag>> flags,
+        std::optional<validity_bitmap>&& bitmap,
+        bool keys_sorted,
         std::optional<std::string_view> name,
         std::optional<METADATA_RANGE> metadata
     )
@@ -564,37 +563,20 @@ namespace sparrow
 
         std::array<sparrow::array, 2> struct_children = {std::move(flat_keys), std::move(flat_items)};
         struct_array entries(std::move(struct_children), false, std::string("entries"));
+        sparrow::array entries_array(std::move(entries));
 
-        auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
-
-        const repeat_view<bool> children_ownership{true, 1};
-
-        ArrowSchema schema = make_arrow_schema(
-            std::string("+m"),
-            name,      // name
-            metadata,  // metadata
-            flags,     // flags,
-            new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
-            children_ownership,  // children ownership
-            nullptr,             // dictionary
-            true                 // dictionary ownership
-
+        ArrowSchema schema = detail::make_map_arrow_schema(
+            entries_array,
+            bitmap.has_value(),
+            keys_sorted,
+            std::move(name),
+            std::move(metadata)
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(2);
-        arr_buffs.emplace_back(std::move(validity_buffer));
-        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            null_count,
-            0,  // offset
-            std::move(arr_buffs),
-            new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))},
-            children_ownership,  // children ownership
-            nullptr,             // dictionary
-            true                 // dictionary ownership
+        ArrowArray arr = detail::make_map_arrow_array(
+            static_cast<std::int64_t>(size),
+            std::move(bitmap),
+            std::move(list_offsets).extract_storage(),
+            std::move(entries_array)
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
@@ -611,24 +593,14 @@ namespace sparrow
     {
         const auto size = list_offsets.size() - 1;
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-
-        std::optional<std::unordered_set<ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
         const bool keys_sorted = check_keys_sorted(flat_keys, list_offsets);
-        if (keys_sorted)
-        {
-            flags.value().insert(ArrowFlag::MAP_KEYS_SORTED);
-        }
-
-        const auto null_count = vbitmap.null_count();
-        buffer<std::uint8_t> validity_buffer = std::move(vbitmap).extract_storage();
 
         return create_proxy_impl(
             std::move(flat_keys),
             std::move(flat_items),
             std::move(list_offsets),
-            std::move(validity_buffer),
-            static_cast<std::int64_t>(null_count),
-            std::move(flags),
+            std::move(vbitmap),
+            keys_sorted,
             name,
             std::forward<std::optional<METADATA_RANGE>>(metadata)
         );
@@ -644,32 +616,27 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
+        const bool keys_sorted = check_keys_sorted(flat_keys, list_offsets);
         if (nullable)
         {
-            return map_array::create_proxy(
-                std::move(flat_keys),
-                std::move(flat_items),
-                std::move(list_offsets),
-                validity_bitmap{validity_bitmap::default_allocator()},
-                name,
-                metadata
-            );
-        }
-        else
-        {
-            bool keys_sorted = check_keys_sorted(flat_keys, list_offsets);
-            auto flags = keys_sorted
-                             ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::MAP_KEYS_SORTED}}
-                             : std::nullopt;
-
             return create_proxy_impl(
                 std::move(flat_keys),
                 std::move(flat_items),
                 std::move(list_offsets),
-                buffer<std::uint8_t>{nullptr, 0, buffer<std::uint8_t>::default_allocator()},  // no validity
-                                                                                              // bitmap
-                0,                                                                            // null_count
-                std::move(flags),
+                validity_bitmap{validity_bitmap::default_allocator()},
+                keys_sorted,
+                name,
+                std::forward<std::optional<METADATA_RANGE>>(metadata)
+            );
+        }
+        else
+        {
+            return create_proxy_impl(
+                std::move(flat_keys),
+                std::move(flat_items),
+                std::move(list_offsets),
+                std::nullopt,
+                keys_sorted,
                 name,
                 std::forward<std::optional<METADATA_RANGE>>(metadata)
             );

@@ -25,6 +25,7 @@
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/primitive_array.hpp"
 #include "sparrow/types/data_traits.hpp"
@@ -691,48 +692,24 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        const auto size = keys.size();
-        auto [value_array, value_schema] = extract_arrow_structures(std::move(values));
-        static const repeat_view<bool> children_ownership{true, 0};
-
-        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
-            flags = validity.has_value()
-                        ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
-                        : std::nullopt;
-
-        // create arrow schema and array
-        ArrowSchema schema = make_arrow_schema(
-            data_type_to_format(detail::get_data_type_from_array<self_type>::get()),  // format
-            std::move(name),                                                          // name
-            std::move(metadata),                                                      // metadata
-            flags,                                                                    // flags
-            nullptr,                                                                  // children
-            children_ownership,                                                       // children_ownership
-            new ArrowSchema(std::move(value_schema)),                                 // dictionary
-            true                                                                      // dictionary ownership
+        const auto format = data_type_to_format(detail::get_data_type_from_array<self_type>::get());
+        const auto size   = static_cast<std::int64_t>(keys.size());
+        const bool nullable = validity.has_value();
+        buffer<uint8_t> keys_buf = std::move(keys).extract_storage();
+        ArrowSchema schema = detail::make_dictionary_encoded_arrow_schema(
+            format,
+            nullable,
+            values,
+            std::move(name),
+            std::move(metadata)
         );
-
-        const size_t null_count = validity.has_value() ? validity->null_count() : 0;
-
-        std::vector<buffer<uint8_t>> buffers;
-        buffers.reserve(2);
-        buffers.emplace_back(
-            validity.has_value() ? std::move(*validity).extract_storage()
-                                 : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()}
+        ArrowArray arr = detail::make_dictionary_encoded_arrow_array(
+            size,
+            std::move(validity),
+            std::move(keys_buf),
+            std::move(values)
         );
-        buffers.emplace_back(std::move(keys).extract_storage());
-        // create arrow array
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),        // length
-            static_cast<std::int64_t>(null_count),  // Null count
-            0,                                      // offset
-            std::move(buffers),
-            nullptr,                                 // children
-            children_ownership,                      // children_ownership
-            new ArrowArray(std::move(value_array)),  // dictionary
-            true                                     // dictionary ownership
-        );
-        return arrow_proxy(std::move(arr), std::move(schema));
+        return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
     template <std::integral IT>

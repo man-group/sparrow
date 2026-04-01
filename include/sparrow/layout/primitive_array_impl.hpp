@@ -17,6 +17,7 @@
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
@@ -673,46 +674,16 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     )
     {
-        const bool bitmap_has_value = bitmap.has_value();
-        const auto null_count = bitmap_has_value ? bitmap->null_count() : 0;
-        const auto flags = bitmap_has_value
-                               ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
-                               : std::nullopt;
-
-        // create arrow schema and array
-        ArrowSchema schema = make_arrow_schema(
-            data_type_to_format(detail::get_data_type_from_array<self_type>::get()),  // format
-            std::move(name),                                                          // name
-            std::move(metadata),                                                      // metadata
-            flags,                                                                    // flags
-            nullptr,                                                                  // children
-            repeat_view<bool>(true, 0),                                               // children_ownership
-            nullptr,                                                                  // dictionary
-            true                                                                      // dictionary ownership
+        ArrowSchema schema = detail::make_primitive_arrow_schema(
+            data_type_to_format(detail::get_data_type_from_array<self_type>::get()),
+            bitmap.has_value(),
+            std::move(name),
+            std::move(metadata)
         );
-
-        // Extract storage from data_buffer and bitmap (if present)
-        buffer<uint8_t> extracted_data_buffer = std::move(data_buffer).extract_storage();
-        buffer<uint8_t> bitmap_buffer = bitmap_has_value
-                                            ? std::move(*bitmap).extract_storage()
-                                            : buffer<uint8_t>{nullptr, 0, extracted_data_buffer.get_allocator()};
-
-        std::vector<buffer<uint8_t>> buffers;
-        buffers.reserve(2);
-        buffers.emplace_back(std::move(bitmap_buffer));
-        buffers.emplace_back(std::move(extracted_data_buffer));
-
-
-        // create arrow array
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // length
-            static_cast<int64_t>(null_count),
-            0,  // offset
-            std::move(buffers),
-            nullptr,                     // children
-            repeat_view<bool>(true, 0),  // children_ownership
-            nullptr,                     // dictionary,
-            true                         // dictionary ownership
+        ArrowArray arr = detail::make_primitive_arrow_array(
+            static_cast<std::int64_t>(size),
+            std::move(bitmap),
+            std::move(data_buffer).extract_storage()
         );
         arrow_proxy proxy(std::move(arr), std::move(schema));
         Ext::init(proxy);

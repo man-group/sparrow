@@ -24,6 +24,7 @@
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/contracts.hpp"
@@ -1190,54 +1191,17 @@ namespace sparrow
             std::optional<METADATA_RANGE> metadata
         )
         {
-            const auto n_children = children.size();
-            ArrowSchema** child_schemas = new ArrowSchema*[n_children];
-            ArrowArray** child_arrays = new ArrowArray*[n_children];
-
-            for (std::size_t i = 0; i < n_children; ++i)
-            {
-                auto& child = children[i];
-                auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
-                child_arrays[i] = new ArrowArray(std::move(flat_arr));
-                child_schemas[i] = new ArrowSchema(std::move(flat_schema));
-            }
-
-            const bool is_nullable = std::all_of(
-                child_schemas,
-                child_schemas + n_children,
-                [](const ArrowSchema* schema)
-                {
-                    return to_set_of_ArrowFlags(schema->flags).contains(ArrowFlag::NULLABLE);
-                }
-            );
-
-            const std::optional<std::unordered_set<sparrow::ArrowFlag>>
-                flags = is_nullable
-                            ? std::make_optional(std::unordered_set<sparrow::ArrowFlag>{ArrowFlag::NULLABLE})
-                            : std::nullopt;
-
-            ArrowSchema schema = make_arrow_schema(
+            ArrowSchema schema = make_union_arrow_schema(
                 std::move(format),
-                std::move(name),                      // name
-                std::move(metadata),                  // metadata
-                flags,                                // flags,
-                child_schemas,                        // children
-                repeat_view<bool>(true, n_children),  // children_ownership
-                nullptr,                              // dictionary,
-                true                                  // dictionary ownership
+                children,
+                std::move(name),
+                std::move(metadata)
             );
-
-            ArrowArray arr = make_arrow_array(
-                static_cast<std::int64_t>(size),  // length
-                0,                                // null_count: always 0 as the nullability is in children
-                0,                                // offset
+            ArrowArray arr = make_union_arrow_array(
+                static_cast<std::int64_t>(size),
                 std::move(buffers),
-                child_arrays,                         // children
-                repeat_view<bool>(true, n_children),  // children_ownership
-                nullptr,                              // dictionary
-                true
+                std::move(children)
             );
-
             return arrow_proxy{std::move(arr), std::move(schema)};
         }
     }

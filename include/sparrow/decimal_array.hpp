@@ -19,6 +19,7 @@
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_array_schema_proxy.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
@@ -725,44 +726,18 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
-        const std::optional<std::unordered_set<sparrow::ArrowFlag>>
-            flags = bitmap.has_value()
-                        ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
-                        : std::nullopt;
-        static const repeat_view<bool> children_ownership{true, 0};
         const auto size = data_buffer.size();
-        const size_t null_count = bitmap.has_value() ? bitmap->null_count() : 0;
 
-        // create arrow schema and array
-        ArrowSchema schema = make_arrow_schema(
+        ArrowSchema schema = detail::make_decimal_arrow_schema(
             generate_format(precision, scale),
-            name,      // name
-            metadata,  // metadata
-            flags,     // flags
-            nullptr,   // children
-            children_ownership,
-            nullptr,  // dictionary
-            true      // dictionary ownership
+            bitmap.has_value(),
+            name,
+            metadata
         );
-
-        std::vector<buffer<uint8_t>> buffers;
-        buffers.reserve(2);
-        buffers.emplace_back(
-            bitmap.has_value() ? std::move(*bitmap).extract_storage()
-                               : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator()}
-        );
-        buffers.emplace_back(std::move(data_buffer).extract_storage());
-
-        // create arrow array
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),  // lengths
-            static_cast<int64_t>(null_count),
-            0,  // offset
-            std::move(buffers),
-            nullptr,                     // children
-            repeat_view<bool>(true, 0),  // children_ownership
-            nullptr,                     // dictionary
-            true
+        ArrowArray arr = detail::make_decimal_arrow_array(
+            static_cast<std::int64_t>(size),
+            std::move(bitmap),
+            std::move(data_buffer).extract_storage()
         );
         return arrow_proxy(std::move(arr), std::move(schema));
     }
