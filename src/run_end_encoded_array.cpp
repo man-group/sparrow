@@ -44,6 +44,13 @@ namespace sparrow
                                                              std::size_t count
                                                          ) { array.insert(pos, typed_value, count); };
 
+        template <class ARRAY>
+        constexpr bool supports_encoded_value_erase_v = requires(
+                                                            ARRAY& array,
+                                                            typename ARRAY::const_iterator first,
+                                                            typename ARRAY::const_iterator last
+                                                        ) { array.erase(first, last); };
+
         template <class ACC_LENGTH_TYPE, class HAS_VALUE_FUNC>
         auto extract_length_and_null_count_from_data(
             const ACC_LENGTH_TYPE* acc_length_data,
@@ -189,6 +196,22 @@ namespace sparrow
                     {
                         throw std::runtime_error(
                             "run_end_encoded_array encoded values child must support insert(value, count)"
+                        );
+                    }
+                }
+            );
+        }
+
+        void validate_encoded_child_erase(const array& child)
+        {
+            child.visit(
+                [](const auto& child_impl)
+                {
+                    using child_array_type = std::decay_t<decltype(child_impl)>;
+                    if constexpr (!supports_encoded_value_erase_v<child_array_type>)
+                    {
+                        throw std::runtime_error(
+                            "run_end_encoded_array encoded values child must support erase(first, last)"
                         );
                     }
                 }
@@ -562,7 +585,7 @@ namespace sparrow
         {
             return;
         }
-        detail::validate_union_child_erase(p_encoded_values_array);
+        validate_encoded_child_erase(p_encoded_values_array);
         p_encoded_values_array.erase(
             p_encoded_values_array.cbegin() + static_cast<std::ptrdiff_t>(run_index),
             p_encoded_values_array.cbegin() + static_cast<std::ptrdiff_t>(run_index + count)
