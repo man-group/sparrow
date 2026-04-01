@@ -28,11 +28,12 @@ namespace sparrow
     // this iteratas over the **actual** values of the run encoded array
     // Ie nullabes values, not values !!!
     template <bool is_const>
-    class run_encoded_array_iterator : public iterator_base<
-                                           run_encoded_array_iterator<is_const>,
-                                           array_traits::value_type,
-                                           std::bidirectional_iterator_tag,
-                                           std::conditional_t<is_const, array_traits::const_reference, run_end_encoded_reference>>
+    class run_encoded_array_iterator
+        : public iterator_base<
+              run_encoded_array_iterator<is_const>,
+              array_traits::value_type,
+              std::bidirectional_iterator_tag,
+              std::conditional_t<is_const, array_traits::const_reference, run_end_encoded_reference>>
     {
     private:
 

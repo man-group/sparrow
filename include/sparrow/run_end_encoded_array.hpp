@@ -315,7 +315,11 @@ namespace sparrow
             requires std::constructible_from<value_type, std::ranges::range_value_t<R>>
         [[nodiscard]] iterator insert(const_iterator pos, R&& range)
         {
-            return insert(pos, std::ranges::begin(std::forward<R>(range)), std::ranges::end(std::forward<R>(range)));
+            return insert(
+                pos,
+                std::ranges::begin(std::forward<R>(range)),
+                std::ranges::end(std::forward<R>(range))
+            );
         }
 
         [[nodiscard]] SPARROW_API iterator erase(const_iterator pos);
@@ -397,8 +401,7 @@ namespace sparrow
          * @param ar The child array containing the rnu-ends.
          * @return A pointer to the data buffer containing the run-ends.
          */
-        [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type
-        get_acc_lengths_ptr(const array& ar);
+        [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array& ar);
 
         /**
          * Gets the run-end value at the given index as an unsigned 64-bits integer.
@@ -430,7 +433,8 @@ namespace sparrow
 
         [[nodiscard]] SPARROW_API const_reference encoded_value(size_type run_index) const;
 
-        [[nodiscard]] SPARROW_API bool encoded_values_equal(size_type lhs_run_index, size_type rhs_run_index) const;
+        [[nodiscard]] SPARROW_API bool
+        encoded_values_equal(size_type lhs_run_index, size_type rhs_run_index) const;
 
         [[nodiscard]] SPARROW_API bool encoded_value_equals(size_type run_index, const value_type& value) const;
 
@@ -440,7 +444,8 @@ namespace sparrow
 
         SPARROW_API void merge_adjacent_runs(size_type left_run_index);
 
-        SPARROW_API void insert_logical_value(size_type index, const value_type& value, bool refresh_state = true);
+        SPARROW_API void
+        insert_logical_value(size_type index, const value_type& value, bool refresh_state = true);
 
         SPARROW_API void erase_logical_value(size_type index, bool refresh_state = true);
 

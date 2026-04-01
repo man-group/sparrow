@@ -37,15 +37,12 @@ namespace sparrow
     {
         template <class ARRAY>
         constexpr bool supports_encoded_value_insert_v = is_nullable_v<typename ARRAY::value_type>
-                                                    && requires(
-                                                        ARRAY& array,
-                                                        typename ARRAY::const_iterator pos,
-                                                        const typename ARRAY::value_type& typed_value,
-                                                        std::size_t count
-                                                    )
-                                                    {
-                                                        array.insert(pos, typed_value, count);
-                                                    };
+                                                         && requires(
+                                                             ARRAY& array,
+                                                             typename ARRAY::const_iterator pos,
+                                                             const typename ARRAY::value_type& typed_value,
+                                                             std::size_t count
+                                                         ) { array.insert(pos, typed_value, count); };
 
         template <class ACC_LENGTH_TYPE, class HAS_VALUE_FUNC>
         auto extract_length_and_null_count_from_data(
@@ -73,7 +70,9 @@ namespace sparrow
                 if (!has_value(i))
                 {
                     const auto run_length = i == 0 ? static_cast<std::int64_t>(acc_length_data[i])
-                                                   : static_cast<std::int64_t>(acc_length_data[i] - acc_length_data[i - 1]);
+                                                   : static_cast<std::int64_t>(
+                                                         acc_length_data[i] - acc_length_data[i - 1]
+                                                     );
                     null_count += run_length;
                     --remaining_null_runs;
                 }
@@ -109,7 +108,9 @@ namespace sparrow
             using acc_type = typename ARRAY::inner_value_type;
             SPARROW_ASSERT_TRUE(std::in_range<acc_type>(value));
             const auto insert_pos = std::next(acc_lengths.cbegin(), static_cast<std::ptrdiff_t>(pos));
-            static_cast<void>(acc_lengths.insert(insert_pos, nullable<acc_type>(static_cast<acc_type>(value), true)));
+            static_cast<void>(
+                acc_lengths.insert(insert_pos, nullable<acc_type>(static_cast<acc_type>(value), true))
+            );
         }
 
         template <class ARRAY>
@@ -163,11 +164,7 @@ namespace sparrow
                         std::visit(
                             [&](const auto& typed_value)
                             {
-                                if constexpr (
-                                    std::same_as<
-                                        std::decay_t<decltype(typed_value)>,
-                                        typename child_array_type::value_type>
-                                )
+                                if constexpr (std::same_as<std::decay_t<decltype(typed_value)>, typename child_array_type::value_type>)
                                 {
                                     auto& mutable_child = const_cast<child_array_type&>(child_impl);
                                     auto insert_pos = std::next(
@@ -238,7 +235,9 @@ namespace sparrow
     }
 
     run_end_encoded_reference::run_end_encoded_reference(run_end_encoded_array& array, std::size_t index)
-        : base_type(run_end_encoded_array::materialize_value(static_cast<const run_end_encoded_array&>(array)[index]))
+        : base_type(
+              run_end_encoded_array::materialize_value(static_cast<const run_end_encoded_array&>(array)[index])
+          )
         , p_array(&array)
         , m_index(index)
     {
@@ -273,8 +272,9 @@ namespace sparrow
 
     void run_end_encoded_reference::refresh()
     {
-        static_cast<base_type&>(*this)
-            = run_end_encoded_array::materialize_value(static_cast<const run_end_encoded_array&>(*p_array)[m_index]);
+        static_cast<base_type&>(*this) = run_end_encoded_array::materialize_value(
+            static_cast<const run_end_encoded_array&>(*p_array)[m_index]
+        );
     }
 
     auto run_end_encoded_array::size() const -> size_type
@@ -515,7 +515,11 @@ namespace sparrow
         return visit(
             [logical_index, this](const auto& acc_lengths_ptr) -> size_type
             {
-                const auto it = std::upper_bound(acc_lengths_ptr, acc_lengths_ptr + this->m_encoded_length, logical_index);
+                const auto it = std::upper_bound(
+                    acc_lengths_ptr,
+                    acc_lengths_ptr + this->m_encoded_length,
+                    logical_index
+                );
                 return static_cast<size_type>(std::distance(acc_lengths_ptr, it));
             },
             m_acc_lengths
@@ -567,7 +571,8 @@ namespace sparrow
 
     void run_end_encoded_array::merge_adjacent_runs(size_type left_run_index)
     {
-        if ((left_run_index + 1) >= m_encoded_length || !encoded_values_equal(left_run_index, left_run_index + 1))
+        if ((left_run_index + 1) >= m_encoded_length
+            || !encoded_values_equal(left_run_index, left_run_index + 1))
         {
             return;
         }
@@ -584,7 +589,8 @@ namespace sparrow
         erase_encoded_values(left_run_index + 1, 1);
     }
 
-    void run_end_encoded_array::insert_logical_value(size_type index, const value_type& value, bool refresh_state)
+    void
+    run_end_encoded_array::insert_logical_value(size_type index, const value_type& value, bool refresh_state)
     {
         throw_if_sliced_for_mutation("run_end_encoded_array::insert");
         SPARROW_ASSERT_TRUE(index <= size());
@@ -757,13 +763,17 @@ namespace sparrow
     {
         m_encoded_length = detail::array_access::get_arrow_proxy(p_acc_lengths_array).length();
         m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(p_acc_lengths_array);
-        m_proxy.set_length(m_encoded_length == 0 ? 0 : static_cast<size_type>(get_acc_length(m_encoded_length - 1)));
+        m_proxy.set_length(
+            m_encoded_length == 0 ? 0 : static_cast<size_type>(get_acc_length(m_encoded_length - 1))
+        );
     }
 
     void run_end_encoded_array::refresh_after_mutation()
     {
         refresh_cache();
-        SPARROW_ASSERT_TRUE(m_encoded_length == detail::array_access::get_arrow_proxy(p_encoded_values_array).length());
+        SPARROW_ASSERT_TRUE(
+            m_encoded_length == detail::array_access::get_arrow_proxy(p_encoded_values_array).length()
+        );
 
         const auto [null_count, length] = p_acc_lengths_array.visit(
             [this](const auto& acc_lengths_array) -> std::pair<std::int64_t, std::int64_t>
@@ -825,7 +835,9 @@ namespace sparrow
 
                 if constexpr (std::same_as<source_value_type, std::string_view>)
                 {
-                    return return_type(nullable<std::string>(std::string(typed_value.get()), typed_value.has_value()));
+                    return return_type(
+                        nullable<std::string>(std::string(typed_value.get()), typed_value.has_value())
+                    );
                 }
                 else if constexpr (std::same_as<source_value_type, sequence_view<const byte_t>>)
                 {
@@ -840,7 +852,9 @@ namespace sparrow
                 else
                 {
                     using stored_type = std::remove_cvref_t<decltype(typed_value.get())>;
-                    return return_type(nullable<stored_type>(stored_type(typed_value.get()), typed_value.has_value()));
+                    return return_type(
+                        nullable<stored_type>(stored_type(typed_value.get()), typed_value.has_value())
+                    );
                 }
             },
 #if SPARROW_GCC_11_2_WORKAROUND
