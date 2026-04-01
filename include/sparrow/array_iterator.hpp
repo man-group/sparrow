@@ -24,15 +24,21 @@ namespace sparrow
 {
     class array;
 
-    class SPARROW_API array_const_iterator : public iterator_base<
+    class SPARROW_API array_const_iterator : public pointer_index_iterator_base<
                                                  array_const_iterator,
+                                                 const array,
                                                  array_traits::value_type,
-                                                 std::random_access_iterator_tag,
                                                  array_traits::const_reference,
-                                                 std::ptrdiff_t>
+                                                 std::random_access_iterator_tag>
     {
     public:
 
+        using base_type = pointer_index_iterator_base<
+            array_const_iterator,
+            const array,
+            array_traits::value_type,
+            array_traits::const_reference,
+            std::random_access_iterator_tag>;
         using difference_type = std::ptrdiff_t;
         using size_type = std::size_t;
 
@@ -41,23 +47,7 @@ namespace sparrow
     private:
 
         array_const_iterator(const array* array_ptr, size_type index);
-
         [[nodiscard]] array_traits::const_reference dereference() const;
-
-        void increment();
-
-        void decrement();
-
-        void advance(difference_type n);
-
-        [[nodiscard]] difference_type distance_to(const array_const_iterator& rhs) const;
-
-        [[nodiscard]] bool equal(const array_const_iterator& rhs) const;
-
-        [[nodiscard]] bool less_than(const array_const_iterator& rhs) const;
-
-        const array* p_array = nullptr;
-        size_type m_index = 0;
 
         friend class iterator_access;
         friend class array;

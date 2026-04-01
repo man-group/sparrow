@@ -50,17 +50,19 @@ namespace sparrow
             return m_functor(m_index);
         }
 
-        constexpr void increment()
+        constexpr void increment() noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
         {
+            SPARROW_ASSERT_TRUE(m_index < std::numeric_limits<size_type>::max());
             ++m_index;
         }
 
-        constexpr void decrement()
+        constexpr void decrement() noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
         {
+            SPARROW_ASSERT_TRUE(m_index > 0);
             --m_index;
         }
 
-        constexpr void advance(difference_type n)
+        constexpr void advance(difference_type n) noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
         {
             if (n >= 0)
             {
@@ -73,17 +75,18 @@ namespace sparrow
             }
         }
 
-        [[nodiscard]] constexpr difference_type distance_to(const self_type& rhs) const
+        [[nodiscard]] constexpr difference_type
+        distance_to(const self_type& rhs) const noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
         {
             return static_cast<difference_type>(rhs.m_index) - static_cast<difference_type>(m_index);
         }
 
-        [[nodiscard]] constexpr bool equal(const self_type& rhs) const
+        [[nodiscard]] constexpr bool equal(const self_type& rhs) const noexcept
         {
             return m_index == rhs.m_index;
         }
 
-        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const
+        [[nodiscard]] constexpr bool less_than(const self_type& rhs) const noexcept
         {
             return m_index < rhs.m_index;
         }

@@ -16,9 +16,12 @@
 
 #include <compare>
 #include <iterator>
+#include <limits>
 #include <memory>
 #include <type_traits>
 #include <utility>
+
+#include "sparrow/utils/contracts.hpp"
 
 namespace sparrow
 {
@@ -498,6 +501,105 @@ namespace sparrow
     {
         return pointer_iterator<T*>(t);
     }
+
+    /*
+     * @class pointer_index_iterator_base
+     * @brief CRTP base for iterators that store a pointer and an integer index.
+     *
+     * Provides default implementations of all iterator operations based on comparing
+     * and advancing the index. Derived classes must implement `dereference()` and may
+     * override `advance()`, `distance_to()`, `equal()`, or `less_than()` when they need
+     * stricter precondition checks or different arithmetic semantics.
+     *
+     * The stored members are `protected` so that derived-class overrides can access them
+     * directly:
+     *   - `p_object` of type `Ptr*`
+     *   - `m_index`  of type `IndexType`
+     *
+     * @tparam Derived     The concrete iterator class (CRTP).
+     * @tparam Ptr         The pointed-to object type (e.g. `const array`). `p_object` has
+     *                     type `Ptr*`.
+     * @tparam Element     The iterator's `value_type`.
+     * @tparam Reference   The iterator's `reference` type.
+     * @tparam IteratorTag The iterator category tag.
+     * @tparam IndexType   The integer type used for the index (default: `std::size_t`).
+     * @tparam Difference  The iterator's `difference_type` (default: `std::ptrdiff_t`).
+     */
+    template <
+        class Derived,
+        class Ptr,
+        class Element,
+        class Reference,
+        class IteratorTag,
+        class IndexType = std::size_t,
+        class Difference = std::ptrdiff_t>
+    class pointer_index_iterator_base
+        : public iterator_base<Derived, Element, IteratorTag, Reference, Difference>
+    {
+    public:
+
+        using size_type = IndexType;
+        using difference_type = Difference;
+
+    protected:
+
+        Ptr* p_object = nullptr;
+        IndexType m_index = 0;
+
+        constexpr pointer_index_iterator_base() noexcept = default;
+
+        constexpr pointer_index_iterator_base(Ptr* p, IndexType idx) noexcept
+            : p_object(p)
+            , m_index(idx)
+        {
+        }
+
+        constexpr void increment() noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
+        {
+            SPARROW_ASSERT_TRUE(m_index < std::numeric_limits<size_type>::max());
+            ++m_index;
+        }
+
+        constexpr void decrement() noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
+        {
+            SPARROW_ASSERT_TRUE(m_index > 0);
+            --m_index;
+        }
+
+        constexpr void advance(Difference n) noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
+        {
+            if constexpr (std::is_signed_v<IndexType>)
+            {
+                m_index += static_cast<IndexType>(n);
+            }
+            else
+            {
+                SPARROW_ASSERT_TRUE(n >= 0 || static_cast<IndexType>(-n) <= m_index);
+                m_index = static_cast<IndexType>(static_cast<Difference>(m_index) + n);
+            }
+        }
+
+        [[nodiscard]] constexpr Difference
+        distance_to(const Derived& rhs) const noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
+        {
+            SPARROW_ASSERT_TRUE(p_object == rhs.p_object);
+            return static_cast<Difference>(rhs.m_index) - static_cast<Difference>(m_index);
+        }
+
+        [[nodiscard]] constexpr bool equal(const Derived& rhs) const noexcept
+        {
+            return p_object == rhs.p_object && m_index == rhs.m_index;
+        }
+
+        [[nodiscard]] constexpr bool
+        less_than(const Derived& rhs) const noexcept(SPARROW_CONTRACTS_THROW_ON_FAILURE == 0)
+        {
+            SPARROW_ASSERT_TRUE(p_object == rhs.p_object);
+            return m_index < rhs.m_index;
+        }
+
+        friend class iterator_access;
+    };
 
     template <class InputIt, std::integral Distance>
     [[nodiscard]] constexpr InputIt next(InputIt it, Distance n)
