@@ -538,11 +538,11 @@ namespace sparrow
             size = std::ranges::begin(children)->size();
         }
 
-        for(const auto& child : children)
+        for (const auto& child : children)
         {
             SPARROW_ASSERT_TRUE(child.size() == size);
         }
-        
+
         const bool nullable = bitmap.has_value();
         ArrowSchema schema = detail::make_struct_arrow_schema(
             children,
