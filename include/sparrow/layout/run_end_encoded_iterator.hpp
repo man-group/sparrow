@@ -23,19 +23,21 @@ namespace sparrow
 {
 
     class run_end_encoded_array;
+    class run_end_encoded_reference;
 
     // this iteratas over the **actual** values of the run encoded array
     // Ie nullabes values, not values !!!
     template <bool is_const>
     class run_encoded_array_iterator : public iterator_base<
                                            run_encoded_array_iterator<is_const>,
-                                           array_traits::const_reference,
+                                           array_traits::value_type,
                                            std::bidirectional_iterator_tag,
-                                           array_traits::const_reference>
+                                           std::conditional_t<is_const, array_traits::const_reference, run_end_encoded_reference>>
     {
     private:
 
         using array_ptr_type = std::conditional_t<is_const, const run_end_encoded_array*, run_end_encoded_array*>;
+        using reference_type = std::conditional_t<is_const, array_traits::const_reference, run_end_encoded_reference>;
 
     public:
 
@@ -47,10 +49,10 @@ namespace sparrow
         [[nodiscard]] bool equal(const run_encoded_array_iterator& rhs) const;
         void increment();
         void decrement();
-        [[nodiscard]] array_traits::const_reference dereference() const;
+        [[nodiscard]] reference_type dereference() const;
 
         array_ptr_type p_array = nullptr;
-        array_wrapper* p_encoded_values_array = nullptr;
+        const array* p_encoded_values_array = nullptr;
         std::uint64_t m_index = 0;            // the current index / the index the user sees
         std::uint64_t m_run_end_index = 0;    // the current index in the run ends array
         std::uint64_t m_acc_length_up = 0;    // the accumulated length at m_run_end_index
@@ -66,7 +68,7 @@ namespace sparrow
         std::uint64_t run_end_index
     )
         : p_array(array_ptr)
-        , p_encoded_values_array(array_ptr->p_encoded_values_array.get())
+        , p_encoded_values_array(&array_ptr->p_encoded_values_array)
         , m_index(index)
         , m_run_end_index(run_end_index)
         , m_acc_length_up(
@@ -121,9 +123,16 @@ namespace sparrow
     }
 
     template <bool is_const>
-    typename array_traits::const_reference run_encoded_array_iterator<is_const>::dereference() const
+    auto run_encoded_array_iterator<is_const>::dereference() const -> reference_type
     {
-        return array_element(*p_encoded_values_array, static_cast<std::size_t>(m_run_end_index));
+        if constexpr (is_const)
+        {
+            return (*p_encoded_values_array)[static_cast<std::size_t>(m_run_end_index)];
+        }
+        else
+        {
+            return reference_type(*p_array, static_cast<std::size_t>(m_index));
+        }
     }
 
 }  // namespace sparrow

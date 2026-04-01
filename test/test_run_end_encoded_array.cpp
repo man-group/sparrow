@@ -26,6 +26,21 @@ namespace sparrow
 {
     namespace test
     {
+        inline auto make_u64_value(std::uint64_t value, bool valid = true) -> array_traits::value_type
+        {
+            return array_traits::value_type(nullable<std::uint64_t>(value, valid));
+        }
+
+        inline primitive_array<std::int32_t> get_run_ends_child(const run_end_encoded_array& array)
+        {
+            return primitive_array<std::int32_t>(::sparrow::detail::array_access::get_arrow_proxy(array).children()[0].view());
+        }
+
+        inline primitive_array<std::uint64_t> get_encoded_values_child(const run_end_encoded_array& array)
+        {
+            return primitive_array<std::uint64_t>(::sparrow::detail::array_access::get_arrow_proxy(array).children()[1].view());
+        }
+
         run_end_encoded_array make_test_run_encoded_array(bool alterate = false)
         {
             using acc_type = std::int32_t;
@@ -254,6 +269,96 @@ namespace sparrow
             SUBCASE("consistency")
             {
                 test::generic_consistency_test(rle_array);
+            }
+
+            SUBCASE("mutable operator[]")
+            {
+                rle_array[3] = test::make_u64_value(7);
+
+                REQUIRE_EQ(rle_array.size(), 8u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                const auto encoded_values = test::get_encoded_values_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 6u);
+                REQUIRE_EQ(encoded_values.size(), 6u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 6);
+                CHECK_EQ(run_ends[4].value(), 7);
+                CHECK_EQ(run_ends[5].value(), 8);
+            }
+
+            SUBCASE("push_back merges adjacent run")
+            {
+                rle_array.push_back(test::make_u64_value(9));
+
+                REQUIRE_EQ(rle_array.size(), 9u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[7], std::uint64_t(9));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[8], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                const auto encoded_values = test::get_encoded_values_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                REQUIRE_EQ(encoded_values.size(), 5u);
+                CHECK_EQ(run_ends[4].value(), 9);
+                CHECK_EQ(encoded_values[4].value(), std::uint64_t(9));
+            }
+
+            SUBCASE("insert inside run splits encoding")
+            {
+                static_cast<void>(rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7)));
+
+                REQUIRE_EQ(rle_array.size(), 9u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[6], std::uint64_t(42));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 7u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 7);
+                CHECK_EQ(run_ends[5].value(), 8);
+                CHECK_EQ(run_ends[6].value(), 9);
+            }
+
+            SUBCASE("erase range merges adjacent runs")
+            {
+                static_cast<void>(rle_array.erase(
+                    sparrow::next(rle_array.cbegin(), 3),
+                    sparrow::next(rle_array.cbegin(), 6)
+                ));
+
+                REQUIRE_EQ(rle_array.size(), 5u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_FALSE(rle_array[2].has_value());
+                CHECK_FALSE(rle_array[3].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                const auto encoded_values = test::get_encoded_values_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 3u);
+                REQUIRE_EQ(encoded_values.size(), 3u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 4);
+                CHECK_EQ(run_ends[2].value(), 5);
+                CHECK_FALSE(encoded_values[1].has_value());
+            }
+
+            SUBCASE("mutation on slice is unsupported")
+            {
+                run_end_encoded_array sliced(detail::array_access::get_arrow_proxy(rle_array).slice(1, 3));
+
+                CHECK_THROWS_AS(sliced.push_back(test::make_u64_value(11)), std::logic_error);
+                CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
             }
 
 #if defined(__cpp_lib_format)
