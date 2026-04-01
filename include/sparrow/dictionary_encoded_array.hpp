@@ -693,7 +693,7 @@ namespace sparrow
     )
     {
         const auto format = data_type_to_format(detail::get_data_type_from_array<self_type>::get());
-        const auto size   = static_cast<std::int64_t>(keys.size());
+        const auto size = static_cast<std::int64_t>(keys.size());
         const bool nullable = validity.has_value();
         buffer<uint8_t> keys_buf = std::move(keys).extract_storage();
         ArrowSchema schema = detail::make_dictionary_encoded_arrow_schema(

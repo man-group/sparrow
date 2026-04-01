@@ -17,11 +17,11 @@
 
 #include "sparrow/arrow_interface/arrow_array.hpp"
 #include "sparrow/arrow_interface/arrow_schema.hpp"
-#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/primitive_data_access.hpp"
 #include "sparrow/u8_buffer.hpp"
 #include "sparrow/utils/extension.hpp"
