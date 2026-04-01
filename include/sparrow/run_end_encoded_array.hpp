@@ -398,7 +398,7 @@ namespace sparrow
          * @return A pointer to the data buffer containing the run-ends.
          */
         [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type
-        get_acc_lengths_ptr(const array_wrapper& ar);
+        get_acc_lengths_ptr(const array& ar);
 
         /**
          * Gets the run-end value at the given index as an unsigned 64-bits integer.
@@ -462,7 +462,7 @@ namespace sparrow
         std::uint64_t m_encoded_length;
 
         /** The child array containing the run ends **/
-        cloning_ptr<array_wrapper> p_acc_lengths_array;
+        array p_acc_lengths_array;
         /** The child array containing the values **/
         array p_encoded_values_array;
         /** A pointer to the run-end child data buffer **/

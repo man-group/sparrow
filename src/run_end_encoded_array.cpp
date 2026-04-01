@@ -26,8 +26,27 @@
 
 namespace sparrow
 {
+    template <class T>
+    concept usable_array = (mpl::is_type_instance_of_v<T, primitive_array>
+                            || mpl::is_type_instance_of_v<T, primitive_array_impl>)
+                           && (std::same_as<typename T::inner_value_type, std::int16_t>
+                               || std::same_as<typename T::inner_value_type, std::int32_t>
+                               || std::same_as<typename T::inner_value_type, std::int64_t>);
+
     namespace
     {
+        template <class ARRAY>
+        constexpr bool supports_encoded_value_insert_v = is_nullable_v<typename ARRAY::value_type>
+                                                    && requires(
+                                                        ARRAY& array,
+                                                        typename ARRAY::const_iterator pos,
+                                                        const typename ARRAY::value_type& typed_value,
+                                                        std::size_t count
+                                                    )
+                                                    {
+                                                        array.insert(pos, typed_value, count);
+                                                    };
+
         template <class ACC_LENGTH_TYPE, class HAS_VALUE_FUNC>
         auto extract_length_and_null_count_from_data(
             const ACC_LENGTH_TYPE* acc_length_data,
@@ -63,22 +82,25 @@ namespace sparrow
         }
 
         template <class F>
-        void with_mutable_acc_lengths(array_wrapper& wrapper, F&& func)
+        void with_mutable_acc_lengths(array& wrapper, F&& func)
         {
-            switch (wrapper.data_type())
-            {
-                case data_type::INT16:
-                    std::forward<F>(func)(unwrap_array<primitive_array<std::int16_t>>(wrapper));
-                    return;
-                case data_type::INT32:
-                    std::forward<F>(func)(unwrap_array<primitive_array<std::int32_t>>(wrapper));
-                    return;
-                case data_type::INT64:
-                    std::forward<F>(func)(unwrap_array<primitive_array<std::int64_t>>(wrapper));
-                    return;
-                default:
-                    throw std::invalid_argument("run_end_encoded_array accumulated lengths must be int16/int32/int64");
-            }
+            wrapper.visit(
+                [&func](const auto& typed_wrapper)
+                {
+                    using array_type = std::remove_cvref_t<decltype(typed_wrapper)>;
+
+                    if constexpr (usable_array<array_type>)
+                    {
+                        std::forward<F>(func)(const_cast<array_type&>(typed_wrapper));
+                    }
+                    else
+                    {
+                        throw std::invalid_argument(
+                            "run_end_encoded_array accumulated lengths must be int16/int32/int64"
+                        );
+                    }
+                }
+            );
         }
 
         template <class ARRAY>
@@ -126,6 +148,55 @@ namespace sparrow
                 entry.null_flag() = true;
             }
         }
+
+        void insert_encoded_child_value(array& child, std::size_t pos, const array_traits::value_type& value)
+        {
+            using value_variant_type = typename array_traits::value_type::base_type;
+
+            child.visit(
+                [&](const auto& child_impl)
+                {
+                    using child_array_type = std::decay_t<decltype(child_impl)>;
+                    if constexpr (supports_encoded_value_insert_v<child_array_type>)
+                    {
+                        bool inserted = false;
+                        std::visit(
+                            [&](const auto& typed_value)
+                            {
+                                if constexpr (
+                                    std::same_as<
+                                        std::decay_t<decltype(typed_value)>,
+                                        typename child_array_type::value_type>
+                                )
+                                {
+                                    auto& mutable_child = const_cast<child_array_type&>(child_impl);
+                                    auto insert_pos = std::next(
+                                        mutable_child.cbegin(),
+                                        static_cast<std::ptrdiff_t>(pos)
+                                    );
+                                    static_cast<void>(mutable_child.insert(insert_pos, typed_value, 1));
+                                    inserted = true;
+                                }
+                            },
+                            static_cast<const value_variant_type&>(value)
+                        );
+
+                        if (!inserted)
+                        {
+                            throw std::invalid_argument(
+                                "run_end_encoded_array value type does not match encoded values child array"
+                            );
+                        }
+                    }
+                    else
+                    {
+                        throw std::runtime_error(
+                            "run_end_encoded_array encoded values child must support insert(value, count)"
+                        );
+                    }
+                }
+            );
+        }
     }
 
     namespace copy_tracker
@@ -140,9 +211,9 @@ namespace sparrow
     run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
         , m_encoded_length(m_proxy.children()[0].length())
-        , p_acc_lengths_array(array_factory(m_proxy.children()[0].view()))
+        , p_acc_lengths_array(array(m_proxy.children()[0].view()))
         , p_encoded_values_array(array(m_proxy.children()[1].view()))
-        , m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array))
+        , m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(p_acc_lengths_array))
     {
     }
 
@@ -159,9 +230,9 @@ namespace sparrow
         {
             m_proxy = rhs.m_proxy;
             m_encoded_length = rhs.m_encoded_length;
-            p_acc_lengths_array = array_factory(m_proxy.children()[0].view());
+            p_acc_lengths_array = array(m_proxy.children()[0].view());
             p_encoded_values_array = array(m_proxy.children()[1].view());
-            m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array);
+            m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(p_acc_lengths_array);
         }
         return *this;
     }
@@ -414,16 +485,9 @@ namespace sparrow
         return true;
     }
 
-    template <class T>
-    concept usable_array = (mpl::is_type_instance_of_v<T, primitive_array>
-                            || mpl::is_type_instance_of_v<T, primitive_array_impl>)
-                           && (std::same_as<typename T::inner_value_type, std::int16_t>
-                               || std::same_as<typename T::inner_value_type, std::int32_t>
-                               || std::same_as<typename T::inner_value_type, std::int64_t>);
-
-    auto run_end_encoded_array::get_acc_lengths_ptr(const array_wrapper& ar) -> acc_length_ptr_variant_type
+    auto run_end_encoded_array::get_acc_lengths_ptr(const array& ar) -> acc_length_ptr_variant_type
     {
-        return visit(
+        return ar.visit(
             [](const auto& actual_arr) -> acc_length_ptr_variant_type
             {
                 using array_type = std::decay_t<decltype(actual_arr)>;
@@ -436,8 +500,7 @@ namespace sparrow
                 {
                     throw std::invalid_argument("array type not supported");
                 }
-            },
-            ar
+            }
         );
     }
 
@@ -486,8 +549,7 @@ namespace sparrow
 
     void run_end_encoded_array::insert_encoded_value(size_type run_index, const value_type& value)
     {
-        detail::validate_union_child_insert_value(p_encoded_values_array, value);
-        detail::insert_union_child_value(p_encoded_values_array, run_index, value, 1);
+        insert_encoded_child_value(p_encoded_values_array, run_index, value);
     }
 
     void run_end_encoded_array::erase_encoded_values(size_type run_index, size_type count)
@@ -512,7 +574,7 @@ namespace sparrow
 
         const auto merged_run_end = run_end(left_run_index + 1);
         with_mutable_acc_lengths(
-            *p_acc_lengths_array,
+            p_acc_lengths_array,
             [left_run_index, merged_run_end](auto& acc_lengths)
             {
                 set_acc_length_value(acc_lengths, left_run_index, merged_run_end);
@@ -531,7 +593,7 @@ namespace sparrow
         {
             insert_encoded_value(0, value);
             with_mutable_acc_lengths(
-                *p_acc_lengths_array,
+                p_acc_lengths_array,
                 [](auto& acc_lengths)
                 {
                     insert_acc_length_value(acc_lengths, 0, 1);
@@ -546,7 +608,7 @@ namespace sparrow
             if (encoded_value_equals(m_encoded_length - 1, value))
             {
                 with_mutable_acc_lengths(
-                    *p_acc_lengths_array,
+                    p_acc_lengths_array,
                     [this](auto& acc_lengths)
                     {
                         shift_acc_length_values(acc_lengths, m_encoded_length - 1, 1);
@@ -557,7 +619,7 @@ namespace sparrow
             {
                 insert_encoded_value(m_encoded_length, value);
                 with_mutable_acc_lengths(
-                    *p_acc_lengths_array,
+                    p_acc_lengths_array,
                     [this](auto& acc_lengths)
                     {
                         insert_acc_length_value(acc_lengths, m_encoded_length, size() + 1);
@@ -577,7 +639,7 @@ namespace sparrow
             if (run_index > 0 && encoded_value_equals(run_index - 1, value))
             {
                 with_mutable_acc_lengths(
-                    *p_acc_lengths_array,
+                    p_acc_lengths_array,
                     [run_index](auto& acc_lengths)
                     {
                         shift_acc_length_values(acc_lengths, run_index - 1, 1);
@@ -587,7 +649,7 @@ namespace sparrow
             else if (encoded_value_equals(run_index, value))
             {
                 with_mutable_acc_lengths(
-                    *p_acc_lengths_array,
+                    p_acc_lengths_array,
                     [run_index](auto& acc_lengths)
                     {
                         shift_acc_length_values(acc_lengths, run_index, 1);
@@ -598,7 +660,7 @@ namespace sparrow
             {
                 insert_encoded_value(run_index, value);
                 with_mutable_acc_lengths(
-                    *p_acc_lengths_array,
+                    p_acc_lengths_array,
                     [run_index, index](auto& acc_lengths)
                     {
                         insert_acc_length_value(acc_lengths, run_index, static_cast<std::uint64_t>(index) + 1);
@@ -613,7 +675,7 @@ namespace sparrow
         if (encoded_value_equals(run_index, value))
         {
             with_mutable_acc_lengths(
-                *p_acc_lengths_array,
+                p_acc_lengths_array,
                 [run_index](auto& acc_lengths)
                 {
                     shift_acc_length_values(acc_lengths, run_index, 1);
@@ -628,7 +690,7 @@ namespace sparrow
         insert_encoded_value(run_index + 2, current_run_value);
 
         with_mutable_acc_lengths(
-            *p_acc_lengths_array,
+            p_acc_lengths_array,
             [run_index, index, current_run_end](auto& acc_lengths)
             {
                 set_acc_length_value(acc_lengths, run_index, index);
@@ -652,7 +714,7 @@ namespace sparrow
         if ((current_run_end - current_run_start) > 1)
         {
             with_mutable_acc_lengths(
-                *p_acc_lengths_array,
+                p_acc_lengths_array,
                 [run_index](auto& acc_lengths)
                 {
                     shift_acc_length_values(acc_lengths, run_index, -1);
@@ -664,7 +726,7 @@ namespace sparrow
 
         erase_encoded_values(run_index, 1);
         with_mutable_acc_lengths(
-            *p_acc_lengths_array,
+            p_acc_lengths_array,
             [run_index](auto& acc_lengths)
             {
                 erase_acc_length_values(acc_lengths, run_index, 1);
@@ -693,8 +755,8 @@ namespace sparrow
 
     void run_end_encoded_array::refresh_cache()
     {
-        m_encoded_length = detail::array_access::get_arrow_proxy(*p_acc_lengths_array).length();
-        m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(*p_acc_lengths_array);
+        m_encoded_length = detail::array_access::get_arrow_proxy(p_acc_lengths_array).length();
+        m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(p_acc_lengths_array);
         m_proxy.set_length(m_encoded_length == 0 ? 0 : static_cast<size_type>(get_acc_length(m_encoded_length - 1)));
     }
 
@@ -703,7 +765,7 @@ namespace sparrow
         refresh_cache();
         SPARROW_ASSERT_TRUE(m_encoded_length == detail::array_access::get_arrow_proxy(p_encoded_values_array).length());
 
-        const auto [null_count, length] = visit(
+        const auto [null_count, length] = p_acc_lengths_array.visit(
             [this](const auto& acc_lengths_array) -> std::pair<std::int64_t, std::int64_t>
             {
                 using array_type = std::decay_t<decltype(acc_lengths_array)>;
@@ -723,8 +785,7 @@ namespace sparrow
                 {
                     throw std::invalid_argument("array type not supported");
                 }
-            },
-            *p_acc_lengths_array
+            }
         );
 
         SPARROW_ASSERT_TRUE(static_cast<size_type>(length) == size());
