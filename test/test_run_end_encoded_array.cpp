@@ -168,7 +168,7 @@ namespace sparrow
                                     }
                                 },
 #if SPARROW_GCC_11_2_WORKAROUND
-                                static_cast<const typename array_traits::const_reference::base_type&>(val)
+                                sparrow::test::unwrap_gcc11_variant_base(val)
 #else
                                 val
 #endif
@@ -210,10 +210,6 @@ namespace sparrow
                     if (iter->has_value())
                     {
                         auto val = *iter;
-#if SPARROW_GCC_11_2_WORKAROUND
-                        using variant_type = std::decay_t<decltype(val)>;
-                        using base_type = typename variant_type::base_type;
-#endif
                         std::visit(
                             [&](auto&& nullable) -> void
                             {
@@ -236,7 +232,7 @@ namespace sparrow
                                 }
                             },
 #if SPARROW_GCC_11_2_WORKAROUND
-                            *static_cast<const base_type*>(&val)
+                            sparrow::test::unwrap_gcc11_variant_base(val)
 #else
                             val
 #endif
@@ -258,10 +254,6 @@ namespace sparrow
                     if (iter->has_value())
                     {
                         auto val = *iter;
-#if SPARROW_GCC_11_2_WORKAROUND
-                        using variant_type = std::decay_t<decltype(val)>;
-                        using base_type = typename variant_type::base_type;
-#endif
                         std::visit(
                             [&](auto&& nullable) -> void
                             {
@@ -284,7 +276,7 @@ namespace sparrow
                                 }
                             },
 #if SPARROW_GCC_11_2_WORKAROUND
-                            *static_cast<const base_type*>(&val)
+                            sparrow::test::unwrap_gcc11_variant_base(val)
 #else
                             val
 #endif
