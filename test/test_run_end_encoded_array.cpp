@@ -85,6 +85,33 @@ namespace sparrow
 
             return run_end_encoded_array(std::move(acc_lengths_array), std::move(encoded_values_array));
         }
+
+        run_end_encoded_array make_test_run_encoded_array_with_unknown_encoded_null_count()
+        {
+            using acc_type = std::int32_t;
+            using inner_value_type = std::uint64_t;
+
+            primitive_array<inner_value_type> encoded_values(
+                std::vector<inner_value_type>{
+                    inner_value_type(1),
+                    inner_value_type(),
+                    inner_value_type(42),
+                    inner_value_type(),
+                    inner_value_type(9)
+                },
+                std::vector<std::size_t>{1, 3}
+            );
+
+            primitive_array<acc_type> acc_lengths{
+                {acc_type(1), acc_type(3), acc_type(6), acc_type(7), acc_type(8)}
+            };
+
+            array acc_lengths_array(std::move(acc_lengths));
+            array encoded_values_array(std::move(encoded_values));
+            ::sparrow::detail::array_access::get_arrow_proxy(encoded_values_array).set_null_count(-1);
+
+            return run_end_encoded_array(std::move(acc_lengths_array), std::move(encoded_values_array));
+        }
     }
 
     TEST_SUITE("run_length_encoded")
@@ -103,6 +130,11 @@ namespace sparrow
 
             std::vector<bool> expected_bitmap{1, 0, 0, 1, 1, 1, 0, 1};
             std::vector<inner_value_type> expected_values{1, 0, 0, 42, 42, 42, 0, 9};
+
+            SUBCASE("proxy null_count matches expanded null runs")
+            {
+                CHECK_EQ(detail::array_access::get_arrow_proxy(rle_array).null_count(), 3);
+            }
 
             SUBCASE("copy")
             {
@@ -391,6 +423,14 @@ namespace sparrow
                 CHECK_EQ(formatted, expected);
             }
 #endif
+        }
+
+        TEST_CASE("run_length_encoded computes null_count when encoded child null count is unknown")
+        {
+            const auto rle_array = test::make_test_run_encoded_array_with_unknown_encoded_null_count();
+
+            CHECK_EQ(rle_array.size(), 8u);
+            CHECK_EQ(detail::array_access::get_arrow_proxy(rle_array).null_count(), 3);
         }
     }
 }

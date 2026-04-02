@@ -71,6 +71,22 @@ namespace sparrow
             }
 
             std::int64_t null_count = 0;
+            if (raw_null_count < 0)
+            {
+                for (std::size_t i = 0; i < raw_size; ++i)
+                {
+                    if (!has_value(i))
+                    {
+                        const auto run_length = i == 0 ? static_cast<std::int64_t>(acc_length_data[i])
+                                                       : static_cast<std::int64_t>(
+                                                             acc_length_data[i] - acc_length_data[i - 1]
+                                                         );
+                        null_count += run_length;
+                    }
+                }
+                return {null_count, length};
+            }
+
             std::int64_t remaining_null_runs = raw_null_count;
             for (std::size_t i = 0; i < raw_size && remaining_null_runs != 0; ++i)
             {
@@ -915,9 +931,8 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(acc_lengths_arr.size() == encoded_values_arr.size());
 
-        // get the raw null count
-        std::uint64_t raw_null_count = detail::array_access::get_arrow_proxy(acc_lengths_arr).null_count();
-        auto raw_size = acc_lengths_arr.size();
+        const std::int64_t raw_null_count = detail::array_access::get_arrow_proxy(encoded_values_arr).null_count();
+        const auto raw_size = acc_lengths_arr.size();
         return acc_lengths_arr.visit(
             [&](const auto& acc_lengths_array) -> std::pair<std::int64_t, std::int64_t>
             {
@@ -926,7 +941,7 @@ namespace sparrow
                     return extract_length_and_null_count_from_data(
                         acc_lengths_array.data(),
                         raw_size,
-                        static_cast<std::int64_t>(raw_null_count),
+                        raw_null_count,
                         [&encoded_values_arr](std::size_t index)
                         {
                             return encoded_values_arr[index].has_value();
