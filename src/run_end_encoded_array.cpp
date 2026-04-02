@@ -283,9 +283,7 @@ namespace sparrow
         std::size_t index,
         std::size_t run_index
     )
-        : base_type(
-              run_end_encoded_array::materialize_value(array.encoded_value(run_index))
-          )
+        : base_type(run_end_encoded_array::materialize_value(array.encoded_value(run_index)))
         , p_array(&array)
         , m_index(index)
         , m_run_index(run_index)
@@ -323,8 +321,7 @@ namespace sparrow
     {
         SPARROW_ASSERT_TRUE(m_index < p_array->size());
 
-        if (m_run_index >= p_array->m_encoded_length
-            || m_index < p_array->run_start(m_run_index)
+        if (m_run_index >= p_array->m_encoded_length || m_index < p_array->run_start(m_run_index)
             || m_index >= p_array->run_end(m_run_index))
         {
             m_run_index = p_array->find_run_index(static_cast<std::uint64_t>(m_index));
