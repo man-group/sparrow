@@ -384,6 +384,31 @@ namespace sparrow
                 CHECK_EQ(run_ends[6].value(), 9);
             }
 
+            SUBCASE("insert count inside run updates encoding once")
+            {
+                static_cast<void>(
+                    rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7), 3)
+                );
+
+                REQUIRE_EQ(rle_array.size(), 11u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[6], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[7], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[8], std::uint64_t(42));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 7u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 7);
+                CHECK_EQ(run_ends[4].value(), 9);
+                CHECK_EQ(run_ends[5].value(), 10);
+                CHECK_EQ(run_ends[6].value(), 11);
+            }
+
             SUBCASE("erase range merges adjacent runs")
             {
                 static_cast<void>(
@@ -407,6 +432,107 @@ namespace sparrow
                 CHECK_FALSE(encoded_values[1].has_value());
             }
 
+            SUBCASE("erase range inside a run shrinks it once")
+            {
+                static_cast<void>(
+                    rle_array.erase(sparrow::next(rle_array.cbegin(), 4), sparrow::next(rle_array.cbegin(), 6))
+                );
+
+                REQUIRE_EQ(rle_array.size(), 6u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_FALSE(rle_array[2].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_FALSE(rle_array[4].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 6);
+            }
+
+            SUBCASE("erase range across runs keeps both outer fragments")
+            {
+                static_cast<void>(
+                    rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 4))
+                );
+
+                REQUIRE_EQ(rle_array.size(), 6u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[2], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_FALSE(rle_array[4].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 2);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 6);
+            }
+
+            SUBCASE("erase range across runs keeps left fragment only")
+            {
+                static_cast<void>(
+                    rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 7))
+                );
+
+                REQUIRE_EQ(rle_array.size(), 3u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[2], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 3u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 2);
+                CHECK_EQ(run_ends[2].value(), 3);
+            }
+
+            SUBCASE("erase range across runs keeps right fragment only")
+            {
+                static_cast<void>(
+                    rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 4))
+                );
+
+                REQUIRE_EQ(rle_array.size(), 5u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[1], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[2], std::uint64_t(42));
+                CHECK_FALSE(rle_array[3].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 4u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+            }
+
+            SUBCASE("erase range across runs removes whole middle section")
+            {
+                static_cast<void>(
+                    rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 7))
+                );
+
+                REQUIRE_EQ(rle_array.size(), 2u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[1], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 2u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 2);
+            }
+
             SUBCASE("mutation on slice is unsupported")
             {
                 run_end_encoded_array sliced(detail::array_access::get_arrow_proxy(rle_array).slice(1, 3));
@@ -421,6 +547,15 @@ namespace sparrow
                 const std::string formatted = std::format("{}", rle_array);
                 constexpr std::string_view expected = "Run end encoded [size=8] <1, null, null, 42, 42, 42, null, 9>";
                 CHECK_EQ(formatted, expected);
+            }
+
+            SUBCASE("formatter handles empty arrays")
+            {
+                primitive_array<std::int32_t> run_ends(std::vector<std::int32_t>{});
+                primitive_array<std::uint64_t> encoded_values(std::vector<std::uint64_t>{});
+                run_end_encoded_array empty(array(std::move(run_ends)), array(std::move(encoded_values)));
+
+                CHECK_EQ(std::format("{}", empty), "Run end encoded [size=0] <>");
             }
 #endif
         }

@@ -88,6 +88,14 @@ namespace sparrow
      *
      * This array is used to store data in a run-length encoded format, where each run is represented by a
      * length and a value. Compresses data by storing run lengths for consecutive identical values.
+    *
+    * Performance notes:
+    * - Random access is $O(\log R)$ where $R$ is the number of encoded runs.
+    * - Iterator increment is amortized $O(1)$ because iterators cache the current run.
+    * - Mutating operations work on the encoded run representation rather than the full logical length.
+    *   Inserting repeated copies of a single value and erasing a contiguous logical range both run in
+    *   $O(R_t)$, where $R_t$ is the number of encoded runs at or after the splice point.
+    * - Sliced arrays (non-zero offset) are read-only for mutation APIs.
      *
      * Related Apache Arrow description and specification:
      * - https://arrow.apache.org/docs/dev/format/Intro.html#run-end-encoded-layout
@@ -296,8 +304,21 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API array_traits::const_reference back() const;
 
+        /**
+         * Inserts a single logical value before pos.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs at or after pos.
+         */
         [[nodiscard]] SPARROW_API iterator insert(const_iterator pos, const value_type& value);
 
+        /**
+         * Inserts count copies of value before pos.
+         *
+         * This is implemented as a single structural mutation on the encoded runs, rather than
+         * repeating single-element inserts.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs at or after pos.
+         */
         [[nodiscard]] SPARROW_API iterator insert(const_iterator pos, const value_type& value, size_type count);
 
         template <std::input_iterator InputIt>
@@ -327,8 +348,21 @@ namespace sparrow
             );
         }
 
+        /**
+         * Erases the logical value at pos.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, pos.
+         */
         [[nodiscard]] SPARROW_API iterator erase(const_iterator pos);
 
+        /**
+         * Erases the logical range [first, last).
+         *
+         * This is implemented as a single structural mutation on the encoded runs, rather than
+         * repeating single-element erases.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, the erased range.
+         */
         [[nodiscard]] SPARROW_API iterator erase(const_iterator first, const_iterator last);
 
         SPARROW_API void push_back(const value_type& value);
@@ -448,6 +482,11 @@ namespace sparrow
         SPARROW_API void erase_encoded_values(size_type run_index, size_type count);
 
         SPARROW_API void merge_adjacent_runs(size_type left_run_index);
+
+        SPARROW_API void
+        insert_logical_values(size_type index, const value_type& value, size_type count, bool refresh_state = true);
+
+        SPARROW_API void erase_logical_values(size_type index, size_type count, bool refresh_state = true);
 
         SPARROW_API void
         insert_logical_value(size_type index, const value_type& value, bool refresh_state = true);
