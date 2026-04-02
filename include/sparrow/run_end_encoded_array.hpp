@@ -88,14 +88,14 @@ namespace sparrow
      *
      * This array is used to store data in a run-length encoded format, where each run is represented by a
      * length and a value. Compresses data by storing run lengths for consecutive identical values.
-    *
-    * Performance notes:
-    * - Random access is $O(\log R)$ where $R$ is the number of encoded runs.
-    * - Iterator increment is amortized $O(1)$ because iterators cache the current run.
-    * - Mutating operations work on the encoded run representation rather than the full logical length.
-    *   Inserting repeated copies of a single value and erasing a contiguous logical range both run in
-    *   $O(R_t)$, where $R_t$ is the number of encoded runs at or after the splice point.
-    * - Sliced arrays (non-zero offset) are read-only for mutation APIs.
+     *
+     * Performance notes:
+     * - Random access is $O(\log R)$ where $R$ is the number of encoded runs.
+     * - Iterator increment is amortized $O(1)$ because iterators cache the current run.
+     * - Mutating operations work on the encoded run representation rather than the full logical length.
+     *   Inserting repeated copies of a single value and erasing a contiguous logical range both run in
+     *   $O(R_t)$, where $R_t$ is the number of encoded runs at or after the splice point.
+     * - Sliced arrays (non-zero offset) are read-only for mutation APIs.
      *
      * Related Apache Arrow description and specification:
      * - https://arrow.apache.org/docs/dev/format/Intro.html#run-end-encoded-layout
@@ -361,7 +361,8 @@ namespace sparrow
          * This is implemented as a single structural mutation on the encoded runs, rather than
          * repeating single-element erases.
          *
-         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, the erased range.
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, the erased
+         * range.
          */
         [[nodiscard]] SPARROW_API iterator erase(const_iterator first, const_iterator last);
 
