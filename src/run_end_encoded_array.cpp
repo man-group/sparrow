@@ -23,6 +23,7 @@
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_registry.hpp"
 #include "sparrow/primitive_array.hpp"
+
 namespace sparrow
 {
     template <class T>
@@ -126,7 +127,6 @@ namespace sparrow
             }
             return {null_count, length};
         }
-
 
         template <class F>
         void with_mutable_acc_lengths(array& wrapper, F&& func)
@@ -691,11 +691,10 @@ namespace sparrow
         const auto logical_index = to_uint64(index);
         const auto insertion_end = checked_add_u64(logical_index, count);
         const auto appended_end = checked_add_u64(to_uint64(size()), count);
-        const auto update_acc_lengths =
-            [this](auto&& updater)
-            {
-                with_mutable_acc_lengths(p_acc_lengths_array, std::forward<decltype(updater)>(updater));
-            };
+        const auto update_acc_lengths = [this](auto&& updater)
+        {
+            with_mutable_acc_lengths(p_acc_lengths_array, std::forward<decltype(updater)>(updater));
+        };
 
         if (m_encoded_length == 0)
         {
@@ -823,9 +822,8 @@ namespace sparrow
         const auto count_delta = to_int64(count);
 
         const size_type first_run_index = find_run_index(index);
-        const size_type last_run_index = (index + count == size())
-                                            ? (m_encoded_length - 1)
-                                            : find_run_index(index + count - 1);
+        const size_type last_run_index = (index + count == size()) ? (m_encoded_length - 1)
+                                                                   : find_run_index(index + count - 1);
         const std::uint64_t first_run_start = run_start(first_run_index);
         const std::uint64_t last_run_end = run_end(last_run_index);
         const bool keep_left_fragment = index > first_run_start;
@@ -833,26 +831,24 @@ namespace sparrow
         const auto logical_index = to_uint64(index);
         const auto shortened_last_run_end = checked_sub_u64(last_run_end, count);
         const auto no_merge_candidate = std::numeric_limits<size_type>::max();
-        const auto update_acc_lengths =
-            [this](auto&& updater)
-            {
-                with_mutable_acc_lengths(p_acc_lengths_array, std::forward<decltype(updater)>(updater));
-            };
+        const auto update_acc_lengths = [this](auto&& updater)
+        {
+            with_mutable_acc_lengths(p_acc_lengths_array, std::forward<decltype(updater)>(updater));
+        };
         const auto erase_runs_and_update_acc_lengths =
             [this, &update_acc_lengths](size_type first_run, size_type run_count, auto&& updater)
+        {
+            erase_encoded_values(first_run, run_count);
+            update_acc_lengths(std::forward<decltype(updater)>(updater));
+        };
+        const auto refresh_and_merge = [this](size_type merge_candidate)
+        {
+            refresh_cache();
+            if (merge_candidate < m_encoded_length)
             {
-                erase_encoded_values(first_run, run_count);
-                update_acc_lengths(std::forward<decltype(updater)>(updater));
-            };
-        const auto refresh_and_merge =
-            [this](size_type merge_candidate)
-            {
-                refresh_cache();
-                if (merge_candidate < m_encoded_length)
-                {
-                    merge_adjacent_runs(merge_candidate);
-                }
-            };
+                merge_adjacent_runs(merge_candidate);
+            }
+        };
 
         if (first_run_index == last_run_index)
         {
@@ -894,7 +890,9 @@ namespace sparrow
             erase_runs_and_update_acc_lengths(
                 first_run_index + 1,
                 last_run_index - first_run_index - 1,
-                [first_run_index, last_run_index, logical_index, shortened_last_run_end, count_delta](auto& acc_lengths)
+                [first_run_index, last_run_index, logical_index, shortened_last_run_end, count_delta](
+                    auto& acc_lengths
+                )
                 {
                     set_acc_length_value(acc_lengths, first_run_index, logical_index);
                     set_acc_length_value(acc_lengths, last_run_index, shortened_last_run_end);
