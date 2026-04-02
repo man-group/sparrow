@@ -23,8 +23,6 @@
 #include "sparrow/layout/array_helper.hpp"
 #include "sparrow/layout/array_registry.hpp"
 #include "sparrow/primitive_array.hpp"
-#include "sparrow/union_array.hpp"
-
 namespace sparrow
 {
     template <class T>
