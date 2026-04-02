@@ -132,7 +132,11 @@ namespace sparrow
         }
         else
         {
-            return reference_type(*p_array, static_cast<std::size_t>(m_index));
+            return reference_type(
+                *p_array,
+                static_cast<std::size_t>(m_index),
+                static_cast<std::size_t>(m_run_end_index)
+            );
         }
     }
 

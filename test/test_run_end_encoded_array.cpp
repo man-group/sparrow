@@ -242,6 +242,28 @@ namespace sparrow
                 }
             }
 
+            SUBCASE("mutable iterator reuses cached run across split mutation")
+            {
+                auto iter = sparrow::next(rle_array.begin(), 4);
+                auto ref = *iter;
+
+                CHECK_NULLABLE_VARIANT_EQ(ref, std::uint64_t(42));
+
+                ref = test::make_u64_value(7);
+
+                CHECK_NULLABLE_VARIANT_EQ(ref, std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(static_cast<array_traits::const_reference>(ref), std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+
+                ref = test::make_u64_value(8);
+
+                CHECK_NULLABLE_VARIANT_EQ(ref, std::uint64_t(8));
+                CHECK_NULLABLE_VARIANT_EQ(static_cast<array_traits::const_reference>(ref), std::uint64_t(8));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(8));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
+            }
+
             SUBCASE("reverse_iterator")
             {
                 auto iter = rle_array.rbegin();

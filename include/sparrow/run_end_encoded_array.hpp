@@ -33,6 +33,7 @@ namespace sparrow
         using const_reference = array_traits::const_reference;
 
         SPARROW_API run_end_encoded_reference(run_end_encoded_array& array, std::size_t index);
+        SPARROW_API run_end_encoded_reference(run_end_encoded_array& array, std::size_t index, std::size_t run_index);
 
         run_end_encoded_reference(const run_end_encoded_reference&) = default;
         run_end_encoded_reference(run_end_encoded_reference&&) noexcept = default;
@@ -47,10 +48,13 @@ namespace sparrow
 
     private:
 
+        [[nodiscard]] SPARROW_API const_reference current_value() const;
+
         SPARROW_API void refresh();
 
         run_end_encoded_array* p_array = nullptr;
         std::size_t m_index = 0;
+        mutable std::size_t m_run_index = 0;
     };
 }
 

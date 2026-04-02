@@ -258,11 +258,21 @@ namespace sparrow
     }
 
     run_end_encoded_reference::run_end_encoded_reference(run_end_encoded_array& array, std::size_t index)
+        : run_end_encoded_reference(array, index, array.find_run_index(static_cast<std::uint64_t>(index)))
+    {
+    }
+
+    run_end_encoded_reference::run_end_encoded_reference(
+        run_end_encoded_array& array,
+        std::size_t index,
+        std::size_t run_index
+    )
         : base_type(
-              run_end_encoded_array::materialize_value(static_cast<const run_end_encoded_array&>(array)[index])
+              run_end_encoded_array::materialize_value(array.encoded_value(run_index))
           )
         , p_array(&array)
         , m_index(index)
+        , m_run_index(run_index)
     {
     }
 
@@ -290,14 +300,26 @@ namespace sparrow
 
     run_end_encoded_reference::operator const_reference() const
     {
-        return static_cast<const run_end_encoded_array&>(*p_array)[m_index];
+        return current_value();
+    }
+
+    auto run_end_encoded_reference::current_value() const -> const_reference
+    {
+        SPARROW_ASSERT_TRUE(m_index < p_array->size());
+
+        if (m_run_index >= p_array->m_encoded_length
+            || m_index < p_array->run_start(m_run_index)
+            || m_index >= p_array->run_end(m_run_index))
+        {
+            m_run_index = p_array->find_run_index(static_cast<std::uint64_t>(m_index));
+        }
+
+        return p_array->encoded_value(m_run_index);
     }
 
     void run_end_encoded_reference::refresh()
     {
-        static_cast<base_type&>(*this) = run_end_encoded_array::materialize_value(
-            static_cast<const run_end_encoded_array&>(*p_array)[m_index]
-        );
+        static_cast<base_type&>(*this) = run_end_encoded_array::materialize_value(current_value());
     }
 
     auto run_end_encoded_array::size() const -> size_type
