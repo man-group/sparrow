@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if defined(__cpp_lib_format)
+#if __has_include(<format>)
 #    include <format>
 #endif
+
 #include <string>
 #include <vector>
 
