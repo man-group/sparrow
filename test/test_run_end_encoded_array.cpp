@@ -363,9 +363,7 @@ namespace sparrow
 
             SUBCASE("insert inside run splits encoding")
             {
-                static_cast<void>(
-                    rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7))
-                );
+                rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7));
 
                 REQUIRE_EQ(rle_array.size(), 9u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
@@ -386,9 +384,7 @@ namespace sparrow
 
             SUBCASE("insert count inside run updates encoding once")
             {
-                static_cast<void>(
-                    rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7), 3)
-                );
+                rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7), 3);
 
                 REQUIRE_EQ(rle_array.size(), 11u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
@@ -453,9 +449,7 @@ namespace sparrow
 
             SUBCASE("erase range merges adjacent runs")
             {
-                static_cast<void>(
-                    rle_array.erase(sparrow::next(rle_array.cbegin(), 3), sparrow::next(rle_array.cbegin(), 6))
-                );
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 3), sparrow::next(rle_array.cbegin(), 6));
 
                 REQUIRE_EQ(rle_array.size(), 5u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
@@ -476,9 +470,7 @@ namespace sparrow
 
             SUBCASE("erase range inside a run shrinks it once")
             {
-                static_cast<void>(
-                    rle_array.erase(sparrow::next(rle_array.cbegin(), 4), sparrow::next(rle_array.cbegin(), 6))
-                );
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 4), sparrow::next(rle_array.cbegin(), 6));
 
                 REQUIRE_EQ(rle_array.size(), 6u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
@@ -499,9 +491,7 @@ namespace sparrow
 
             SUBCASE("erase range across runs keeps both outer fragments")
             {
-                static_cast<void>(
-                    rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 4))
-                );
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 4));
 
                 REQUIRE_EQ(rle_array.size(), 6u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
@@ -522,9 +512,7 @@ namespace sparrow
 
             SUBCASE("erase range across runs keeps left fragment only")
             {
-                static_cast<void>(
-                    rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 7))
-                );
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 7));
 
                 REQUIRE_EQ(rle_array.size(), 3u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
@@ -540,9 +528,7 @@ namespace sparrow
 
             SUBCASE("erase range across runs keeps right fragment only")
             {
-                static_cast<void>(
-                    rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 4))
-                );
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 4));
 
                 REQUIRE_EQ(rle_array.size(), 5u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
@@ -561,9 +547,7 @@ namespace sparrow
 
             SUBCASE("erase range across runs removes whole middle section")
             {
-                static_cast<void>(
-                    rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 7))
-                );
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 7));
 
                 REQUIRE_EQ(rle_array.size(), 2u);
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));

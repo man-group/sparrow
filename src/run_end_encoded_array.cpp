@@ -156,9 +156,7 @@ namespace sparrow
             using acc_type = typename ARRAY::inner_value_type;
             SPARROW_ASSERT_TRUE(std::in_range<acc_type>(value));
             const auto insert_pos = std::next(acc_lengths.cbegin(), static_cast<std::ptrdiff_t>(pos));
-            static_cast<void>(
-                acc_lengths.insert(insert_pos, nullable<acc_type>(static_cast<acc_type>(value), true))
-            );
+            acc_lengths.insert(insert_pos, nullable<acc_type>(static_cast<acc_type>(value), true));
         }
 
         template <class ARRAY>
@@ -170,7 +168,7 @@ namespace sparrow
             }
             const auto first = std::next(acc_lengths.cbegin(), static_cast<std::ptrdiff_t>(pos));
             const auto last = std::next(first, static_cast<std::ptrdiff_t>(count));
-            static_cast<void>(acc_lengths.erase(first, last));
+            acc_lengths.erase(first, last);
         }
 
         template <class ARRAY>
@@ -212,14 +210,16 @@ namespace sparrow
                         std::visit(
                             [&](const auto& typed_value)
                             {
-                                if constexpr (std::same_as<std::decay_t<decltype(typed_value)>, typename child_array_type::value_type>)
+                                if constexpr (std::same_as<
+                                                  std::decay_t<decltype(typed_value)>,
+                                                  typename child_array_type::value_type>)
                                 {
                                     auto& mutable_child = const_cast<child_array_type&>(child_impl);
                                     auto insert_pos = std::next(
                                         mutable_child.cbegin(),
                                         static_cast<std::ptrdiff_t>(pos)
                                     );
-                                    static_cast<void>(mutable_child.insert(insert_pos, typed_value, 1));
+                                    mutable_child.insert(insert_pos, typed_value, 1);
                                     inserted = true;
                                 }
                             },
@@ -516,13 +516,13 @@ namespace sparrow
 
     void run_end_encoded_array::push_back(const value_type& value)
     {
-        static_cast<void>(insert(cend(), value));
+        insert(cend(), value);
     }
 
     void run_end_encoded_array::pop_back()
     {
         SPARROW_ASSERT_TRUE(!empty());
-        static_cast<void>(erase(sparrow::next(cbegin(), static_cast<std::ptrdiff_t>(size() - 1))));
+        erase(sparrow::next(cbegin(), static_cast<std::ptrdiff_t>(size() - 1)));
     }
 
     void run_end_encoded_array::resize(size_type new_length, const value_type& value)
@@ -530,11 +530,11 @@ namespace sparrow
         const size_type current_size = size();
         if (new_length < current_size)
         {
-            static_cast<void>(erase(sparrow::next(cbegin(), static_cast<std::ptrdiff_t>(new_length)), cend()));
+           erase(sparrow::next(cbegin(), static_cast<std::ptrdiff_t>(new_length)), cend());
         }
         else if (new_length > current_size)
         {
-            static_cast<void>(insert(cend(), value, new_length - current_size));
+            insert(cend(), value, new_length - current_size);
         }
     }
 
@@ -542,7 +542,7 @@ namespace sparrow
     {
         if (!empty())
         {
-            static_cast<void>(erase(cbegin(), cend()));
+            erase(cbegin(), cend());
         }
     }
 

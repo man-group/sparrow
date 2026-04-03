@@ -308,7 +308,7 @@ namespace sparrow
          *
          * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs at or after pos.
          */
-        [[nodiscard]] SPARROW_API iterator insert(const_iterator pos, const value_type& value);
+        SPARROW_API iterator insert(const_iterator pos, const value_type& value);
 
         /**
          * Inserts count copies of value before pos.
@@ -318,11 +318,11 @@ namespace sparrow
          *
          * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs at or after pos.
          */
-        [[nodiscard]] SPARROW_API iterator insert(const_iterator pos, const value_type& value, size_type count);
+        SPARROW_API iterator insert(const_iterator pos, const value_type& value, size_type count);
 
         template <std::input_iterator InputIt>
             requires std::constructible_from<value_type, typename std::iterator_traits<InputIt>::value_type>
-        [[nodiscard]] iterator insert(const_iterator pos, InputIt first, InputIt last)
+        iterator insert(const_iterator pos, InputIt first, InputIt last)
         {
             const size_type index = static_cast<size_type>(std::distance(cbegin(), pos));
             size_type inserted_count = 0;
@@ -338,7 +338,7 @@ namespace sparrow
 
         template <std::ranges::input_range R>
             requires std::constructible_from<value_type, std::ranges::range_value_t<R>>
-        [[nodiscard]] iterator insert(const_iterator pos, R&& range)
+        iterator insert(const_iterator pos, R&& range)
         {
             return insert(
                 pos,
@@ -352,7 +352,7 @@ namespace sparrow
          *
          * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, pos.
          */
-        [[nodiscard]] SPARROW_API iterator erase(const_iterator pos);
+        SPARROW_API iterator erase(const_iterator pos);
 
         /**
          * Erases the logical range [first, last).
@@ -363,7 +363,7 @@ namespace sparrow
          * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, the erased
          * range.
          */
-        [[nodiscard]] SPARROW_API iterator erase(const_iterator first, const_iterator last);
+        SPARROW_API iterator erase(const_iterator first, const_iterator last);
 
         SPARROW_API void push_back(const value_type& value);
 
