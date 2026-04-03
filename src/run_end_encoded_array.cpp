@@ -103,29 +103,37 @@ namespace sparrow
                 return {0, length};
             }
 
-            std::int64_t null_count = 0;
+            const auto is_null_run = [&has_value](std::size_t i)
+            {
+                return !has_value(i);
+            };
+
+            auto accumulate_null_runs = [acc_length_data](auto& run_indices)
+            {
+                return std::accumulate(
+                    run_indices.begin(),
+                    run_indices.end(),
+                    std::int64_t{0},
+                    [acc_length_data](std::int64_t acc, std::size_t i)
+                    {
+                        return acc + run_length_at(acc_length_data, i);
+                    }
+                );
+            };
+
+            auto null_run_indices = std::views::iota(std::size_t{0}, raw_size)
+                                    | std::views::filter(is_null_run);
+
             if (raw_null_count < 0)
             {
-                for (std::size_t i = 0; i < raw_size; ++i)
-                {
-                    if (!has_value(i))
-                    {
-                        null_count += run_length_at(acc_length_data, i);
-                    }
-                }
-                return {null_count, length};
+                return {accumulate_null_runs(null_run_indices), length};
             }
 
-            std::int64_t remaining_null_runs = raw_null_count;
-            for (std::size_t i = 0; i < raw_size && remaining_null_runs != 0; ++i)
-            {
-                if (!has_value(i))
-                {
-                    null_count += run_length_at(acc_length_data, i);
-                    --remaining_null_runs;
-                }
-            }
-            return {null_count, length};
+            auto limited_null_run_indices = null_run_indices
+                                            | std::views::take(static_cast<std::size_t>(raw_null_count))
+                                            | std::views::common;
+
+            return {accumulate_null_runs(limited_null_run_indices), length};
         }
 
         template <class F>
@@ -405,12 +413,12 @@ namespace sparrow
 
     auto run_end_encoded_array::begin() -> iterator
     {
-        return iterator(this, 0, 0);
+        return {this, 0, 0};
     }
 
     auto run_end_encoded_array::end() -> iterator
     {
-        return iterator(this, size(), m_encoded_length);
+        return {this, size(), m_encoded_length};
     }
 
     auto run_end_encoded_array::begin() const -> const_iterator
@@ -425,12 +433,12 @@ namespace sparrow
 
     auto run_end_encoded_array::cbegin() const -> const_iterator
     {
-        return const_iterator(this, 0, 0);
+        return {this, 0, 0};
     }
 
     auto run_end_encoded_array::cend() const -> const_iterator
     {
-        return const_iterator(this, size(), m_encoded_length);
+        return {this, size(), m_encoded_length};
     }
 
     auto run_end_encoded_array::rbegin() -> reverse_iterator
@@ -490,7 +498,7 @@ namespace sparrow
 
     auto run_end_encoded_array::insert(const_iterator pos, const value_type& value, size_type count) -> iterator
     {
-        const size_type index = static_cast<size_type>(std::distance(cbegin(), pos));
+        const auto index = static_cast<size_type>(std::distance(cbegin(), pos));
         if (count != 0)
         {
             insert_logical_values(index, value, count);
@@ -505,8 +513,8 @@ namespace sparrow
 
     auto run_end_encoded_array::erase(const_iterator first, const_iterator last) -> iterator
     {
-        const size_type index = static_cast<size_type>(std::distance(cbegin(), first));
-        const size_type count = static_cast<size_type>(std::distance(first, last));
+        const auto index = static_cast<size_type>(std::distance(cbegin(), first));
+        const auto count = static_cast<size_type>(std::distance(first, last));
         if (count != 0)
         {
             erase_logical_values(index, count);
@@ -530,7 +538,7 @@ namespace sparrow
         const size_type current_size = size();
         if (new_length < current_size)
         {
-           erase(sparrow::next(cbegin(), static_cast<std::ptrdiff_t>(new_length)), cend());
+            erase(sparrow::next(cbegin(), static_cast<std::ptrdiff_t>(new_length)), cend());
         }
         else if (new_length > current_size)
         {
@@ -548,24 +556,7 @@ namespace sparrow
 
     bool operator==(const run_end_encoded_array& lhs, const run_end_encoded_array& rhs)
     {
-        if (lhs.size() != rhs.size())
-        {
-            return false;
-        }
-
-        auto lhs_it = lhs.cbegin();
-        auto rhs_it = rhs.cbegin();
-        const auto lhs_end = lhs.cend();
-
-        for (; lhs_it != lhs_end; ++lhs_it, ++rhs_it)
-        {
-            if (!(*lhs_it == *rhs_it))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin());
     }
 
     auto run_end_encoded_array::get_acc_lengths_ptr(const array& ar) -> acc_length_ptr_variant_type
