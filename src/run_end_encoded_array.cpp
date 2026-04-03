@@ -218,9 +218,7 @@ namespace sparrow
                         std::visit(
                             [&](const auto& typed_value)
                             {
-                                if constexpr (std::same_as<
-                                                  std::decay_t<decltype(typed_value)>,
-                                                  typename child_array_type::value_type>)
+                                if constexpr (std::same_as<std::decay_t<decltype(typed_value)>, typename child_array_type::value_type>)
                                 {
                                     auto& mutable_child = const_cast<child_array_type&>(child_impl);
                                     auto insert_pos = std::next(
