@@ -409,6 +409,48 @@ namespace sparrow
                 CHECK_EQ(run_ends[6].value(), 11);
             }
 
+            SUBCASE("replace inside run splits encoding")
+            {
+                rle_array[4] = test::make_u64_value(7);
+
+                REQUIRE_EQ(rle_array.size(), 8u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 7u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 6);
+                CHECK_EQ(run_ends[5].value(), 7);
+                CHECK_EQ(run_ends[6].value(), 8);
+            }
+
+            SUBCASE("replace with adjacent run value merges encoding")
+            {
+                rle_array[5] = test::make_u64_value(0, false);
+
+                REQUIRE_EQ(rle_array.size(), 8u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(42));
+                CHECK_FALSE(rle_array[5].has_value());
+                CHECK_FALSE(rle_array[6].has_value());
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                const auto encoded_values = test::get_encoded_values_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                REQUIRE_EQ(encoded_values.size(), 5u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 5);
+                CHECK_EQ(run_ends[3].value(), 7);
+                CHECK_EQ(run_ends[4].value(), 8);
+                CHECK_FALSE(encoded_values[3].has_value());
+            }
+
             SUBCASE("erase range merges adjacent runs")
             {
                 static_cast<void>(
