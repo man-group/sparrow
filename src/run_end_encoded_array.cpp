@@ -573,7 +573,6 @@ namespace sparrow
         return true;
     }
 
-
     auto run_end_encoded_array::get_acc_lengths_ptr(const array& ar) -> acc_length_ptr_variant_type
     {
         return ar.visit(
