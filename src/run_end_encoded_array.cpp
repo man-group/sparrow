@@ -271,11 +271,9 @@ namespace sparrow
 
     run_end_encoded_array::run_end_encoded_array(arrow_proxy proxy)
         : m_proxy(std::move(proxy))
-        , m_encoded_length(m_proxy.children()[0].length())
-        , p_acc_lengths_array(array(m_proxy.children()[0].view()))
-        , p_encoded_values_array(array(m_proxy.children()[1].view()))
-        , m_acc_lengths(run_end_encoded_array::get_acc_lengths_ptr(p_acc_lengths_array))
+        , m_encoded_length(0)
     {
+        rebind_children_from_proxy();
     }
 
     run_end_encoded_array::run_end_encoded_array(const self_type& rhs)
@@ -290,10 +288,7 @@ namespace sparrow
         if (this != &rhs)
         {
             m_proxy = rhs.m_proxy;
-            m_encoded_length = rhs.m_encoded_length;
-            p_acc_lengths_array = array(m_proxy.children()[0].view());
-            p_encoded_values_array = array(m_proxy.children()[1].view());
-            m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(p_acc_lengths_array);
+            rebind_children_from_proxy();
         }
         return *this;
     }
@@ -658,6 +653,58 @@ namespace sparrow
         );
     }
 
+    void run_end_encoded_array::rebind_children_from_proxy()
+    {
+        m_encoded_length = m_proxy.children()[0].length();
+        p_acc_lengths_array = array(m_proxy.children()[0].view());
+        p_encoded_values_array = array(m_proxy.children()[1].view());
+        m_acc_lengths = run_end_encoded_array::get_acc_lengths_ptr(p_acc_lengths_array);
+    }
+
+    void run_end_encoded_array::insert_acc_length(size_type pos, std::uint64_t value)
+    {
+        with_mutable_acc_lengths(
+            p_acc_lengths_array,
+            [pos, value](auto& acc_lengths)
+            {
+                insert_acc_length_value(acc_lengths, pos, value);
+            }
+        );
+    }
+
+    void run_end_encoded_array::erase_acc_lengths(size_type pos, size_type count)
+    {
+        with_mutable_acc_lengths(
+            p_acc_lengths_array,
+            [pos, count](auto& acc_lengths)
+            {
+                erase_acc_length_values(acc_lengths, pos, count);
+            }
+        );
+    }
+
+    void run_end_encoded_array::set_acc_length(size_type index, std::uint64_t value)
+    {
+        with_mutable_acc_lengths(
+            p_acc_lengths_array,
+            [index, value](auto& acc_lengths)
+            {
+                set_acc_length_value(acc_lengths, index, value);
+            }
+        );
+    }
+
+    void run_end_encoded_array::shift_acc_lengths(size_type start_index, std::int64_t delta)
+    {
+        with_mutable_acc_lengths(
+            p_acc_lengths_array,
+            [start_index, delta](auto& acc_lengths)
+            {
+                shift_acc_length_values(acc_lengths, start_index, delta);
+            }
+        );
+    }
+
     void run_end_encoded_array::merge_adjacent_runs(size_type left_run_index)
     {
         if ((left_run_index + 1) >= m_encoded_length
@@ -667,15 +714,23 @@ namespace sparrow
         }
 
         const auto merged_run_end = run_end(left_run_index + 1);
-        with_mutable_acc_lengths(
-            p_acc_lengths_array,
-            [left_run_index, merged_run_end](auto& acc_lengths)
-            {
-                set_acc_length_value(acc_lengths, left_run_index, merged_run_end);
-                erase_acc_length_values(acc_lengths, left_run_index + 1, 1);
-            }
-        );
+        set_acc_length(left_run_index, merged_run_end);
+        erase_acc_lengths(left_run_index + 1, 1);
         erase_encoded_values(left_run_index + 1, 1);
+    }
+
+    void run_end_encoded_array::refresh_and_merge_adjacent_runs(std::optional<size_type> merge_candidate)
+    {
+        if (!merge_candidate.has_value())
+        {
+            return;
+        }
+
+        refresh_cache();
+        if (*merge_candidate < m_encoded_length)
+        {
+            merge_adjacent_runs(*merge_candidate);
+        }
     }
 
     void run_end_encoded_array::insert_logical_values(
@@ -697,20 +752,11 @@ namespace sparrow
         const auto logical_index = to_uint64(index);
         const auto insertion_end = checked_add_u64(logical_index, count);
         const auto appended_end = checked_add_u64(to_uint64(size()), count);
-        const auto update_acc_lengths = [this](auto&& updater)
-        {
-            with_mutable_acc_lengths(p_acc_lengths_array, std::forward<decltype(updater)>(updater));
-        };
 
         if (m_encoded_length == 0)
         {
             insert_encoded_value(0, value);
-            update_acc_lengths(
-                [count](auto& acc_lengths)
-                {
-                    insert_acc_length_value(acc_lengths, 0, count);
-                }
-            );
+            insert_acc_length(0, count);
             finalize_mutation(refresh_state);
             return;
         }
@@ -719,22 +765,12 @@ namespace sparrow
         {
             if (encoded_value_equals(m_encoded_length - 1, value))
             {
-                update_acc_lengths(
-                    [this, count_delta](auto& acc_lengths)
-                    {
-                        shift_acc_length_values(acc_lengths, m_encoded_length - 1, count_delta);
-                    }
-                );
+                shift_acc_lengths(m_encoded_length - 1, count_delta);
             }
             else
             {
                 insert_encoded_value(m_encoded_length, value);
-                update_acc_lengths(
-                    [this, appended_end](auto& acc_lengths)
-                    {
-                        insert_acc_length_value(acc_lengths, m_encoded_length, appended_end);
-                    }
-                );
+                insert_acc_length(m_encoded_length, appended_end);
             }
             finalize_mutation(refresh_state);
             return;
@@ -749,32 +785,17 @@ namespace sparrow
         {
             if (run_index > 0 && encoded_value_equals(run_index - 1, value))
             {
-                update_acc_lengths(
-                    [run_index, count_delta](auto& acc_lengths)
-                    {
-                        shift_acc_length_values(acc_lengths, run_index - 1, count_delta);
-                    }
-                );
+                shift_acc_lengths(run_index - 1, count_delta);
             }
             else if (encoded_value_equals(run_index, value))
             {
-                update_acc_lengths(
-                    [run_index, count_delta](auto& acc_lengths)
-                    {
-                        shift_acc_length_values(acc_lengths, run_index, count_delta);
-                    }
-                );
+                shift_acc_lengths(run_index, count_delta);
             }
             else
             {
                 insert_encoded_value(run_index, value);
-                update_acc_lengths(
-                    [run_index, insertion_end, count_delta](auto& acc_lengths)
-                    {
-                        insert_acc_length_value(acc_lengths, run_index, insertion_end);
-                        shift_acc_length_values(acc_lengths, run_index + 1, count_delta);
-                    }
-                );
+                insert_acc_length(run_index, insertion_end);
+                shift_acc_lengths(run_index + 1, count_delta);
             }
             finalize_mutation(refresh_state);
             return;
@@ -782,12 +803,7 @@ namespace sparrow
 
         if (encoded_value_equals(run_index, value))
         {
-            update_acc_lengths(
-                [run_index, count_delta](auto& acc_lengths)
-                {
-                    shift_acc_length_values(acc_lengths, run_index, count_delta);
-                }
-            );
+            shift_acc_lengths(run_index, count_delta);
             finalize_mutation(refresh_state);
             return;
         }
@@ -796,15 +812,10 @@ namespace sparrow
         insert_encoded_value(run_index + 1, value);
         insert_encoded_value(run_index + 2, current_run_value);
 
-        update_acc_lengths(
-            [run_index, logical_index, insertion_end, shifted_run_end, count_delta](auto& acc_lengths)
-            {
-                set_acc_length_value(acc_lengths, run_index, logical_index);
-                insert_acc_length_value(acc_lengths, run_index + 1, insertion_end);
-                insert_acc_length_value(acc_lengths, run_index + 2, shifted_run_end);
-                shift_acc_length_values(acc_lengths, run_index + 3, count_delta);
-            }
-        );
+        set_acc_length(run_index, logical_index);
+        insert_acc_length(run_index + 1, insertion_end);
+        insert_acc_length(run_index + 2, shifted_run_end);
+        shift_acc_lengths(run_index + 3, count_delta);
         finalize_mutation(refresh_state);
     }
 
@@ -836,104 +847,52 @@ namespace sparrow
         const bool keep_right_fragment = (index + count) < last_run_end;
         const auto logical_index = to_uint64(index);
         const auto shortened_last_run_end = checked_sub_u64(last_run_end, count);
-        const auto no_merge_candidate = std::numeric_limits<size_type>::max();
-        const auto update_acc_lengths = [this](auto&& updater)
-        {
-            with_mutable_acc_lengths(p_acc_lengths_array, std::forward<decltype(updater)>(updater));
-        };
-        const auto erase_runs_and_update_acc_lengths =
-            [this, &update_acc_lengths](size_type first_run, size_type run_count, auto&& updater)
-        {
-            erase_encoded_values(first_run, run_count);
-            update_acc_lengths(std::forward<decltype(updater)>(updater));
-        };
-        const auto refresh_and_merge = [this](size_type merge_candidate)
-        {
-            refresh_cache();
-            if (merge_candidate < m_encoded_length)
-            {
-                merge_adjacent_runs(merge_candidate);
-            }
-        };
 
         if (first_run_index == last_run_index)
         {
             if (keep_left_fragment || keep_right_fragment)
             {
-                update_acc_lengths(
-                    [first_run_index, shortened_last_run_end, count_delta](auto& acc_lengths)
-                    {
-                        set_acc_length_value(acc_lengths, first_run_index, shortened_last_run_end);
-                        shift_acc_length_values(acc_lengths, first_run_index + 1, -count_delta);
-                    }
-                );
+                set_acc_length(first_run_index, shortened_last_run_end);
+                shift_acc_lengths(first_run_index + 1, -count_delta);
                 finalize_mutation(refresh_state);
                 return;
             }
 
-            erase_runs_and_update_acc_lengths(
-                first_run_index,
-                1,
-                [first_run_index, count_delta](auto& acc_lengths)
-                {
-                    erase_acc_length_values(acc_lengths, first_run_index, 1);
-                    shift_acc_length_values(acc_lengths, first_run_index, -count_delta);
-                }
+            erase_encoded_values(first_run_index, 1);
+            erase_acc_lengths(first_run_index, 1);
+            shift_acc_lengths(first_run_index, -count_delta);
+            refresh_and_merge_adjacent_runs(
+                first_run_index > 0 ? std::optional<size_type>(first_run_index - 1) : std::nullopt
             );
-
-            if (first_run_index > 0)
-            {
-                refresh_and_merge(first_run_index - 1);
-            }
             finalize_mutation(refresh_state);
             return;
         }
 
-        size_type merge_candidate = no_merge_candidate;
+        std::optional<size_type> merge_candidate;
 
         if (keep_left_fragment && keep_right_fragment)
         {
-            erase_runs_and_update_acc_lengths(
-                first_run_index + 1,
-                last_run_index - first_run_index - 1,
-                [first_run_index, last_run_index, logical_index, shortened_last_run_end, count_delta](
-                    auto& acc_lengths
-                )
-                {
-                    set_acc_length_value(acc_lengths, first_run_index, logical_index);
-                    set_acc_length_value(acc_lengths, last_run_index, shortened_last_run_end);
-                    erase_acc_length_values(acc_lengths, first_run_index + 1, last_run_index - first_run_index - 1);
-                    shift_acc_length_values(acc_lengths, first_run_index + 2, -count_delta);
-                }
-            );
+            erase_encoded_values(first_run_index + 1, last_run_index - first_run_index - 1);
+            set_acc_length(first_run_index, logical_index);
+            set_acc_length(last_run_index, shortened_last_run_end);
+            erase_acc_lengths(first_run_index + 1, last_run_index - first_run_index - 1);
+            shift_acc_lengths(first_run_index + 2, -count_delta);
             merge_candidate = first_run_index;
         }
         else if (keep_left_fragment)
         {
-            erase_runs_and_update_acc_lengths(
-                first_run_index + 1,
-                last_run_index - first_run_index,
-                [first_run_index, logical_index, last_run_index, count_delta](auto& acc_lengths)
-                {
-                    set_acc_length_value(acc_lengths, first_run_index, logical_index);
-                    erase_acc_length_values(acc_lengths, first_run_index + 1, last_run_index - first_run_index);
-                    shift_acc_length_values(acc_lengths, first_run_index + 1, -count_delta);
-                }
-            );
+            erase_encoded_values(first_run_index + 1, last_run_index - first_run_index);
+            set_acc_length(first_run_index, logical_index);
+            erase_acc_lengths(first_run_index + 1, last_run_index - first_run_index);
+            shift_acc_lengths(first_run_index + 1, -count_delta);
             merge_candidate = first_run_index;
         }
         else if (keep_right_fragment)
         {
-            erase_runs_and_update_acc_lengths(
-                first_run_index,
-                last_run_index - first_run_index,
-                [first_run_index, last_run_index, shortened_last_run_end, count_delta](auto& acc_lengths)
-                {
-                    set_acc_length_value(acc_lengths, last_run_index, shortened_last_run_end);
-                    erase_acc_length_values(acc_lengths, first_run_index, last_run_index - first_run_index);
-                    shift_acc_length_values(acc_lengths, first_run_index + 1, -count_delta);
-                }
-            );
+            erase_encoded_values(first_run_index, last_run_index - first_run_index);
+            set_acc_length(last_run_index, shortened_last_run_end);
+            erase_acc_lengths(first_run_index, last_run_index - first_run_index);
+            shift_acc_lengths(first_run_index + 1, -count_delta);
             if (first_run_index > 0)
             {
                 merge_candidate = first_run_index - 1;
@@ -941,26 +900,16 @@ namespace sparrow
         }
         else
         {
-            erase_runs_and_update_acc_lengths(
-                first_run_index,
-                last_run_index - first_run_index + 1,
-                [first_run_index, last_run_index, count_delta](auto& acc_lengths)
-                {
-                    erase_acc_length_values(acc_lengths, first_run_index, last_run_index - first_run_index + 1);
-                    shift_acc_length_values(acc_lengths, first_run_index, -count_delta);
-                }
-            );
+            erase_encoded_values(first_run_index, last_run_index - first_run_index + 1);
+            erase_acc_lengths(first_run_index, last_run_index - first_run_index + 1);
+            shift_acc_lengths(first_run_index, -count_delta);
             if (first_run_index > 0)
             {
                 merge_candidate = first_run_index - 1;
             }
         }
 
-        if (merge_candidate != no_merge_candidate)
-        {
-            refresh_and_merge(merge_candidate);
-        }
-
+        refresh_and_merge_adjacent_runs(merge_candidate);
         finalize_mutation(refresh_state);
     }
 

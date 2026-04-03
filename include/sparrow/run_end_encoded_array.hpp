@@ -481,7 +481,19 @@ namespace sparrow
 
         SPARROW_API void erase_encoded_values(size_type run_index, size_type count);
 
+        SPARROW_API void rebind_children_from_proxy();
+
+        SPARROW_API void insert_acc_length(size_type pos, std::uint64_t value);
+
+        SPARROW_API void erase_acc_lengths(size_type pos, size_type count);
+
+        SPARROW_API void set_acc_length(size_type index, std::uint64_t value);
+
+        SPARROW_API void shift_acc_lengths(size_type start_index, std::int64_t delta);
+
         SPARROW_API void merge_adjacent_runs(size_type left_run_index);
+
+        SPARROW_API void refresh_and_merge_adjacent_runs(std::optional<size_type> merge_candidate);
 
         SPARROW_API void
         insert_logical_values(size_type index, const value_type& value, size_type count, bool refresh_state = true);
