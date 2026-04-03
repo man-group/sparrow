@@ -257,6 +257,7 @@ set(SPARROW_HEADERS
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/fixed_width_binary_reference.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/interval_types.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_concept.hpp
+    ${SPARROW_INCLUDE_DIR}/sparrow/layout/arrow_schema_array_factory.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_iterator.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/layout_utils.hpp
     ${SPARROW_INCLUDE_DIR}/sparrow/layout/list_value.hpp
@@ -343,6 +344,7 @@ set(SPARROW_SRC
     ${SPARROW_SOURCE_DIR}/arrow_interface/private_data_ownership.cpp
     ${SPARROW_SOURCE_DIR}/debug/copy_tracker.cpp
     ${SPARROW_SOURCE_DIR}/buffer/dynamic_bitset/null_count_policy.cpp
+    ${SPARROW_SOURCE_DIR}/layout/arrow_schema_array_factory.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_factory.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_helper.cpp
     ${SPARROW_SOURCE_DIR}/layout/array_registry.cpp

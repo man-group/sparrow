@@ -30,6 +30,7 @@
 #include "sparrow/layout/array_bitmap_base.hpp"
 #include "sparrow/layout/array_factory.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
@@ -530,55 +531,29 @@ namespace sparrow
         std::optional<METADATA_RANGE> metadata
     ) -> arrow_proxy
     {
-        const auto n_children = children.size();
-        ArrowSchema** child_schemas = new ArrowSchema*[n_children];
-        ArrowArray** child_arrays = new ArrowArray*[n_children];
+        std::size_t size = 0;
 
-        const auto size = children.empty() ? 0 : children[0].size();
-
-        for (std::size_t i = 0; i < n_children; ++i)
+        if (!std::ranges::empty(children))
         {
-            auto& child = children[i];
-            SPARROW_ASSERT_TRUE(child.size() == size);
-            auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(child));
-            child_arrays[i] = new ArrowArray(std::move(flat_arr));
-            child_schemas[i] = new ArrowSchema(std::move(flat_schema));
+            size = std::ranges::begin(children)->size();
         }
 
-        const bool bitmap_has_value = bitmap.has_value();
-        const auto null_count = bitmap_has_value ? bitmap->null_count() : 0;
-        const auto flags = bitmap_has_value
-                               ? std::make_optional<std::unordered_set<sparrow::ArrowFlag>>({ArrowFlag::NULLABLE})
-                               : std::nullopt;
+        for (const auto& child : children)
+        {
+            SPARROW_ASSERT_TRUE(child.size() == size);
+        }
 
-        ArrowSchema schema = make_arrow_schema(
-            std::string("+s"),                    // format
-            std::move(name),                      // name
-            std::move(metadata),                  // metadata
-            flags,                                // flags,
-            child_schemas,                        // children
-            repeat_view<bool>(true, n_children),  // children_ownership
-            nullptr,                              // dictionary
-            true                                  // dictionary ownership
+        const bool nullable = bitmap.has_value();
+        ArrowSchema schema = detail::make_struct_arrow_schema(
+            children,
+            nullable,
+            std::move(name),
+            std::move(metadata)
         );
-
-        buffer<uint8_t> bitmap_buffer = bitmap_has_value
-                                            ? std::move(*bitmap).extract_storage()
-                                            : buffer<uint8_t>{nullptr, 0, buffer<uint8_t>::default_allocator{}};
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(1);
-        arr_buffs.emplace_back(std::move(bitmap_buffer));
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(size),        // length
-            static_cast<std::int64_t>(null_count),  // null_count
-            0,                                      // offset
-            std::move(arr_buffs),
-            child_arrays,                         // children
-            repeat_view<bool>(true, n_children),  // children_ownership
-            nullptr,                              // dictionary
-            true                                  // dictionary ownership
+        ArrowArray arr = detail::make_struct_arrow_array(
+            static_cast<std::int64_t>(size),
+            std::move(bitmap),
+            std::forward<CHILDREN_RANGE>(children)
         );
         return arrow_proxy{std::move(arr), std::move(schema)};
     }

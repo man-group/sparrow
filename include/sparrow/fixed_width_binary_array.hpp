@@ -30,6 +30,7 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/fixed_width_binary_array_utils.hpp"
 #include "sparrow/layout/fixed_width_binary_reference.hpp"
 #include "sparrow/layout/layout_utils.hpp"
@@ -854,41 +855,16 @@ namespace sparrow
             element_size == 0 ? (data_buffer.size() == 0) : (data_buffer.size() % element_size == 0)
         );
 
-        const auto null_count = bitmap.has_value() ? bitmap->null_count() : 0;
-        std::string format_str = "w:" + std::to_string(element_size);
-        const std::optional<std::unordered_set<ArrowFlag>>
-            flags = bitmap.has_value()
-                        ? std::make_optional<std::unordered_set<ArrowFlag>>({ArrowFlag::NULLABLE})
-                        : std::nullopt;
-
-        ArrowSchema schema = make_arrow_schema(
-            std::move(format_str),
-            std::move(name),             // name
-            std::move(metadata),         // metadata
-            flags,                       // flags,
-            nullptr,                     // children
-            repeat_view<bool>(true, 0),  // children_ownership
-            nullptr,                     // dictionary
-            true                         // dictionary ownership
-
+        ArrowSchema schema = detail::make_fixed_width_binary_arrow_schema(
+            "w:" + std::to_string(element_size),
+            bitmap.has_value(),
+            std::move(name),
+            std::move(metadata)
         );
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(2);
-        arr_buffs.emplace_back(
-            bitmap.has_value() ? std::move(*bitmap).extract_storage()
-                               : buffer<std::uint8_t>{nullptr, 0, validity_bitmap::default_allocator()}
-        );
-        arr_buffs.emplace_back(std::move(data_buffer).extract_storage());
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<std::int64_t>(element_count),  // length
-            static_cast<int64_t>(null_count),
-            0,  // offset
-            std::move(arr_buffs),
-            nullptr,                     // children
-            repeat_view<bool>(true, 0),  // children_ownership
-            nullptr,                     // dictionary
-            true                         // dictionary ownership
+        ArrowArray arr = detail::make_fixed_width_binary_arrow_array(
+            static_cast<std::int64_t>(element_count),
+            std::move(bitmap),
+            std::move(data_buffer).extract_storage()
         );
         arrow_proxy proxy{std::move(arr), std::move(schema)};
         Ext::init(proxy);

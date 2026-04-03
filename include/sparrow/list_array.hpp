@@ -28,6 +28,7 @@
 #include "sparrow/buffer/dynamic_bitset/dynamic_bitset.hpp"
 #include "sparrow/debug/copy_tracker.hpp"
 #include "sparrow/layout/array_bitmap_base.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/layout/layout_utils.hpp"
 #include "sparrow/layout/nested_value_types.hpp"
 #include "sparrow/utils/functor_index_iterator.hpp"
@@ -173,53 +174,7 @@ namespace sparrow
             }
         };
 
-        // Helper to build arrow schema for list arrays
-        template <input_metadata_container METADATA_RANGE = std::vector<metadata_pair>>
-        inline ArrowSchema make_list_arrow_schema(
-            std::string format,
-            ArrowSchema&& flat_schema,
-            std::optional<std::string_view> name,
-            std::optional<METADATA_RANGE> metadata,
-            bool nullable
-        )
-        {
-            const repeat_view<bool> children_ownership{true, 1};
-            std::optional<std::unordered_set<ArrowFlag>>
-                flags = nullable ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}}
-                                 : std::nullopt;
-
-            return make_arrow_schema(
-                std::move(format),
-                name,
-                metadata,
-                flags,
-                new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},
-                children_ownership,
-                nullptr,  // dictionary
-                true      // dictionary ownership
-            );
-        }
-
-        // Helper to build arrow array for list arrays
-        inline ArrowArray make_list_arrow_array(
-            std::int64_t size,
-            std::int64_t null_count,
-            std::vector<buffer<std::uint8_t>>&& arr_buffs,
-            ArrowArray&& flat_arr
-        )
-        {
-            const repeat_view<bool> children_ownership{true, 1};
-            return make_arrow_array(
-                size,
-                null_count,
-                0,  // offset
-                std::move(arr_buffs),
-                new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},
-                children_ownership,
-                nullptr,  // dictionary
-                true      // dictionary ownership
-            );
-        }
+        // Helper to build arrow schema/array for list arrays are now in arrow_schema_array_factory.hpp
     }
 
     template <bool BIG>
@@ -1215,30 +1170,25 @@ namespace sparrow
     {
         const auto size = list_offsets.size() - 1;
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-        const auto null_count = vbitmap.null_count();
 
-        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
+        std::vector<buffer<std::uint8_t>> extra_buffs;
+        extra_buffs.reserve(1);
+        extra_buffs.emplace_back(std::move(list_offsets).extract_storage());
 
+        const std::string_view format = BIG ? "+L" : "+l";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            BIG ? std::string("+L") : std::string("+l"),
-            std::move(flat_schema),
-            name,
-            metadata,
-            true  // nullable
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/true
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(2);
-        arr_buffs.emplace_back(std::move(vbitmap).extract_storage());
-        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
-
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
-            static_cast<std::int64_t>(null_count),
-            std::move(arr_buffs),
-            std::move(flat_arr)
+            std::move(vbitmap),
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
-
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
@@ -1264,28 +1214,25 @@ namespace sparrow
         }
 
         const auto size = list_offsets.size() - 1;
-        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
+        std::vector<buffer<std::uint8_t>> extra_buffs;
+        extra_buffs.reserve(1);
+        extra_buffs.emplace_back(std::move(list_offsets).extract_storage());
+
+        const std::string_view format = BIG ? "+L" : "+l";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            BIG ? std::string("+L") : std::string("+l"),
-            std::move(flat_schema),
-            name,
-            metadata,
-            false  // not nullable
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/false
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(2);
-        arr_buffs.emplace_back(nullptr, 0, buffer<std::uint8_t>::default_allocator());  // no validity bitmap
-        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
-
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
-            0,  // null_count
-            std::move(arr_buffs),
-            std::move(flat_arr)
+            std::nullopt,
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
-
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
@@ -1559,31 +1506,26 @@ namespace sparrow
         SPARROW_ASSERT(list_offsets.size() == list_sizes.size(), "sizes and offset must have the same size");
         const auto size = list_sizes.size();
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<VB>(validity_input));
-        const auto null_count = vbitmap.null_count();
 
-        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
+        std::vector<buffer<std::uint8_t>> extra_buffs;
+        extra_buffs.reserve(2);
+        extra_buffs.emplace_back(std::move(list_offsets).extract_storage());
+        extra_buffs.emplace_back(std::move(list_sizes).extract_storage());
 
+        const std::string_view format = BIG ? "+vL" : "+vl";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            BIG ? std::string("+vL") : std::string("+vl"),
-            std::move(flat_schema),
-            name,
-            metadata,
-            true  // nullable
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/true
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(3);
-        arr_buffs.emplace_back(std::move(vbitmap).extract_storage());
-        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
-        arr_buffs.emplace_back(std::move(list_sizes).extract_storage());
-
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
-            static_cast<std::int64_t>(null_count),
-            std::move(arr_buffs),
-            std::move(flat_arr)
+            std::move(vbitmap),
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
-
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
@@ -1612,29 +1554,26 @@ namespace sparrow
 
         SPARROW_ASSERT(list_offsets.size() == list_sizes.size(), "sizes and offset must have the same size");
         const auto size = list_sizes.size();
-        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
+        std::vector<buffer<std::uint8_t>> extra_buffs;
+        extra_buffs.reserve(2);
+        extra_buffs.emplace_back(std::move(list_offsets).extract_storage());
+        extra_buffs.emplace_back(std::move(list_sizes).extract_storage());
+
+        const std::string_view format = BIG ? "+vL" : "+vl";
         ArrowSchema schema = detail::make_list_arrow_schema(
-            BIG ? std::string("+vL") : std::string("+vl"),
-            std::move(flat_schema),
-            name,
-            metadata,
-            false  // not nullable
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/false
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(3);
-        arr_buffs.emplace_back(nullptr, 0, buffer<std::uint8_t>::default_allocator());  // no validity bitmap
-        arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
-        arr_buffs.emplace_back(std::move(list_sizes).extract_storage());
-
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
-            0,  // null_count
-            std::move(arr_buffs),
-            std::move(flat_arr)
+            std::nullopt,
+            std::move(extra_buffs),
+            std::move(flat_values)
         );
-
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
@@ -2005,30 +1944,21 @@ namespace sparrow
     {
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
         validity_bitmap vbitmap = ensure_validity_bitmap(size, std::forward<R>(validity_input));
-        const auto null_count = vbitmap.null_count();
-
-        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = detail::make_list_arrow_schema(
-            std::move(format),
-            std::move(flat_schema),
-            name,
-            metadata,
-            true  // nullable
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/true
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(1);
-        arr_buffs.emplace_back(vbitmap.extract_storage());
-
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
-            static_cast<std::int64_t>(null_count),
-            std::move(arr_buffs),
-            std::move(flat_arr)
+            std::move(vbitmap),
+            std::vector<buffer<std::uint8_t>>{},
+            std::move(flat_values)
         );
-
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 
@@ -2053,28 +1983,21 @@ namespace sparrow
         }
 
         const auto size = flat_values.size() / static_cast<std::size_t>(list_size);
-        auto [flat_arr, flat_schema] = extract_arrow_structures(std::move(flat_values));
 
         std::string format = "+w:" + std::to_string(list_size);
         ArrowSchema schema = detail::make_list_arrow_schema(
-            std::move(format),
-            std::move(flat_schema),
-            name,
-            metadata,
-            false  // not nullable
+            format,
+            flat_values,
+            std::move(name),
+            std::move(metadata),
+            /*nullable=*/false
         );
-
-        std::vector<buffer<std::uint8_t>> arr_buffs;
-        arr_buffs.reserve(1);
-        arr_buffs.emplace_back(nullptr, 0, buffer<std::uint8_t>::default_allocator());  // no validity bitmap
-
         ArrowArray arr = detail::make_list_arrow_array(
             static_cast<std::int64_t>(size),
-            0,  // null_count
-            std::move(arr_buffs),
-            std::move(flat_arr)
+            std::nullopt,
+            std::vector<buffer<std::uint8_t>>{},
+            std::move(flat_values)
         );
-
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 }

@@ -23,6 +23,7 @@
 #include "sparrow/c_interface.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
+#include "sparrow/layout/arrow_schema_array_factory.hpp"
 #include "sparrow/utils/iterator.hpp"
 #include "sparrow/utils/metadata.hpp"
 #include "sparrow/utils/nullable.hpp"
@@ -672,32 +673,8 @@ namespace sparrow
     arrow_proxy
     null_array::create_proxy(size_t length, std::optional<std::string_view> name, std::optional<METADATA_RANGE> metadata)
     {
-        using namespace std::literals;
-        static const std::optional<std::unordered_set<sparrow::ArrowFlag>> flags{{ArrowFlag::NULLABLE}};
-        ArrowSchema schema = make_arrow_schema(
-            "n"sv,
-            std::move(name),
-            std::move(metadata),
-            flags,
-            0,
-            repeat_view<bool>(false, 0),
-            nullptr,
-            false
-        );
-
-        using buffer_type = sparrow::buffer<std::uint8_t>;
-        std::vector<buffer_type> arr_buffs = {};
-
-        ArrowArray arr = make_arrow_array(
-            static_cast<int64_t>(length),
-            static_cast<int64_t>(length),
-            0,
-            std::move(arr_buffs),
-            nullptr,
-            repeat_view<bool>(false, 0),
-            nullptr,
-            false
-        );
+        ArrowSchema schema = detail::make_null_arrow_schema(std::move(name), std::move(metadata));
+        ArrowArray arr = detail::make_null_arrow_array(static_cast<std::int64_t>(length));
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
 }
