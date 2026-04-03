@@ -38,7 +38,6 @@ namespace sparrow
 
         run_end_encoded_reference(const run_end_encoded_reference&) = default;
         run_end_encoded_reference(run_end_encoded_reference&&) noexcept = default;
-        ~run_end_encoded_reference() = default;
         run_end_encoded_reference& operator=(run_end_encoded_reference&&) noexcept = default;
 
         SPARROW_API run_end_encoded_reference& operator=(const run_end_encoded_reference& rhs);

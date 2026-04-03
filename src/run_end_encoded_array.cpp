@@ -558,15 +558,21 @@ namespace sparrow
             return false;
         }
 
-        for (run_end_encoded_array::size_type i = 0; i < lhs.size(); ++i)
+        auto lhs_it = lhs.cbegin();
+        auto rhs_it = rhs.cbegin();
+        const auto lhs_end = lhs.cend();
+
+        for (; lhs_it != lhs_end; ++lhs_it, ++rhs_it)
         {
-            if (!(lhs[i] == rhs[i]))
+            if (!(*lhs_it == *rhs_it))
             {
                 return false;
             }
         }
+
         return true;
     }
+
 
     auto run_end_encoded_array::get_acc_lengths_ptr(const array& ar) -> acc_length_ptr_variant_type
     {
