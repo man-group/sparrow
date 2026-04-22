@@ -568,13 +568,14 @@ namespace sparrow
         auto [entries_arr, entries_schema] = extract_arrow_structures(std::move(entries));
 
         const repeat_view<bool> children_ownership{true, 1};
+        auto child_schemas = new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))};
 
         ArrowSchema schema = make_arrow_schema(
             std::string("+m"),
             name,      // name
             metadata,  // metadata
             flags,     // flags,
-            new ArrowSchema*[1]{new ArrowSchema(std::move(entries_schema))},
+            child_schemas,
             children_ownership,  // children ownership
             nullptr,             // dictionary
             true                 // dictionary ownership
@@ -585,13 +586,14 @@ namespace sparrow
         arr_buffs.reserve(2);
         arr_buffs.emplace_back(std::move(validity_buffer));
         arr_buffs.emplace_back(std::move(list_offsets).extract_storage());
+        auto child_arrays = new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))};
 
         ArrowArray arr = make_arrow_array(
             static_cast<std::int64_t>(size),  // length
             null_count,
             0,  // offset
             std::move(arr_buffs),
-            new ArrowArray*[1]{new ArrowArray(std::move(entries_arr))},
+            child_arrays,
             children_ownership,  // children ownership
             nullptr,             // dictionary
             true                 // dictionary ownership
