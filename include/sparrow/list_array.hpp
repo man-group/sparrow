@@ -187,13 +187,14 @@ namespace sparrow
             std::optional<std::unordered_set<ArrowFlag>>
                 flags = nullable ? std::optional<std::unordered_set<ArrowFlag>>{{ArrowFlag::NULLABLE}}
                                  : std::nullopt;
+            auto child_schemas = new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))};
 
             return make_arrow_schema(
                 std::move(format),
                 name,
                 metadata,
                 flags,
-                new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))},
+                child_schemas,
                 children_ownership,
                 nullptr,  // dictionary
                 true      // dictionary ownership
@@ -209,12 +210,13 @@ namespace sparrow
         )
         {
             const repeat_view<bool> children_ownership{true, 1};
+            auto child_arrays = new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))};
             return make_arrow_array(
                 size,
                 null_count,
                 0,  // offset
                 std::move(arr_buffs),
-                new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))},
+                child_arrays,
                 children_ownership,
                 nullptr,  // dictionary
                 true      // dictionary ownership
