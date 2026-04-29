@@ -26,6 +26,25 @@ namespace sparrow
 {
     namespace test
     {
+        inline auto make_u64_value(std::uint64_t value, bool valid = true) -> array_traits::value_type
+        {
+            return array_traits::value_type(nullable<std::uint64_t>(value, valid));
+        }
+
+        inline primitive_array<std::int32_t> get_run_ends_child(const run_end_encoded_array& array)
+        {
+            return primitive_array<std::int32_t>(
+                ::sparrow::detail::array_access::get_arrow_proxy(array).children()[0].view()
+            );
+        }
+
+        inline primitive_array<std::uint64_t> get_encoded_values_child(const run_end_encoded_array& array)
+        {
+            return primitive_array<std::uint64_t>(
+                ::sparrow::detail::array_access::get_arrow_proxy(array).children()[1].view()
+            );
+        }
+
         run_end_encoded_array make_test_run_encoded_array(bool alterate = false)
         {
             using acc_type = std::int32_t;
@@ -66,6 +85,33 @@ namespace sparrow
 
             return run_end_encoded_array(std::move(acc_lengths_array), std::move(encoded_values_array));
         }
+
+        run_end_encoded_array make_test_run_encoded_array_with_unknown_encoded_null_count()
+        {
+            using acc_type = std::int32_t;
+            using inner_value_type = std::uint64_t;
+
+            primitive_array<inner_value_type> encoded_values(
+                std::vector<inner_value_type>{
+                    inner_value_type(1),
+                    inner_value_type(),
+                    inner_value_type(42),
+                    inner_value_type(),
+                    inner_value_type(9)
+                },
+                std::vector<std::size_t>{1, 3}
+            );
+
+            primitive_array<acc_type> acc_lengths{
+                {acc_type(1), acc_type(3), acc_type(6), acc_type(7), acc_type(8)}
+            };
+
+            array acc_lengths_array(std::move(acc_lengths));
+            array encoded_values_array(std::move(encoded_values));
+            ::sparrow::detail::array_access::get_arrow_proxy(encoded_values_array).set_null_count(-1);
+
+            return run_end_encoded_array(std::move(acc_lengths_array), std::move(encoded_values_array));
+        }
     }
 
     TEST_SUITE("run_length_encoded")
@@ -84,6 +130,11 @@ namespace sparrow
 
             std::vector<bool> expected_bitmap{1, 0, 0, 1, 1, 1, 0, 1};
             std::vector<inner_value_type> expected_values{1, 0, 0, 42, 42, 42, 0, 9};
+
+            SUBCASE("proxy null_count matches expanded null runs")
+            {
+                CHECK_EQ(detail::array_access::get_arrow_proxy(rle_array).null_count(), 3);
+            }
 
             SUBCASE("copy")
             {
@@ -116,43 +167,67 @@ namespace sparrow
 
             SUBCASE("operator[]")
             {
-                // check elements
-                for (std::size_t i = 0; i < n; ++i)
+                SUBCASE("const")
                 {
-                    REQUIRE(rle_array[i].has_value() == bool(expected_bitmap[i]));
-                    if (expected_bitmap[i])
+                    // check elements
+                    for (std::size_t i = 0; i < n; ++i)
                     {
-                        array_traits::const_reference val = rle_array[i];
-                        CHECK(val.has_value() == val.has_value());
-                        // // visit the variant
-                        std::visit(
-                            [&](auto&& nullable) -> void
-                            {
-                                using T = std::decay_t<decltype(nullable)>;
-                                using inner_type = std::decay_t<typename T::value_type>;
-                                if constexpr (std::is_same_v<inner_type, inner_value_type>)
+                        REQUIRE(rle_array[i].has_value() == bool(expected_bitmap[i]));
+                        if (expected_bitmap[i])
+                        {
+                            array_traits::const_reference val = rle_array[i];
+                            CHECK(val.has_value() == val.has_value());
+                            // // visit the variant
+                            std::visit(
+                                [&](auto&& nullable) -> void
                                 {
-                                    if (nullable.has_value())
+                                    using T = std::decay_t<decltype(nullable)>;
+                                    using inner_type = std::decay_t<typename T::value_type>;
+                                    if constexpr (std::is_same_v<inner_type, inner_value_type>)
                                     {
-                                        CHECK(nullable.value() == expected_values[i]);
+                                        if (nullable.has_value())
+                                        {
+                                            CHECK(nullable.value() == expected_values[i]);
+                                        }
+                                        else
+                                        {
+                                            CHECK(false);
+                                        }
                                     }
                                     else
                                     {
                                         CHECK(false);
                                     }
-                                }
-                                else
-                                {
-                                    CHECK(false);
-                                }
-                            },
+                                },
 #if SPARROW_GCC_11_2_WORKAROUND
-                            static_cast<const typename array_traits::const_reference::base_type&>(val)
+                                sparrow::test::unwrap_gcc11_variant_base(val)
 #else
-                            val
+                                val
 #endif
-                        );
+                            );
+                        }
                     }
+                }
+
+                SUBCASE("mutable")
+                {
+                    rle_array[3] = test::make_u64_value(7);
+
+                    REQUIRE_EQ(rle_array.size(), 8u);
+                    CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(7));
+                    CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(42));
+                    CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
+
+                    const auto run_ends = test::get_run_ends_child(rle_array);
+                    const auto encoded_values = test::get_encoded_values_child(rle_array);
+                    REQUIRE_EQ(run_ends.size(), 6u);
+                    REQUIRE_EQ(encoded_values.size(), 6u);
+                    CHECK_EQ(run_ends[0].value(), 1);
+                    CHECK_EQ(run_ends[1].value(), 3);
+                    CHECK_EQ(run_ends[2].value(), 4);
+                    CHECK_EQ(run_ends[3].value(), 6);
+                    CHECK_EQ(run_ends[4].value(), 7);
+                    CHECK_EQ(run_ends[5].value(), 8);
                 }
             }
 
@@ -167,10 +242,6 @@ namespace sparrow
                     if (iter->has_value())
                     {
                         auto val = *iter;
-#if SPARROW_GCC_11_2_WORKAROUND
-                        using variant_type = std::decay_t<decltype(val)>;
-                        using base_type = typename variant_type::base_type;
-#endif
                         std::visit(
                             [&](auto&& nullable) -> void
                             {
@@ -193,7 +264,7 @@ namespace sparrow
                                 }
                             },
 #if SPARROW_GCC_11_2_WORKAROUND
-                            *static_cast<const base_type*>(&val)
+                            sparrow::test::unwrap_gcc11_variant_base(val)
 #else
                             val
 #endif
@@ -201,6 +272,28 @@ namespace sparrow
                     }
                     ++iter;
                 }
+            }
+
+            SUBCASE("mutable iterator reuses cached run across split mutation")
+            {
+                auto iter = sparrow::next(rle_array.begin(), 4);
+                auto ref = *iter;
+
+                CHECK_NULLABLE_VARIANT_EQ(ref, std::uint64_t(42));
+
+                ref = test::make_u64_value(7);
+
+                CHECK_NULLABLE_VARIANT_EQ(ref, std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(static_cast<array_traits::const_reference>(ref), std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+
+                ref = test::make_u64_value(8);
+
+                CHECK_NULLABLE_VARIANT_EQ(ref, std::uint64_t(8));
+                CHECK_NULLABLE_VARIANT_EQ(static_cast<array_traits::const_reference>(ref), std::uint64_t(8));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(8));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
             }
 
             SUBCASE("reverse_iterator")
@@ -215,10 +308,6 @@ namespace sparrow
                     if (iter->has_value())
                     {
                         auto val = *iter;
-#if SPARROW_GCC_11_2_WORKAROUND
-                        using variant_type = std::decay_t<decltype(val)>;
-                        using base_type = typename variant_type::base_type;
-#endif
                         std::visit(
                             [&](auto&& nullable) -> void
                             {
@@ -241,7 +330,7 @@ namespace sparrow
                                 }
                             },
 #if SPARROW_GCC_11_2_WORKAROUND
-                            *static_cast<const base_type*>(&val)
+                            sparrow::test::unwrap_gcc11_variant_base(val)
 #else
                             val
 #endif
@@ -256,6 +345,228 @@ namespace sparrow
                 test::generic_consistency_test(rle_array);
             }
 
+            SUBCASE("push_back merges adjacent run")
+            {
+                rle_array.push_back(test::make_u64_value(9));
+
+                REQUIRE_EQ(rle_array.size(), 9u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[7], std::uint64_t(9));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[8], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                const auto encoded_values = test::get_encoded_values_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                REQUIRE_EQ(encoded_values.size(), 5u);
+                CHECK_EQ(run_ends[4].value(), 9);
+                CHECK_EQ(encoded_values[4].value(), std::uint64_t(9));
+            }
+
+            SUBCASE("insert inside run splits encoding")
+            {
+                rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7));
+
+                REQUIRE_EQ(rle_array.size(), 9u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[6], std::uint64_t(42));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 7u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 7);
+                CHECK_EQ(run_ends[5].value(), 8);
+                CHECK_EQ(run_ends[6].value(), 9);
+            }
+
+            SUBCASE("insert count inside run updates encoding once")
+            {
+                rle_array.insert(sparrow::next(rle_array.cbegin(), 4), test::make_u64_value(7), 3);
+
+                REQUIRE_EQ(rle_array.size(), 11u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[6], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[7], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[8], std::uint64_t(42));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 7u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 7);
+                CHECK_EQ(run_ends[4].value(), 9);
+                CHECK_EQ(run_ends[5].value(), 10);
+                CHECK_EQ(run_ends[6].value(), 11);
+            }
+
+            SUBCASE("replace inside run splits encoding")
+            {
+                rle_array[4] = test::make_u64_value(7);
+
+                REQUIRE_EQ(rle_array.size(), 8u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 7u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 6);
+                CHECK_EQ(run_ends[5].value(), 7);
+                CHECK_EQ(run_ends[6].value(), 8);
+            }
+
+            SUBCASE("replace with adjacent run value merges encoding")
+            {
+                rle_array[5] = test::make_u64_value(0, false);
+
+                REQUIRE_EQ(rle_array.size(), 8u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(42));
+                CHECK_FALSE(rle_array[5].has_value());
+                CHECK_FALSE(rle_array[6].has_value());
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                const auto encoded_values = test::get_encoded_values_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                REQUIRE_EQ(encoded_values.size(), 5u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 5);
+                CHECK_EQ(run_ends[3].value(), 7);
+                CHECK_EQ(run_ends[4].value(), 8);
+                CHECK_FALSE(encoded_values[3].has_value());
+            }
+
+            SUBCASE("erase range merges adjacent runs")
+            {
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 3), sparrow::next(rle_array.cbegin(), 6));
+
+                REQUIRE_EQ(rle_array.size(), 5u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_FALSE(rle_array[2].has_value());
+                CHECK_FALSE(rle_array[3].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                const auto encoded_values = test::get_encoded_values_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 3u);
+                REQUIRE_EQ(encoded_values.size(), 3u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 4);
+                CHECK_EQ(run_ends[2].value(), 5);
+                CHECK_FALSE(encoded_values[1].has_value());
+            }
+
+            SUBCASE("erase range inside a run shrinks it once")
+            {
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 4), sparrow::next(rle_array.cbegin(), 6));
+
+                REQUIRE_EQ(rle_array.size(), 6u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_FALSE(rle_array[2].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_FALSE(rle_array[4].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 6);
+            }
+
+            SUBCASE("erase range across runs keeps both outer fragments")
+            {
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 4));
+
+                REQUIRE_EQ(rle_array.size(), 6u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[2], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(42));
+                CHECK_FALSE(rle_array[4].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 5u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 2);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+                CHECK_EQ(run_ends[4].value(), 6);
+            }
+
+            SUBCASE("erase range across runs keeps left fragment only")
+            {
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 2), sparrow::next(rle_array.cbegin(), 7));
+
+                REQUIRE_EQ(rle_array.size(), 3u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_FALSE(rle_array[1].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[2], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 3u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 2);
+                CHECK_EQ(run_ends[2].value(), 3);
+            }
+
+            SUBCASE("erase range across runs keeps right fragment only")
+            {
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 4));
+
+                REQUIRE_EQ(rle_array.size(), 5u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[1], std::uint64_t(42));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[2], std::uint64_t(42));
+                CHECK_FALSE(rle_array[3].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 4u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 3);
+                CHECK_EQ(run_ends[2].value(), 4);
+                CHECK_EQ(run_ends[3].value(), 5);
+            }
+
+            SUBCASE("erase range across runs removes whole middle section")
+            {
+                rle_array.erase(sparrow::next(rle_array.cbegin(), 1), sparrow::next(rle_array.cbegin(), 7));
+
+                REQUIRE_EQ(rle_array.size(), 2u);
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[0], std::uint64_t(1));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[1], std::uint64_t(9));
+
+                const auto run_ends = test::get_run_ends_child(rle_array);
+                REQUIRE_EQ(run_ends.size(), 2u);
+                CHECK_EQ(run_ends[0].value(), 1);
+                CHECK_EQ(run_ends[1].value(), 2);
+            }
+
+            SUBCASE("mutation on slice is unsupported")
+            {
+                run_end_encoded_array sliced(detail::array_access::get_arrow_proxy(rle_array).slice(1, 3));
+
+                CHECK_THROWS_AS(sliced.push_back(test::make_u64_value(11)), std::logic_error);
+                CHECK_THROWS_AS(sliced.erase(sliced.cbegin()), std::logic_error);
+            }
+
 #if defined(__cpp_lib_format)
             SUBCASE("formatter")
             {
@@ -263,7 +574,24 @@ namespace sparrow
                 constexpr std::string_view expected = "Run end encoded [size=8] <1, null, null, 42, 42, 42, null, 9>";
                 CHECK_EQ(formatted, expected);
             }
+
+            SUBCASE("formatter handles empty arrays")
+            {
+                primitive_array<std::int32_t> run_ends(std::vector<std::int32_t>{});
+                primitive_array<std::uint64_t> encoded_values(std::vector<std::uint64_t>{});
+                run_end_encoded_array empty(array(std::move(run_ends)), array(std::move(encoded_values)));
+
+                CHECK_EQ(std::format("{}", empty), "Run end encoded [size=0] <>");
+            }
 #endif
+        }
+
+        TEST_CASE("run_length_encoded computes null_count when encoded child null count is unknown")
+        {
+            const auto rle_array = test::make_test_run_encoded_array_with_unknown_encoded_null_count();
+
+            CHECK_EQ(rle_array.size(), 8u);
+            CHECK_EQ(detail::array_access::get_arrow_proxy(rle_array).null_count(), 3);
         }
     }
 }

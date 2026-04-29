@@ -18,12 +18,50 @@
 #include "sparrow/config/config.hpp"
 #include "sparrow/layout/array_access.hpp"
 #include "sparrow/layout/array_wrapper.hpp"
-#include "sparrow/layout/run_end_encoded_iterator.hpp"
 #include "sparrow/utils/memory.hpp"
 
 namespace sparrow
 {
     class run_end_encoded_array;
+
+    class run_end_encoded_reference : public array_traits::value_type
+    {
+    public:
+
+        using base_type = array_traits::value_type;
+        using value_type = array_traits::value_type;
+        using const_reference = array_traits::const_reference;
+
+        SPARROW_API run_end_encoded_reference(run_end_encoded_array& array, std::size_t index);
+        SPARROW_API
+        run_end_encoded_reference(run_end_encoded_array& array, std::size_t index, std::size_t run_index);
+
+        run_end_encoded_reference(const run_end_encoded_reference&) = default;
+        run_end_encoded_reference(run_end_encoded_reference&&) noexcept = default;
+        run_end_encoded_reference& operator=(run_end_encoded_reference&&) noexcept = default;
+
+        SPARROW_API run_end_encoded_reference& operator=(const run_end_encoded_reference& rhs);
+        SPARROW_API run_end_encoded_reference& operator=(const const_reference& rhs);
+        SPARROW_API run_end_encoded_reference& operator=(const value_type& rhs);
+
+        [[nodiscard]] SPARROW_API operator const_reference() const;
+
+    private:
+
+        [[nodiscard]] SPARROW_API const_reference current_value() const;
+
+        SPARROW_API void refresh();
+
+        run_end_encoded_array* p_array = nullptr;
+        std::size_t m_index = 0;
+        mutable std::size_t m_run_index = 0;
+    };
+}
+
+#include "sparrow/layout/run_end_encoded_iterator.hpp"
+
+namespace sparrow
+{
 
     namespace detail
     {
@@ -50,6 +88,14 @@ namespace sparrow
      * This array is used to store data in a run-length encoded format, where each run is represented by a
      * length and a value. Compresses data by storing run lengths for consecutive identical values.
      *
+     * Performance notes:
+     * - Random access is $O(\log R)$ where $R$ is the number of encoded runs.
+     * - Iterator increment is amortized $O(1)$ because iterators cache the current run.
+     * - Mutating operations work on the encoded run representation rather than the full logical length.
+     *   Inserting repeated copies of a single value and erasing a contiguous logical range both run in
+     *   $O(R_t)$, where $R_t$ is the number of encoded runs at or after the splice point.
+     * - Sliced arrays (non-zero offset) are read-only for mutation APIs.
+     *
      * Related Apache Arrow description and specification:
      * - https://arrow.apache.org/docs/dev/format/Intro.html#run-end-encoded-layout
      * - https://arrow.apache.org/docs/format/Columnar.html#run-end-encoded-layout
@@ -62,6 +108,7 @@ namespace sparrow
         using size_type = std::size_t;
         using inner_value_type = array_traits::inner_value_type;
         using value_type = array_traits::value_type;
+        using reference = run_end_encoded_reference;
         using const_reference = array_traits::const_reference;
         using iterator = run_encoded_array_iterator<false>;
         using const_iterator = run_encoded_array_iterator<true>;
@@ -122,9 +169,18 @@ namespace sparrow
          * @post Child arrays and offset pointers are reconstructed
          */
         SPARROW_API self_type& operator=(const self_type&);
+        ~run_end_encoded_array() = default;
 
         run_end_encoded_array(self_type&&) = default;
         self_type& operator=(self_type&&) = default;
+
+        /**
+         * Mutable access operator for updating the logical value at index.
+         *
+         * @param i The index of the element to access.
+         * @return Mutable proxy reference to the element at the specified index.
+         */
+        [[nodiscard]] SPARROW_API reference operator[](std::uint64_t i);
 
         /**
          * Constant access operator for getting element at index.
@@ -220,6 +276,13 @@ namespace sparrow
         [[nodiscard]] SPARROW_API const_reverse_iterator crend() const;
 
         /**
+         * Gets a mutable reference to the first element.
+         *
+         * @return Mutable proxy reference to the first element.
+         */
+        [[nodiscard]] SPARROW_API reference front();
+
+        /**
          * Gets a constant reference to the first element.
          *
          * @return Constant reference to the first element.
@@ -227,11 +290,88 @@ namespace sparrow
         [[nodiscard]] SPARROW_API array_traits::const_reference front() const;
 
         /**
+         * Gets a mutable reference to the last element.
+         *
+         * @return Mutable proxy reference to the last element.
+         */
+        [[nodiscard]] SPARROW_API reference back();
+
+        /**
          * Gets a reference to the last element.
          *
          * @return Constant reference to the last element.
          */
         [[nodiscard]] SPARROW_API array_traits::const_reference back() const;
+
+        /**
+         * Inserts a single logical value before pos.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs at or after pos.
+         */
+        SPARROW_API iterator insert(const_iterator pos, const value_type& value);
+
+        /**
+         * Inserts count copies of value before pos.
+         *
+         * This is implemented as a single structural mutation on the encoded runs, rather than
+         * repeating single-element inserts.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs at or after pos.
+         */
+        SPARROW_API iterator insert(const_iterator pos, const value_type& value, size_type count);
+
+        template <std::input_iterator InputIt>
+            requires std::constructible_from<value_type, typename std::iterator_traits<InputIt>::value_type>
+        iterator insert(const_iterator pos, InputIt first, InputIt last)
+        {
+            const size_type index = static_cast<size_type>(std::distance(cbegin(), pos));
+            size_type inserted_count = 0;
+            while (first != last)
+            {
+                value_type current_value(*first);
+                ++first;
+                insert_logical_value(index + inserted_count, current_value, first == last);
+                ++inserted_count;
+            }
+            return sparrow::next(begin(), static_cast<std::ptrdiff_t>(index));
+        }
+
+        template <std::ranges::input_range R>
+            requires std::constructible_from<value_type, std::ranges::range_value_t<R>>
+        iterator insert(const_iterator pos, R&& range)
+        {
+            return insert(
+                pos,
+                std::ranges::begin(std::forward<R>(range)),
+                std::ranges::end(std::forward<R>(range))
+            );
+        }
+
+        /**
+         * Erases the logical value at pos.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, pos.
+         */
+        SPARROW_API iterator erase(const_iterator pos);
+
+        /**
+         * Erases the logical range [first, last).
+         *
+         * This is implemented as a single structural mutation on the encoded runs, rather than
+         * repeating single-element erases.
+         *
+         * Complexity: $O(R_t)$ where $R_t$ is the number of encoded runs touched by, or after, the erased
+         * range.
+         */
+        SPARROW_API iterator erase(const_iterator first, const_iterator last);
+
+        SPARROW_API void push_back(const value_type& value);
+
+        SPARROW_API void pop_back();
+
+        SPARROW_API void resize(size_type new_length, const value_type& value);
+
+        SPARROW_API void clear();
 
         /**
          * Checks if the array is empty.
@@ -300,8 +440,7 @@ namespace sparrow
          * @param ar The child array containing the rnu-ends.
          * @return A pointer to the data buffer containing the run-ends.
          */
-        [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type
-        get_acc_lengths_ptr(const array_wrapper& ar);
+        [[nodiscard]] SPARROW_API static acc_length_ptr_variant_type get_acc_lengths_ptr(const array& ar);
 
         /**
          * Gets the run-end value at the given index as an unsigned 64-bits integer.
@@ -325,21 +464,75 @@ namespace sparrow
          */
         [[nodiscard]] SPARROW_API const arrow_proxy& get_arrow_proxy() const;
 
+        [[nodiscard]] SPARROW_API size_type find_run_index(std::uint64_t logical_index) const;
+
+        [[nodiscard]] SPARROW_API std::uint64_t run_start(size_type run_index) const;
+
+        [[nodiscard]] SPARROW_API std::uint64_t run_end(size_type run_index) const;
+
+        [[nodiscard]] SPARROW_API const_reference encoded_value(size_type run_index) const;
+
+        [[nodiscard]] SPARROW_API bool
+        encoded_values_equal(size_type lhs_run_index, size_type rhs_run_index) const;
+
+        [[nodiscard]] SPARROW_API bool encoded_value_equals(size_type run_index, const value_type& value) const;
+
+        SPARROW_API void insert_encoded_value(size_type run_index, const value_type& value);
+
+        SPARROW_API void erase_encoded_values(size_type run_index, size_type count);
+
+        SPARROW_API void rebind_children_from_proxy();
+
+        SPARROW_API void insert_acc_length(size_type pos, std::uint64_t value);
+
+        SPARROW_API void erase_acc_lengths(size_type pos, size_type count);
+
+        SPARROW_API void set_acc_length(size_type index, std::uint64_t value);
+
+        SPARROW_API void shift_acc_lengths(size_type start_index, std::int64_t delta);
+
+        SPARROW_API void merge_adjacent_runs(size_type left_run_index);
+
+        SPARROW_API void refresh_and_merge_adjacent_runs(std::optional<size_type> merge_candidate);
+
+        SPARROW_API void
+        insert_logical_values(size_type index, const value_type& value, size_type count, bool refresh_state = true);
+
+        SPARROW_API void erase_logical_values(size_type index, size_type count, bool refresh_state = true);
+
+        SPARROW_API void
+        insert_logical_value(size_type index, const value_type& value, bool refresh_state = true);
+
+        SPARROW_API void erase_logical_value(size_type index, bool refresh_state = true);
+
+        SPARROW_API void replace_logical_value(size_type index, const value_type& value);
+
+        SPARROW_API void refresh_cache();
+
+        SPARROW_API void refresh_after_mutation();
+
+        SPARROW_API void finalize_mutation(bool refresh_state);
+
+        SPARROW_API void throw_if_sliced_for_mutation(const char* operation) const;
+
+        [[nodiscard]] SPARROW_API static value_type materialize_value(const const_reference& value);
+
         /** The arrow proxy containing the array data and schema. */
         arrow_proxy m_proxy;
         /** The length of therun-ends child array **/
         std::uint64_t m_encoded_length;
 
         /** The child array containing the run ends **/
-        cloning_ptr<array_wrapper> p_acc_lengths_array;
+        array p_acc_lengths_array;
         /** The child array containing the values **/
-        cloning_ptr<array_wrapper> p_encoded_values_array;
+        array p_encoded_values_array;
         /** A pointer to the run-end child data buffer **/
         acc_length_ptr_variant_type m_acc_lengths;
 
         // friend classes
         friend class run_encoded_array_iterator<false>;
         friend class run_encoded_array_iterator<true>;
+        friend class run_end_encoded_reference;
         friend class detail::array_access;
     };
 
@@ -364,11 +557,11 @@ namespace sparrow
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
 
-        child_schemas[0] = new ArrowSchema(std::move(acc_length_schema));
-        child_schemas[1] = new ArrowSchema(std::move(encoded_values_schema));
+        child_schemas[0] = new ArrowSchema(acc_length_schema);
+        child_schemas[1] = new ArrowSchema(encoded_values_schema);
 
-        child_arrays[0] = new ArrowArray(std::move(acc_length_array));
-        child_arrays[1] = new ArrowArray(std::move(encoded_values_array));
+        child_arrays[0] = new ArrowArray(acc_length_array);
+        child_arrays[1] = new ArrowArray(encoded_values_array);
 
         const repeat_view<bool> children_ownserhip{true, n_children};
 
@@ -398,6 +591,7 @@ namespace sparrow
 
         return arrow_proxy{std::move(arr), std::move(schema)};
     }
+
 }  // namespace sparrow
 
 
