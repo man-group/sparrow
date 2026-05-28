@@ -24,15 +24,17 @@
 #include "sparrow/layout/array_registry.hpp"
 #include "sparrow/primitive_array.hpp"
 
-namespace sparrow
+namespace
 {
     template <class T>
-    concept usable_array = (mpl::is_type_instance_of_v<T, primitive_array>
-                            || mpl::is_type_instance_of_v<T, primitive_array_impl>)
+    concept usable_array = (sparrow::mpl::is_type_instance_of_v<T, sparrow::primitive_array>)
                            && (std::same_as<typename T::inner_value_type, std::int16_t>
                                || std::same_as<typename T::inner_value_type, std::int32_t>
                                || std::same_as<typename T::inner_value_type, std::int64_t>);
+}
 
+namespace sparrow
+{
     namespace
     {
         template <class ARRAY>
@@ -309,8 +311,7 @@ namespace sparrow
         std::size_t index,
         std::size_t run_index
     )
-        : base_type(run_end_encoded_array::materialize_value(array.encoded_value(run_index)))
-        , p_array(&array)
+        : p_array(&array)
         , m_index(index)
         , m_run_index(run_index)
     {
@@ -320,7 +321,7 @@ namespace sparrow
     {
         if (this != &rhs)
         {
-            *this = static_cast<const value_type&>(rhs);
+            *this = run_end_encoded_array::materialize_value(rhs.current_value());
         }
         return *this;
     }
@@ -334,8 +335,12 @@ namespace sparrow
     run_end_encoded_reference& run_end_encoded_reference::operator=(const value_type& rhs)
     {
         p_array->replace_logical_value(m_index, rhs);
-        refresh();
         return *this;
+    }
+
+    bool run_end_encoded_reference::has_value() const
+    {
+        return current_value().has_value();
     }
 
     run_end_encoded_reference::operator const_reference() const
@@ -354,11 +359,6 @@ namespace sparrow
         }
 
         return p_array->encoded_value(m_run_index);
-    }
-
-    void run_end_encoded_reference::refresh()
-    {
-        static_cast<base_type&>(*this) = run_end_encoded_array::materialize_value(current_value());
     }
 
     auto run_end_encoded_array::size() const -> size_type

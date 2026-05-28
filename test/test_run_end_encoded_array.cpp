@@ -296,6 +296,19 @@ namespace sparrow
                 CHECK_NULLABLE_VARIANT_EQ(rle_array[5], std::uint64_t(42));
             }
 
+            SUBCASE("proxy copy assignment materializes current source value")
+            {
+                auto source = rle_array[4];
+                auto target = rle_array[3];
+
+                rle_array[4] = test::make_u64_value(7);
+                target = source;
+
+                CHECK_NULLABLE_VARIANT_EQ(target, std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[3], std::uint64_t(7));
+                CHECK_NULLABLE_VARIANT_EQ(rle_array[4], std::uint64_t(7));
+            }
+
             SUBCASE("reverse_iterator")
             {
                 auto iter = rle_array.rbegin();

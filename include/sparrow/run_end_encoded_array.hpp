@@ -24,11 +24,10 @@ namespace sparrow
 {
     class run_end_encoded_array;
 
-    class run_end_encoded_reference : public array_traits::value_type
+    class run_end_encoded_reference
     {
     public:
 
-        using base_type = array_traits::value_type;
         using value_type = array_traits::value_type;
         using const_reference = array_traits::const_reference;
 
@@ -38,19 +37,17 @@ namespace sparrow
 
         run_end_encoded_reference(const run_end_encoded_reference&) = default;
         run_end_encoded_reference(run_end_encoded_reference&&) noexcept = default;
-        run_end_encoded_reference& operator=(run_end_encoded_reference&&) noexcept = default;
 
         SPARROW_API run_end_encoded_reference& operator=(const run_end_encoded_reference& rhs);
         SPARROW_API run_end_encoded_reference& operator=(const const_reference& rhs);
         SPARROW_API run_end_encoded_reference& operator=(const value_type& rhs);
 
+        [[nodiscard]] SPARROW_API bool has_value() const;
         [[nodiscard]] SPARROW_API operator const_reference() const;
 
     private:
 
         [[nodiscard]] SPARROW_API const_reference current_value() const;
-
-        SPARROW_API void refresh();
 
         run_end_encoded_array* p_array = nullptr;
         std::size_t m_index = 0;
@@ -557,11 +554,11 @@ namespace sparrow
         ArrowSchema** child_schemas = new ArrowSchema*[n_children];
         ArrowArray** child_arrays = new ArrowArray*[n_children];
 
-        child_schemas[0] = new ArrowSchema(acc_length_schema);
-        child_schemas[1] = new ArrowSchema(encoded_values_schema);
+        child_schemas[0] = new ArrowSchema(std::move(acc_length_schema));
+        child_schemas[1] = new ArrowSchema(std::move(encoded_values_schema));
 
-        child_arrays[0] = new ArrowArray(acc_length_array);
-        child_arrays[1] = new ArrowArray(encoded_values_array);
+        child_arrays[0] = new ArrowArray(std::move(acc_length_array));
+        child_arrays[1] = new ArrowArray(std::move(encoded_values_array));
 
         const repeat_view<bool> children_ownserhip{true, n_children};
 
