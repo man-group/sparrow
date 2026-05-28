@@ -57,14 +57,15 @@ namespace sparrow::test
     };
 
     template <class V>
-    constexpr decltype(auto) visitable_nullable_variant(const V& value)
+    constexpr auto visitable_nullable_variant(const V& value)
     {
         if constexpr (is_nullable_variant_like<V>::value)
         {
+            using variant_type = std::remove_cvref_t<V>;
 #if SPARROW_GCC_11_2_WORKAROUND
-            return unwrap_gcc11_variant_base(value);
+            return typename variant_type::base_type(unwrap_gcc11_variant_base(value));
 #else
-            return (value);
+            return typename variant_type::base_type(value);
 #endif
         }
         else if constexpr (std::is_convertible_v<const V&, array_traits::const_reference>)
@@ -73,7 +74,7 @@ namespace sparrow::test
         }
         else
         {
-            return (value);
+            return value;
         }
     }
 

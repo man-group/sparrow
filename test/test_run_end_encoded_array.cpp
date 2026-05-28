@@ -234,10 +234,10 @@ namespace sparrow
                 for (std::size_t i = 0; i < n; ++i)
                 {
                     REQUIRE(iter != rle_array.end());
-                    CHECK(iter->has_value() == bool(expected_bitmap[i]));
-                    if (iter->has_value())
+                    const auto current = *iter;
+                    CHECK(current.has_value() == bool(expected_bitmap[i]));
+                    if (current.has_value())
                     {
-                        auto val = *iter;
                         std::visit(
                             [&](auto&& nullable) -> void
                             {
@@ -259,7 +259,7 @@ namespace sparrow
                                     CHECK(false);
                                 }
                             },
-                            sparrow::test::visitable_nullable_variant(val)
+                            sparrow::test::visitable_nullable_variant(current)
                         );
                     }
                     ++iter;
@@ -309,10 +309,10 @@ namespace sparrow
                 {
                     REQUIRE(iter != rle_array.rend());
                     const auto idx = rle_array.size() - i - 1;
-                    CHECK(iter->has_value() == bool(expected_bitmap[idx]));
-                    if (iter->has_value())
+                    const auto current = *iter;
+                    CHECK(current.has_value() == bool(expected_bitmap[idx]));
+                    if (current.has_value())
                     {
-                        auto val = *iter;
                         std::visit(
                             [&](auto&& nullable) -> void
                             {
@@ -334,7 +334,7 @@ namespace sparrow
                                     CHECK(false);
                                 }
                             },
-                            sparrow::test::visitable_nullable_variant(val)
+                            sparrow::test::visitable_nullable_variant(current)
                         );
                     }
                     ++iter;
