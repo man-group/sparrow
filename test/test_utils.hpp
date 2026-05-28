@@ -55,7 +55,7 @@ namespace sparrow::test
 
     template <class V>
         requires is_nullable_variant_like<V>::value
-    constexpr auto visitable_nullable_variant(const V& value) -> typename std::remove_cvref_t<V>::base_type
+    auto visitable_nullable_variant(const V& value) -> typename std::remove_cvref_t<V>::base_type
     {
         using variant_type = std::remove_cvref_t<V>;
 #if SPARROW_GCC_11_2_WORKAROUND
@@ -67,7 +67,7 @@ namespace sparrow::test
 
     template <class V>
         requires(!is_nullable_variant_like<V>::value && std::is_convertible_v<const V&, array_traits::const_reference>)
-    constexpr auto visitable_nullable_variant(const V& value) -> array_traits::const_reference::base_type
+    auto visitable_nullable_variant(const V& value) -> array_traits::const_reference::base_type
     {
         const auto materialized = static_cast<array_traits::const_reference>(value);
 #if SPARROW_GCC_11_2_WORKAROUND
@@ -82,7 +82,7 @@ namespace sparrow::test
             !is_nullable_variant_like<V>::value
             && !std::is_convertible_v<const V&, array_traits::const_reference>
         )
-    constexpr decltype(auto) visitable_nullable_variant(const V& value)
+    decltype(auto) visitable_nullable_variant(const V& value)
     {
         return (value);
     }
