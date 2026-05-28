@@ -66,7 +66,7 @@ namespace sparrow::test
     }
 
     template <class V>
-        requires (!is_nullable_variant_like<V>::value && std::is_convertible_v<const V&, array_traits::const_reference>)
+        requires(!is_nullable_variant_like<V>::value && std::is_convertible_v<const V&, array_traits::const_reference>)
     constexpr auto visitable_nullable_variant(const V& value) -> array_traits::const_reference::base_type
     {
         const auto materialized = static_cast<array_traits::const_reference>(value);
@@ -78,7 +78,10 @@ namespace sparrow::test
     }
 
     template <class V>
-        requires (!is_nullable_variant_like<V>::value && !std::is_convertible_v<const V&, array_traits::const_reference>)
+        requires(
+            !is_nullable_variant_like<V>::value
+            && !std::is_convertible_v<const V&, array_traits::const_reference>
+        )
     constexpr decltype(auto) visitable_nullable_variant(const V& value)
     {
         return (value);
