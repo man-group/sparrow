@@ -47,12 +47,9 @@ namespace sparrow::test
     };
 
     template <class T>
-        requires requires {
-            typename std::remove_cvref_t<T>::base_type;
-        }
+        requires requires { typename std::remove_cvref_t<T>::base_type; }
     struct is_nullable_variant_like<T>
-        : std::bool_constant<
-              std::derived_from<std::remove_cvref_t<T>, typename std::remove_cvref_t<T>::base_type>>
+        : std::bool_constant<std::derived_from<std::remove_cvref_t<T>, typename std::remove_cvref_t<T>::base_type>>
     {
     };
 
