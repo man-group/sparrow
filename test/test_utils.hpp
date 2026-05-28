@@ -41,24 +41,39 @@ namespace sparrow::test
     }
 #endif
 
+    template <class T>
+    struct is_nullable_variant_like : std::false_type
+    {
+    };
+
+    template <class T>
+        requires requires {
+            typename std::remove_cvref_t<T>::base_type;
+        }
+    struct is_nullable_variant_like<T>
+        : std::bool_constant<
+              std::derived_from<std::remove_cvref_t<T>, typename std::remove_cvref_t<T>::base_type>>
+    {
+    };
+
     template <class V>
     constexpr decltype(auto) visitable_nullable_variant(const V& value)
     {
-#if SPARROW_GCC_11_2_WORKAROUND
-        decltype(auto) unwrapped = unwrap_gcc11_variant_base(value);
-#else
-        decltype(auto) unwrapped = (value);
-#endif
-
-        if constexpr (requires(const std::remove_cvref_t<decltype(unwrapped)>& candidate) {
-                          std::visit([](const auto&) {}, candidate);
-                      })
+        if constexpr (is_nullable_variant_like<V>::value)
         {
-            return (unwrapped);
+#if SPARROW_GCC_11_2_WORKAROUND
+            return unwrap_gcc11_variant_base(value);
+#else
+            return (value);
+#endif
+        }
+        else if constexpr (std::is_convertible_v<const V&, array_traits::const_reference>)
+        {
+            return visitable_nullable_variant(static_cast<array_traits::const_reference>(value));
         }
         else
         {
-            return static_cast<array_traits::const_reference>(unwrapped);
+            return (value);
         }
     }
 
