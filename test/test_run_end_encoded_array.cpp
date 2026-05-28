@@ -199,11 +199,7 @@ namespace sparrow
                                         CHECK(false);
                                     }
                                 },
-#if SPARROW_GCC_11_2_WORKAROUND
-                                sparrow::test::unwrap_gcc11_variant_base(val)
-#else
-                                val
-#endif
+                                sparrow::test::visitable_nullable_variant(val)
                             );
                         }
                     }
@@ -263,11 +259,7 @@ namespace sparrow
                                     CHECK(false);
                                 }
                             },
-#if SPARROW_GCC_11_2_WORKAROUND
-                            sparrow::test::unwrap_gcc11_variant_base(val)
-#else
-                            val
-#endif
+                            sparrow::test::visitable_nullable_variant(val)
                         );
                     }
                     ++iter;
@@ -342,11 +334,7 @@ namespace sparrow
                                     CHECK(false);
                                 }
                             },
-#if SPARROW_GCC_11_2_WORKAROUND
-                            sparrow::test::unwrap_gcc11_variant_base(val)
-#else
-                            val
-#endif
+                            sparrow::test::visitable_nullable_variant(val)
                         );
                     }
                     ++iter;

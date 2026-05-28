@@ -107,23 +107,23 @@ namespace sparrow
                 REQUIRE_EQ(arr.size(), 4);
 
                 // 0
-                auto arr0 = std::get<nullable<struct_value>>(arr[0]);
+                auto arr0 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[0]));
                 REQUIRE(arr0.has_value());
                 CHECK_NULLABLE_VARIANT_EQ(arr0.value()[0], int(1));
                 CHECK_NULLABLE_VARIANT_EQ(arr0.value()[1], std::uint16_t(1));
 
                 // 1
-                auto arr1 = std::get<nullable<struct_value>>(arr[1]);
+                auto arr1 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[1]));
                 REQUIRE(!arr1.has_value());
 
                 // 2
-                auto arr2 = std::get<nullable<struct_value>>(arr[2]);
+                auto arr2 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[2]));
                 REQUIRE(arr2.has_value());
                 CHECK(!arr2.value()[0].has_value());
                 CHECK_NULLABLE_VARIANT_EQ(arr2.value()[1], std::uint16_t(42));
 
                 // 3
-                auto arr3 = std::get<nullable<struct_value>>(arr[3]);
+                auto arr3 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[3]));
                 REQUIRE(arr3.has_value());
                 CHECK(!arr3.value()[0].has_value());
                 CHECK_NULLABLE_VARIANT_EQ(arr3.value()[1], std::uint16_t(42));
@@ -141,10 +141,22 @@ namespace sparrow
 
                 REQUIRE_EQ(arr.size(), 2);
 
-                CHECK_EQ(std::get<nullable<list_value>>(arr[0]).value().size(), 3);
-                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[0], 1);
-                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[1], 2);
-                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[2], 3);
+                CHECK_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value().size(),
+                    3
+                );
+                CHECK_NULLABLE_VARIANT_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value()[0],
+                    1
+                );
+                CHECK_NULLABLE_VARIANT_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value()[1],
+                    2
+                );
+                CHECK_NULLABLE_VARIANT_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value()[2],
+                    3
+                );
             }
 
             SUBCASE("run_end_encode[union[int, string]]")

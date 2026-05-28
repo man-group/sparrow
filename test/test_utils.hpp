@@ -41,6 +41,27 @@ namespace sparrow::test
     }
 #endif
 
+    template <class V>
+    constexpr decltype(auto) visitable_nullable_variant(const V& value)
+    {
+#if SPARROW_GCC_11_2_WORKAROUND
+        decltype(auto) unwrapped = unwrap_gcc11_variant_base(value);
+#else
+        decltype(auto) unwrapped = (value);
+#endif
+
+        if constexpr (requires(const std::remove_cvref_t<decltype(unwrapped)>& candidate) {
+                          std::visit([](const auto&) {}, candidate);
+                      })
+        {
+            return (unwrapped);
+        }
+        else
+        {
+            return static_cast<array_traits::const_reference>(unwrapped);
+        }
+    }
+
     template <class ARRAY_TYPE>
     void generic_consistency_test_impl(ARRAY_TYPE&& typed_arr)
     {
@@ -132,11 +153,7 @@ namespace sparrow::test
                     ADD_FAIL_AT(file, line, "type mismatch");
                 }
             },
-#if SPARROW_GCC_11_2_WORKAROUND
-            unwrap_gcc11_variant_base(variant)
-#else
-            variant
-#endif
+            visitable_nullable_variant(variant)
         );
     }
 
