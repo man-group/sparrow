@@ -54,25 +54,34 @@ namespace sparrow::test
     };
 
     template <class V>
-    constexpr auto visitable_nullable_variant(const V& value)
+        requires is_nullable_variant_like<V>::value
+    constexpr auto visitable_nullable_variant(const V& value) -> typename std::remove_cvref_t<V>::base_type
     {
-        if constexpr (is_nullable_variant_like<V>::value)
-        {
-            using variant_type = std::remove_cvref_t<V>;
+        using variant_type = std::remove_cvref_t<V>;
 #if SPARROW_GCC_11_2_WORKAROUND
-            return typename variant_type::base_type(unwrap_gcc11_variant_base(value));
+        return typename variant_type::base_type(unwrap_gcc11_variant_base(value));
 #else
-            return typename variant_type::base_type(value);
+        return typename variant_type::base_type(value);
 #endif
-        }
-        else if constexpr (std::is_convertible_v<const V&, array_traits::const_reference>)
-        {
-            return visitable_nullable_variant(static_cast<array_traits::const_reference>(value));
-        }
-        else
-        {
-            return value;
-        }
+    }
+
+    template <class V>
+        requires (!is_nullable_variant_like<V>::value && std::is_convertible_v<const V&, array_traits::const_reference>)
+    constexpr auto visitable_nullable_variant(const V& value) -> array_traits::const_reference::base_type
+    {
+        const auto materialized = static_cast<array_traits::const_reference>(value);
+#if SPARROW_GCC_11_2_WORKAROUND
+        return array_traits::const_reference::base_type(unwrap_gcc11_variant_base(materialized));
+#else
+        return array_traits::const_reference::base_type(materialized);
+#endif
+    }
+
+    template <class V>
+        requires (!is_nullable_variant_like<V>::value && !std::is_convertible_v<const V&, array_traits::const_reference>)
+    constexpr decltype(auto) visitable_nullable_variant(const V& value)
+    {
+        return (value);
     }
 
     template <class ARRAY_TYPE>
