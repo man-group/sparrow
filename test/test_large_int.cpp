@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if __has_include(<format>)
+#    include <format>
+#endif
+
 #include "sparrow/utils/large_int.hpp"
 
 #include "doctest/doctest.h"
