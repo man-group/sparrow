@@ -69,15 +69,16 @@ namespace sparrow
                 };
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
+                const auto& const_arr = arr;
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
                 REQUIRE_EQ(arr.size(), 5);
-                CHECK_NULLABLE_VARIANT_EQ(arr[0], std::string_view("hello"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("world"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[2], std::string_view("hello"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
-                CHECK(!arr[4].has_value());
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[0], std::string_view("hello"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[1], std::string_view("world"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[2], std::string_view("hello"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[3], std::string_view("world"));
+                CHECK(!const_arr[4].has_value());
             }
 
             SUBCASE("run_end_encode[struct[int,float]]")
@@ -106,23 +107,23 @@ namespace sparrow
                 REQUIRE_EQ(arr.size(), 4);
 
                 // 0
-                auto arr0 = std::get<nullable<struct_value>>(arr[0]);
+                auto arr0 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[0]));
                 REQUIRE(arr0.has_value());
                 CHECK_NULLABLE_VARIANT_EQ(arr0.value()[0], int(1));
                 CHECK_NULLABLE_VARIANT_EQ(arr0.value()[1], std::uint16_t(1));
 
                 // 1
-                auto arr1 = std::get<nullable<struct_value>>(arr[1]);
+                auto arr1 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[1]));
                 REQUIRE(!arr1.has_value());
 
                 // 2
-                auto arr2 = std::get<nullable<struct_value>>(arr[2]);
+                auto arr2 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[2]));
                 REQUIRE(arr2.has_value());
                 CHECK(!arr2.value()[0].has_value());
                 CHECK_NULLABLE_VARIANT_EQ(arr2.value()[1], std::uint16_t(42));
 
                 // 3
-                auto arr3 = std::get<nullable<struct_value>>(arr[3]);
+                auto arr3 = std::get<nullable<struct_value>>(static_cast<array_traits::const_reference>(arr[3]));
                 REQUIRE(arr3.has_value());
                 CHECK(!arr3.value()[0].has_value());
                 CHECK_NULLABLE_VARIANT_EQ(arr3.value()[1], std::uint16_t(42));
@@ -140,10 +141,22 @@ namespace sparrow
 
                 REQUIRE_EQ(arr.size(), 2);
 
-                CHECK_EQ(std::get<nullable<list_value>>(arr[0]).value().size(), 3);
-                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[0], 1);
-                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[1], 2);
-                CHECK_NULLABLE_VARIANT_EQ(std::get<nullable<list_value>>(arr[0]).value()[2], 3);
+                CHECK_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value().size(),
+                    3
+                );
+                CHECK_NULLABLE_VARIANT_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value()[0],
+                    1
+                );
+                CHECK_NULLABLE_VARIANT_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value()[1],
+                    2
+                );
+                CHECK_NULLABLE_VARIANT_EQ(
+                    std::get<nullable<list_value>>(static_cast<array_traits::const_reference>(arr[0])).value()[2],
+                    3
+                );
             }
 
             SUBCASE("run_end_encode[union[int, string]]")
@@ -158,14 +171,15 @@ namespace sparrow
                 };
                 auto arr = sparrow::build(v);
                 test::generic_consistency_test(arr);
+                const auto& const_arr = arr;
                 using array_type = std::decay_t<decltype(arr)>;
                 static_assert(std::is_same_v<array_type, sparrow::run_end_encoded_array>);
 
                 REQUIRE_EQ(arr.size(), 4);
-                CHECK_NULLABLE_VARIANT_EQ(arr[0], 1);
-                CHECK_NULLABLE_VARIANT_EQ(arr[1], std::string_view("hello"));
-                CHECK_NULLABLE_VARIANT_EQ(arr[2], 2);
-                CHECK_NULLABLE_VARIANT_EQ(arr[3], std::string_view("world"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[0], 1);
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[1], std::string_view("hello"));
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[2], 2);
+                CHECK_NULLABLE_VARIANT_EQ(const_arr[3], std::string_view("world"));
             }
 
             SUBCASE("list[run_end_encode[int]]")
