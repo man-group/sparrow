@@ -42,9 +42,9 @@ jobs:
         - {name: "Ninja"}
         include:
         - runs-on: windows-latest
-          build-system: {name: "Visual Studio 17 2022"}
+          build-system: {name: "Visual Studio 17 2022", vs-version-range: "[17.0,18.0)"}
         - runs-on: windows-2025-vs2026
-          build-system: {name: "Visual Studio 18 2026"}
+          build-system: {name: "Visual Studio 18 2026", vs-version-range: "[18.0,19.0)"}
 
     steps:
     - name: Setup MSVC (only for non-VS buildsystems)
@@ -84,6 +84,12 @@ jobs:
       if: startsWith(matrix.build-system.name, 'Visual Studio')
       run: |
         echo "GENERATOR_EXTRA_FLAGS=${{matrix.target-arch.vs-flags}}" >> $GITHUB_ENV
+        vs_instance_path=$(vswhere -version "${{ matrix.build-system.vs-version-range }}" -latest -property installationPath)
+        if [[ -z "$vs_instance_path" ]]; then
+          echo "No Visual Studio installation found for version range ${{ matrix.build-system.vs-version-range }}" >&2
+          exit 1
+        fi
+        echo "CMAKE_GENERATOR_INSTANCE=$vs_instance_path" >> $GITHUB_ENV
 
     - name: Setup toolset if we use Visual Studio Build System and Clang
       if: startsWith(matrix.build-system.name, 'Visual Studio') && matrix.toolchain.compiler == 'clang'
