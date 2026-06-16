@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [main]
+    branches: [ main ]
 concurrency:
   group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
   cancel-in-progress: true
@@ -17,11 +17,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [windows-latest, windows-2025-vs2026]
+        runs-on: [ windows-latest, windows-2025-vs2026 ]
         toolchain:
-        - {compiler: msvc, date-polyfill: 'ON', shared: 'ON'}
-        - {compiler: msvc, date-polyfill: 'ON', shared: 'OFF'}
-        - {compiler: msvc, date-polyfill: 'OFF', shared: 'ON'}
+        - { compiler: msvc, date-polyfill: 'ON', shared: 'ON' }
+        - { compiler: msvc, date-polyfill: 'ON', shared: 'OFF' }
+        - { compiler: msvc, date-polyfill: 'OFF', shared: 'ON' }
           # Temporary disable of clang on Windows because of https://github.com/llvm/llvm-project/issues/115990 and current msvc
           # build system on windows runners comes with this bugged version of clang)
           #- {compiler: clang, date-polyfill: 'ON', version: 18, shared: 'ON'}
@@ -36,11 +36,17 @@ jobs:
             msvc-dev-cmd: "win64"
           }
         config:
-        - {name: Debug}
-        - {name: Release}
+        - { name: Debug }
+        - { name: Release }
         build-system:
-        - {name: "Visual Studio 17 2022"}
-        - {name: "Ninja"}
+        - { name: "Visual Studio 17 2022" }
+        - { name: "Visual Studio 18 2026" }
+        - { name: "Ninja" }
+        exclude:
+        - runs-on: windows-latest
+          build-system: { name: "Visual Studio 18 2026" }
+        - runs-on: windows-2025-vs2026
+          build-system: { name: "Visual Studio 17 2022" }
 
     steps:
     - name: Setup MSVC (only for non-VS buildsystems)
@@ -122,7 +128,7 @@ jobs:
       run: |
         choco install opencppcoverage
         echo "TEST_COVERAGE_ACTIVATION=' -DENABLE_COVERAGE=ON'" >> $GITHUB_ENV
-      
+
     - name: Set CMake generator environment variable
       run: |
         echo "CMAKE_GENERATOR=${{ matrix.build-system.name }}" >> $GITHUB_ENV
