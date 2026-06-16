@@ -39,14 +39,12 @@ jobs:
         - { name: Debug }
         - { name: Release }
         build-system:
-        - { name: "Visual Studio 17 2022" }
-        - { name: "Visual Studio 18 2026" }
-        - { name: "Ninja" }
-        exclude:
+        - {name: "Ninja"}
+        include:
         - runs-on: windows-latest
-          build-system: { name: "Visual Studio 18 2026" }
+          build-system: {name: "Visual Studio 17 2022"}
         - runs-on: windows-2025-vs2026
-          build-system: { name: "Visual Studio 17 2022" }
+          build-system: {name: "Visual Studio 18 2026"}
 
     steps:
     - name: Setup MSVC (only for non-VS buildsystems)
