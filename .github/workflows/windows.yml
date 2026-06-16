@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ windows-latest, windows-2025-vs2026 ]
+        runs-on: [ windows-2022, windows-2025-vs2026 ]
         toolchain:
         - { compiler: msvc, date-polyfill: 'ON', shared: 'ON' }
         - { compiler: msvc, date-polyfill: 'ON', shared: 'OFF' }
@@ -41,7 +41,7 @@ jobs:
         build-system:
         - {name: "Ninja"}
         include:
-        - runs-on: windows-latest
+        - runs-on: windows-2022
           build-system: {name: "Visual Studio 17 2022", vs-version-range: "[17.0,18.0)"}
         - runs-on: windows-2025-vs2026
           build-system: {name: "Visual Studio 18 2026", vs-version-range: "[18.0,19.0)"}
