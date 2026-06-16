@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [windows-latest]
+        runs-on: [windows-latest, windows-2025-vs2026]
         toolchain:
         - {compiler: msvc, date-polyfill: 'ON', shared: 'ON'}
         - {compiler: msvc, date-polyfill: 'ON', shared: 'OFF'}
