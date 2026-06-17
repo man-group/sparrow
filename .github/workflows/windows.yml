@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
 concurrency:
   group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
   cancel-in-progress: true
@@ -19,9 +19,9 @@ jobs:
       matrix:
         runs-on: [ windows-2022, windows-2025-vs2026 ]
         toolchain:
-        - { compiler: msvc, date-polyfill: 'ON', shared: 'ON' }
-        - { compiler: msvc, date-polyfill: 'ON', shared: 'OFF' }
-        - { compiler: msvc, date-polyfill: 'OFF', shared: 'ON' }
+        - {compiler: msvc, date-polyfill: 'ON', shared: 'ON'}
+        - {compiler: msvc, date-polyfill: 'ON', shared: 'OFF'}
+        - {compiler: msvc, date-polyfill: 'OFF', shared: 'ON'}
           # Temporary disable of clang on Windows because of https://github.com/llvm/llvm-project/issues/115990 and current msvc
           # build system on windows runners comes with this bugged version of clang)
           #- {compiler: clang, date-polyfill: 'ON', version: 18, shared: 'ON'}
