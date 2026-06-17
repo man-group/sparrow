@@ -119,7 +119,8 @@ namespace sparrow
             schema.metadata = nullptr;
             schema.flags = static_cast<int64_t>(ArrowFlag::NULLABLE);
             schema.n_children = 1;
-            schema.children = new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))};
+            schema.children = new ArrowSchema*[1];
+            schema.children[0] = new ArrowSchema(std::move(flat_schema));
             schema.dictionary = nullptr;
             schema.release = &release_external_arrow_schema;
 
@@ -133,7 +134,8 @@ namespace sparrow
             buffers[1] = make_external_list_offsets_buffer(sizes);
             arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buffers));
             arr.n_children = 1;
-            arr.children = new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))};
+            arr.children = new ArrowArray*[1];
+            arr.children[0] = new ArrowArray(std::move(flat_arr));
             arr.dictionary = nullptr;
             arr.release = &release_external_arrow_array;
 
@@ -154,7 +156,8 @@ namespace sparrow
             schema.metadata = nullptr;
             schema.flags = static_cast<int64_t>(ArrowFlag::NULLABLE);
             schema.n_children = 1;
-            schema.children = new ArrowSchema*[1]{new ArrowSchema(std::move(flat_schema))};
+            schema.children = new ArrowSchema*[1];
+            schema.children[0] = new ArrowSchema(std::move(flat_schema));
             schema.dictionary = nullptr;
             schema.release = &release_external_arrow_schema;
 
@@ -169,7 +172,8 @@ namespace sparrow
             buffers[2] = make_external_list_sizes_buffer(sizes);
             arr.buffers = const_cast<const void**>(reinterpret_cast<void**>(buffers));
             arr.n_children = 1;
-            arr.children = new ArrowArray*[1]{new ArrowArray(std::move(flat_arr))};
+            arr.children = new ArrowArray*[1];
+            arr.children[0] = new ArrowArray(std::move(flat_arr));
             arr.dictionary = nullptr;
             arr.release = &release_external_arrow_array;
 
