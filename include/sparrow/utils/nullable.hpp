@@ -376,7 +376,7 @@ namespace sparrow
          * @post null_flag() returns true
          */
         template <class U>
-            requires(not std::same_as<self_type, std::decay_t<U>> and std::constructible_from<T, U &&>)
+            requires(not std::same_as<self_type, std::decay_t<U>> and std::constructible_from<T, U&&>)
         explicit(not std::convertible_to<U&&, T>) constexpr nullable(U&& value) noexcept(
             noexcept(T(std::declval<U>()))
         )
@@ -600,8 +600,8 @@ namespace sparrow
             requires(std::same_as<std::remove_cvref_t<U>, T> && std::same_as<std::remove_cvref_t<V>, B>
                      && std::is_const_v<std::remove_reference_t<U>>
                      && not std::is_const_v<std::remove_reference_t<V>> && not std::is_reference_v<T>
-                     && not std::is_reference_v<B> && std::is_lvalue_reference_v<U &&>
-                     && std::is_lvalue_reference_v<V &&>)
+                     && not std::is_reference_v<B> && std::is_lvalue_reference_v<U&&>
+                     && std::is_lvalue_reference_v<V&&>)
         constexpr nullable(U& value, V& null_flag)
             : m_value(value)
             , m_null_flag(null_flag)
