@@ -28,8 +28,8 @@ namespace sparrow
         // Helper struct to allow overloading on the type of ARRAY
         // to get the data_type for an array. This is needed since
         // some arrays (for instance run_length_encoded_array)
-        // do not have a inner_value_type, therefore we specialize
-        // this in their respecitve headers.
+        // do not have an inner_value_type, therefore we specialize
+        // this in their respective headers.
         template <class ARRAY>
         struct get_data_type_from_array;
 
