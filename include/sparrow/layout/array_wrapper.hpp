@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or mplied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
@@ -28,8 +28,8 @@ namespace sparrow
         // Helper struct to allow overloading on the type of ARRAY
         // to get the data_type for an array. This is needed since
         // some arrays (for instance run_length_encoded_array)
-        // do not have a inner_value_type, therefore we specialize
-        // this in their respecitve headers.
+        // do not have an inner_value_type, therefore we specialize
+        // this in their respective headers.
         template <class ARRAY>
         struct get_data_type_from_array;
 

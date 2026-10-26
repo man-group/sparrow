@@ -81,8 +81,8 @@ namespace sparrow
              */
             primitive_data_access(arrow_proxy& proxy, size_t data_buffer_index);
 
-            // This class is meant to be use as a private member of array classes,
-            // and holds a inner_pointer to the arrow_proxy of the array. Therefore we
+            // This class is meant to be used as a private member of array classes,
+            // and holds an inner_pointer to the arrow_proxy of the array. Therefore we
             // forbid the copy and the move semantics to:
             // - force the array constructors to call the primitive_data_access
             // constructor taking an arrow_proxy
